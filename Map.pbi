@@ -8,7 +8,7 @@ EnableExplicit
 
 Enumeration
   #TILE_UNBREAKABLE_WALL
-  #TILE_PASSABLE_PATH
+  #TILE_WALKABLE_PATH
   #TILE_BREAKABLE_WALL_1
 EndEnumeration
 
@@ -43,6 +43,23 @@ Structure TMap Extends TGameObject
   
 EndStructure
 
+Procedure MakeTileWalkable(*GameMap.TMap, TileX.u, TileY.u)
+  If TileX < #MAP_PLAY_AREA_START_X Or TileX > #MAP_PLAY_AREA_END_X
+    ProcedureReturn #False
+  EndIf
+  
+  If TileY < #MAP_PLAY_AREA_START_Y Or TileY > #MAP_PLAY_AREA_END_Y
+    ProcedureReturn #False
+  EndIf
+  
+  *GameMap\MapGrid\TilesGrid(TileX, TileY)\Destructable = #False
+  *GameMap\MapGrid\TilesGrid(TileX, TileY)\Walkable = #True
+  *GameMap\MapGrid\TilesGrid(TileX, TileY)\Health = 1.0
+  *GameMap\MapGrid\TilesGrid(TileX, TileY)\SpriteNum = #Ground
+  
+  ProcedureReturn #True
+EndProcedure
+
 Procedure.i InitMapGrid(*MapGrid.TMapGrid, MapGridFile.s)
   Protected FileNum = ReadFile(#PB_Any, MapGridFile)
   If FileNum = 0
@@ -66,21 +83,21 @@ Procedure.i InitMapGrid(*MapGrid.TMapGrid, MapGridFile.s)
       
       Select ColumnValueInt
         Case #TILE_UNBREAKABLE_WALL
-          *MapGrid\TilesGrid(LineNum, ColumnNum)\Destructable = #False
-          *MapGrid\TilesGrid(LineNum, ColumnNum)\Walkable = #False
-          *MapGrid\TilesGrid(LineNum, ColumnNum)\Health = 1.0
-          *MapGrid\TilesGrid(LineNum, ColumnNum)\SpriteNum = #UnbreakableWall
-        Case #TILE_PASSABLE_PATH
-          *MapGrid\TilesGrid(LineNum, ColumnNum)\Destructable = #False
-          *MapGrid\TilesGrid(LineNum, ColumnNum)\Walkable = #True
-          *MapGrid\TilesGrid(LineNum, ColumnNum)\Health = 1.0
-          *MapGrid\TilesGrid(LineNum, ColumnNum)\SpriteNum = #Ground
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\Destructable = #False
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\Walkable = #False
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\Health = 1.0
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\SpriteNum = #UnbreakableWall
+        Case #TILE_WALKABLE_PATH
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\Destructable = #False
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\Walkable = #True
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\Health = 1.0
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\SpriteNum = #Ground
           
         Case #TILE_BREAKABLE_WALL_1
-          *MapGrid\TilesGrid(LineNum, ColumnNum)\Destructable = #True
-          *MapGrid\TilesGrid(LineNum, ColumnNum)\Walkable = #False
-          *MapGrid\TilesGrid(LineNum, ColumnNum)\Health = 1.0
-          *MapGrid\TilesGrid(LineNum, ColumnNum)\SpriteNum = #BreakableWall1
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\Destructable = #True
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\Walkable = #False
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\Health = 1.0
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\SpriteNum = #BreakableWall1
           
       EndSelect
       
@@ -120,12 +137,14 @@ Procedure DrawMap(*GameMap.TMap)
   
 EndProcedure
 
+
+
 Procedure SetRandomBreakableWallsMap(*GameMap.TMap)
   Protected MapX, MapY
   
   For MapX = #MAP_PLAY_AREA_START_X To #MAP_PLAY_AREA_END_X
     For MapY = #MAP_PLAY_AREA_START_Y To #MAP_PLAY_AREA_END_Y
-      If RandomFloat() < 0.25
+      If RandomFloat() <= 0.3
         *GameMap\MapGrid\TilesGrid(MapX, MapY)\Destructable = #True
         *GameMap\MapGrid\TilesGrid(MapX, MapY)\Walkable = #False
         *GameMap\MapGrid\TilesGrid(MapX, MapY)\Health = 1.0
@@ -137,12 +156,28 @@ Procedure SetRandomBreakableWallsMap(*GameMap.TMap)
   Next MapX
   
 EndProcedure
+
+Procedure SetTopLeftCornerPlayableByPlayer(*GameMap.TMap)
+  ;we need to make sure that the top left corner is walkable like this:
+  ;wwwwwwwww...
+  ;w##wwwwww...
+  ;w#wwwwwww...
+  ;wwwwwwwww...
+  ;...
+  ;the tiles with # should be walkable
+  ;*GameMap\MapGrid\TilesGrid(#MAP_PLAY_AREA_START_X, #MAP_PLAY_AREA_START_Y)
+  MakeTileWalkable(*GameMap, #MAP_PLAY_AREA_START_X, #MAP_PLAY_AREA_START_Y)
+  MakeTileWalkable(*GameMap, #MAP_PLAY_AREA_START_X + 1, #MAP_PLAY_AREA_START_Y)
+  MakeTileWalkable(*GameMap, #MAP_PLAY_AREA_START_X, #MAP_PLAY_AREA_START_Y + 1)
   
+EndProcedure
+
 
 Procedure InitMap(*GameMap.TMap, *Position.TVector2D)
   InitGameObject(*GameMap, *Position, -1, @UpdateGameObject(), @DrawMap(), #True, 1.0, #MapDrawOrder)
   InitMapGrid(@*GameMap\MapGrid, ".\data\maps\main-map-grid.csv")
   SetRandomBreakableWallsMap(*GameMap)
+  SetTopLeftCornerPlayableByPlayer(*GameMap)
 EndProcedure
 
 
