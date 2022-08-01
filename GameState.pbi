@@ -1,13 +1,14 @@
 ﻿XIncludeFile "Math.pbi"
 XIncludeFile "GameObject.pbi"
-XIncludeFile "Enemy.pbi"
-XIncludeFile "Player.pbi"
-XIncludeFile "Projectile.pbi"
+;XIncludeFile "Enemy.pbi"
+;XIncludeFile "Player.pbi"
+;XIncludeFile "Projectile.pbi"
 XIncludeFile "Resources.pbi"
 XIncludeFile "Util.pbi"
 XIncludeFile "DrawList.pbi"
 XIncludeFile "Ground.pbi"
 XIncludeFile "DrawText.pbi"
+XIncludeFile "Map.pbi"
 
 EnableExplicit
 
@@ -42,7 +43,7 @@ Structure TGameStateManager
 EndStructure
 
 Structure TPlayState Extends TGameState
-  Player.TPlayer
+  GameMap.TMap
   
   Ground.TGround
   
@@ -101,8 +102,19 @@ Procedure InitGroundPlayState(*PlayState.TPlayState)
   
 EndProcedure
 
+Procedure InitMapPlayState(*PlayState.TPlayState)
+  
+  InitDrawList(@*PlayState\DrawList)
+  
+  Protected MapPosition.TVector2D\x = 0
+  MapPosition\y = 0
+  InitMap(@*PlayState\GameMap, @MapPosition)
+  
+  AddDrawItemDrawList(@*PlayState\DrawList, @*PlayState\GameMap)
+EndProcedure
+
 Procedure StartPlayState(*PlayState.TPlayState)
-  ;InitGroundPlayState(*PlayState)
+  InitMapPlayState(*PlayState)
   
   
 EndProcedure

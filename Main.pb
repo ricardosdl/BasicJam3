@@ -5,8 +5,8 @@ EnableExplicit
 InitSprite()
 InitKeyboard()
 
-OpenWindow(1, 0,0,800,600,"Foo Game", #PB_Window_ScreenCentered | #PB_Window_SystemMenu)
-OpenWindowedScreen(WindowID(1),0,0,800,600,0,0,0)
+OpenWindow(1, 0,0,640,480,"Foo Game", #PB_Window_ScreenCentered | #PB_Window_SystemMenu)
+OpenWindowedScreen(WindowID(1),0,0,640,480,0,0,0)
 
 Global SimulationTime.q = 0, RealTime.q, GameTick = 5
 Global LastTimeInMs.q
@@ -14,6 +14,9 @@ Global LastTimeInMs.q
 Procedure.a LoadSprites()
   Protected LoadedAll = #True
   LoadedAll = LoadedAll & Bool(LoadSprite(#StandardFont, "data\img\font.png", #PB_Sprite_AlphaBlending))
+  LoadedAll = LoadedAll & Bool(LoadSprite(#UnbreakableWall, "data\img\unbreakable-wall.png", #PB_Sprite_AlphaBlending))
+  LoadedAll = LoadedAll & Bool(LoadSprite(#Ground, "data\img\ground.png", #PB_Sprite_AlphaBlending))
+  LoadedAll = LoadedAll & Bool(LoadSprite(#BreakableWall1, "data\img\breakable-wall-1.png", #PB_Sprite_AlphaBlending))
   ProcedureReturn LoadedAll
 EndProcedure
 
