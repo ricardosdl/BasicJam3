@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 5.73 LTS (Windows - x64)">
+  <section name="config">
+    <options closefiles="1" openmode="0" name="Basic Jam 3"/>
+  </section>
+  <section name="data">
+    <explorer view="" pattern="0"/>
+    <log show="1"/>
+    <lastopen date="2022-08-01 09:50" user="ricardo.lima" host="686-D-02700820"/>
+  </section>
+  <section name="files">
+    <file name="Main.pb">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+    <file name="BananaEnemy.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+    <file name="DrawList.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+    <file name="DrawOrders.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+    <file name="DrawText.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+    <file name="Enemy.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+    <file name="GameObject.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+    <file name="GameState.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+    <file name="Ground.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+    <file name="Math.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+    <file name="Player.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+    <file name="Projectile.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+    <file name="Resources.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+    <file name="Util.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+  </section>
+  <section name="targets">
+    <target name="Default Target" enabled="1" default="1">
+      <inputfile value=""/>
+      <outputfile value=""/>
+      <options xpskin="1" debug="1"/>
+    </target>
+  </section>
+</project>
