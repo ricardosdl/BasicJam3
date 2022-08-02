@@ -3,20 +3,43 @@ XIncludeFile "Resources.pbi"
 XIncludeFile "DrawList.pbi"
 XIncludeFile "DrawOrders.pbi"
 XIncludeFile "Map.pbi"
+XIncludeFile "Projectile.pbi"
 
 EnableExplicit
 
 Structure TPlayer Extends TGameObject
   *GameMap.TMap
   PositionMapCoords.TVector2D
+  BombPower.f
+  CurrentBombsLimit.a;max num of bombs that the player can evacuate
+  *ProjectileList.TProjectileList
+  CurrentBombType.a
+  *DrawList.TDrawList
 EndStructure
 
+Procedure PutBombPlayer(*Player.TPlayer)
+  Protected *Projectile.TProjectile = GetInactiveProjectile(*Player\ProjectileList)
+  If *Projectile = #Null
+    ;couldn't allocate the memory for a bomb :(
+    ProcedureReturn #False
+  EndIf
+  
+  InitProjectile(*Projectile, @*Player\PositionMapCoords, #True, #SPRITES_ZOOM, *Player\CurrentBombType, *Player\GameMap,
+                 *Player\BombPower, *Player)
+  
+  AddDrawItemDrawList(*Player\DrawList, *Projectile)
+  
+  ProcedureReturn #True
+  
+EndProcedure
+
 Procedure UpdatePlayer(*Player.TPlayer, TimeSlice.f)
-  Protected Up, Right, Down, Left
+  Protected Up, Right, Down, Left, PutBomb
   Up = KeyboardReleased(#PB_Key_Up)
   Right = KeyboardReleased(#PB_Key_Right)
   Down = KeyboardReleased(#PB_Key_Down)
   Left = KeyboardReleased(#PB_Key_Left)
+  PutBomb = KeyboardReleased(#PB_Key_Z)
   
   Protected NextCoords.TVector2D = *Player\PositionMapCoords
   
@@ -45,6 +68,19 @@ Procedure UpdatePlayer(*Player.TPlayer, TimeSlice.f)
   
   *Player\Position = NewPosition
   
+  If PutBomb
+    ;pressed the key to put a bomb
+    ;get the num of active bombs for the player
+    Protected NumActiveBombsPlayer = GetNumActiveOwnedProjectiles(*Player\ProjectileList, *Player)
+    If NumActiveBombsPlayer < *Player\CurrentBombsLimit
+      ;the player can put a bomb
+      PutBombPlayer(*Player)
+    EndIf
+    
+    
+    
+  EndIf
+  
   
   UpdateGameObject(*Player, TimeSlice)
   
@@ -66,7 +102,8 @@ Procedure.a GetCollisionRectPlayer(*Player.TPlayer, *CollisionRect.TRect)
   
 EndProcedure
 
-Procedure InitPlayer(*Player.TPlayer, *MapCoords.TVector2D, ZoomFactor.f, *DrawList.TDrawList, *GameMap.TMap)
+Procedure InitPlayer(*Player.TPlayer, *MapCoords.TVector2D, ZoomFactor.f, *DrawList.TDrawList, *GameMap.TMap,
+                     *ProjectileList.TProjectileList)
   ;the player has a reference to the game map
   *Player\GameMap = *GameMap
   *Player\PositionMapCoords\x = *MapCoords\x
@@ -81,9 +118,19 @@ Procedure InitPlayer(*Player.TPlayer, *MapCoords.TVector2D, ZoomFactor.f, *DrawL
   
   ClipSprite(#Player1, 0, 0, 16, 16)
   
+  *Player\DrawList = *DrawList
+  
   *Player\GetCollisionRect = @GetCollisionRectPlayer()
   
   *Player\Health = 5.0
+  
+  *Player\BombPower = 1.0
+  
+  *Player\ProjectileList = *ProjectileList
+  
+  *Player\CurrentBombsLimit = 1
+  
+  *Player\CurrentBombType = #ProjectileBomb1
   
 EndProcedure
 

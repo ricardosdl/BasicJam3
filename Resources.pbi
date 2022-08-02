@@ -8,6 +8,7 @@ Enumeration ESprites
   #Ground
   #BreakableWall1
   #Player1
+  #Bomb1
 EndEnumeration
 
 DisableExplicit

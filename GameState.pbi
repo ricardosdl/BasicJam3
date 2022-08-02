@@ -2,7 +2,7 @@
 XIncludeFile "GameObject.pbi"
 ;XIncludeFile "Enemy.pbi"
 XIncludeFile "Player.pbi"
-;XIncludeFile "Projectile.pbi"
+XIncludeFile "Projectile.pbi"
 XIncludeFile "Resources.pbi"
 XIncludeFile "Util.pbi"
 XIncludeFile "DrawList.pbi"
@@ -50,6 +50,8 @@ Structure TPlayState Extends TGameState
   DrawList.TDrawList
   
   Player.TPlayer
+  
+  ProjectileList.TProjectileList
   
 EndStructure
 
@@ -107,7 +109,7 @@ EndProcedure
 Procedure InitPlayerPlayState(*PlayState.TPlayState)
   Protected PlayerMapCoords.TVector2D\x = 1
   PlayerMapCoords\y = 1
-  InitPlayer(@*PlayState\Player, @PlayerMapCoords, #SPRITES_ZOOM, @*PlayState\DrawList, @*PlayState\GameMap)
+  InitPlayer(@*PlayState\Player, @PlayerMapCoords, #SPRITES_ZOOM, @*PlayState\DrawList, @*PlayState\GameMap, @*PlayState\ProjectileList)
   AddDrawItemDrawList(@*PlayState\DrawList, @*PlayState\Player)
 EndProcedure
 
@@ -136,6 +138,15 @@ EndProcedure
 
 Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   *PlayState\Player\Update(@*PlayState\Player, TimeSlice)
+  
+  ForEach *PlayState\ProjectileList\Projectiles()
+    If *PlayState\ProjectileList\Projectiles()\Active
+      *PlayState\ProjectileList\Projectiles()\Update(@*PlayState\ProjectileList\Projectiles(), TimeSlice)
+    EndIf
+    
+  Next
+  
+  
 EndProcedure
 
 Procedure DrawPlayState(*PlayState.TPlayState)
