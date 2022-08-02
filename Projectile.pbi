@@ -2,6 +2,7 @@
 XIncludeFile "Resources.pbi"
 XIncludeFile "Util.pbi"
 XIncludeFile "DrawOrders.pbi"
+XIncludeFile "DrawList.pbi"
 
 EnableExplicit
 
@@ -14,10 +15,11 @@ Structure TProjectile Extends TGameObject
   *GameMap.TMap
   PositionMapCoords.TVector2D
   ProjectileType.a
-  Power.f;how many tiles the bomb fills when it explodes
+  Power.a;how many tiles the bomb fills when it explodes
   HasAliveTimer.a
   AliveTimer.f
   *Owner.TGameObject
+  *DrawList.TDrawList
 EndStructure
 
 Structure TProjectileList
@@ -76,9 +78,61 @@ Procedure DrawProjectile(*Projectile.TProjectile)
   DrawGameObject(*Projectile)
 EndProcedure
 
+Procedure ExplodeProjectile(*Projectile.TProjectile, TimeSlice.f)
+  Protected CurrentTileX.u, CurrentTileY.u
+  CurrentTileX = *Projectile\PositionMapCoords\x
+  CurrentTileY = *Projectile\PositionMapCoords\y
+  
+  Protected *GameMap.TMap = *Projectile\GameMap
+  
+  Protected BombPower.a = *Projectile\Power
+  Protected NumPositions = 4
+  Dim PositionsToCheck.TVector2D(NumPositions - 1)
+  ;up position
+  PositionsToCheck(0)\x = 0
+  PositionsToCheck(0)\y = -1
+  
+  ;right position
+  PositionsToCheck(1)\x = 1
+  PositionsToCheck(1)\y = 0
+  
+  ;down position
+  PositionsToCheck(2)\x = 0
+  PositionsToCheck(2)\y = 1
+  
+  ;left position
+  PositionsToCheck(3)\x = -1
+  PositionsToCheck(3)\y = 0
+  
+  Protected i
+  For i = 0 To NumPositions - 1
+    Protected CurrentPosition.TVector2D\x = PositionsToCheck(i)\x + CurrentTileX
+    CurrentPosition\y = PositionsToCheck(i)\y + CurrentTileY
+    
+    Protected TilesToCheck = BombPower
+    While TilesToCheck
+      If IsTileWalkable(*GameMap, CurrentPosition\x, CurrentPosition\y)
+        ;TODO: something to do later?
+        Continue
+      ;TODO: check if the current tile in the currentposition is breakable
+      EndIf
+      
+      TilesToCheck - 1
+    Wend
+    
+    
+  Next
+  
+  
+  
+  
+  
+EndProcedure
+
 Procedure UpdateProjectile(*Projectile.TProjectile, TimeSlice.f)
   If *Projectile\HasAliveTimer And *Projectile\AliveTimer <= 0.0
     ;explode
+    ExplodeProjectile(*Projectile, TimeSlice)
     *Projectile\Active = #False
   EndIf
   
@@ -90,14 +144,6 @@ Procedure UpdateProjectile(*Projectile.TProjectile, TimeSlice.f)
   UpdateGameObject(*Projectile, TimeSlice)
 EndProcedure
 
-Procedure HurtProjectile(*Projectile.TProjectile, Power.f)
-  *Projectile\Health - Power
-  If *Projectile\Health <= 0
-    *Projectile\Active = #False
-  EndIf
-  
-EndProcedure
-
 Procedure SetProjectileAliveTimer(*Projectile.TProjectile, ProjectileType.a)
   Select ProjectileType
     Case #ProjectileBomb1
@@ -107,7 +153,7 @@ Procedure SetProjectileAliveTimer(*Projectile.TProjectile, ProjectileType.a)
 EndProcedure
 
 Procedure InitProjectile(*Projectile.TProjectile, *MapCoords.TVector2D, Active.a,
-                         ZoomFactor.f, ProjectileType.a, *GameMap.TMap, Power.f = 1.0, *Owner.TGameObject = #Null)
+                         ZoomFactor.f, ProjectileType.a, *GameMap.TMap, *DrawList.TDrawList, Power.a = 1, *Owner.TGameObject = #Null)
   
   *Projectile\PositionMapCoords\x = *MapCoords\x
   *Projectile\PositionMapCoords\y = *MapCoords\y
@@ -121,6 +167,10 @@ Procedure InitProjectile(*Projectile.TProjectile, *MapCoords.TVector2D, Active.a
   ClipSprite(#Bomb1, 0, 0, 16, 16)
   
   *Projectile\ProjectileType = ProjectileType
+  
+  *Projectile\GameMap = *GameMap
+  
+  *Projectile\DrawList = *DrawList
   
   *Projectile\Power = Power
   

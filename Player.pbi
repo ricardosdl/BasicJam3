@@ -25,7 +25,7 @@ Procedure PutBombPlayer(*Player.TPlayer)
   EndIf
   
   InitProjectile(*Projectile, @*Player\PositionMapCoords, #True, #SPRITES_ZOOM, *Player\CurrentBombType, *Player\GameMap,
-                 *Player\BombPower, *Player)
+                 *Player\DrawList, *Player\BombPower, *Player)
   
   AddDrawItemDrawList(*Player\DrawList, *Projectile)
   
