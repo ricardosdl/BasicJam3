@@ -1,7 +1,7 @@
 ﻿XIncludeFile "Math.pbi"
 XIncludeFile "GameObject.pbi"
 ;XIncludeFile "Enemy.pbi"
-;XIncludeFile "Player.pbi"
+XIncludeFile "Player.pbi"
 ;XIncludeFile "Projectile.pbi"
 XIncludeFile "Resources.pbi"
 XIncludeFile "Util.pbi"
@@ -48,6 +48,8 @@ Structure TPlayState Extends TGameState
   Ground.TGround
   
   DrawList.TDrawList
+  
+  Player.TPlayer
   
 EndStructure
 
@@ -102,6 +104,14 @@ Procedure InitGroundPlayState(*PlayState.TPlayState)
   
 EndProcedure
 
+Procedure InitPlayerPlayState(*PlayState.TPlayState)
+  Protected PlayerMapCoords.TVector2D\x = 1
+  PlayerMapCoords\y = 1
+  InitPlayer(@*PlayState\Player, @PlayerMapCoords, #SPRITES_ZOOM, @*PlayState\DrawList, @*PlayState\GameMap)
+  AddDrawItemDrawList(@*PlayState\DrawList, @*PlayState\Player)
+EndProcedure
+
+
 Procedure InitMapPlayState(*PlayState.TPlayState)
   
   InitDrawList(@*PlayState\DrawList)
@@ -116,6 +126,8 @@ EndProcedure
 Procedure StartPlayState(*PlayState.TPlayState)
   InitMapPlayState(*PlayState)
   
+  InitPlayerPlayState(*PlayState)
+  
   
 EndProcedure
 
@@ -123,6 +135,7 @@ Procedure EndPlayState(*PlayState.TPlayState)
 EndProcedure
 
 Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
+  *PlayState\Player\Update(@*PlayState\Player, TimeSlice)
 EndProcedure
 
 Procedure DrawPlayState(*PlayState.TPlayState)

@@ -1,20 +1,50 @@
 ﻿XIncludeFile "GameObject.pbi"
-XIncludeFile "Projectile.pbi"
 XIncludeFile "Resources.pbi"
 XIncludeFile "DrawList.pbi"
 XIncludeFile "DrawOrders.pbi"
+XIncludeFile "Map.pbi"
 
 EnableExplicit
 
-#PLAYER_SHOOT_TIMER = 1.0 / 3.0
-
 Structure TPlayer Extends TGameObject
-  
+  *GameMap.TMap
+  PositionMapCoords.TVector2D
 EndStructure
 
 Procedure UpdatePlayer(*Player.TPlayer, TimeSlice.f)
-  *Player\Velocity\x = 0
-  *Player\Velocity\y = 0
+  Protected Up, Right, Down, Left
+  Up = KeyboardReleased(#PB_Key_Up)
+  Right = KeyboardReleased(#PB_Key_Right)
+  Down = KeyboardReleased(#PB_Key_Down)
+  Left = KeyboardReleased(#PB_Key_Left)
+  
+  Protected NextCoords.TVector2D = *Player\PositionMapCoords
+  
+  If Up
+    NextCoords\y - 1
+  EndIf
+  
+  If Right
+    NextCoords\x + 1
+  EndIf
+  
+  If Down
+    NextCoords\y + 1
+  EndIf
+  
+  If Left
+    NextCoords\x - 1
+  EndIf
+  
+  If IsTileWalkable(*Player\GameMap, NextCoords\x, NextCoords\y)
+    *Player\PositionMapCoords = NextCoords
+  EndIf
+  
+  Protected NewPosition.TVector2D\x = *Player\GameMap\Position\x + (*Player\PositionMapCoords\x * #MAP_GRID_TILE_WIDTH)
+  NewPosition\y = *Player\GameMap\Position\y + (*Player\PositionMapCoords\y * #MAP_GRID_TILE_HEIGHT)
+  
+  *Player\Position = NewPosition
+  
   
   UpdateGameObject(*Player, TimeSlice)
   
@@ -32,14 +62,24 @@ Procedure.a GetCollisionRectPlayer(*Player.TPlayer, *CollisionRect.TRect)
   *CollisionRect\Position\x = (*Player\Position\x + *Player\Width / 2) - *CollisionRect\Width / 2
   *CollisionRect\Position\y = (*Player\Position\y + *Player\Height / 2) - *CollisionRect\Height / 2
   
-  ;if the player is hurt we don't return it as collidable
-  ProcedureReturn Bool(*Player\HurtTimer <= 0)
+  ProcedureReturn #True
   
 EndProcedure
 
-Procedure InitPlayer(*Player.TPlayer, *ProjectilesList.TProjectileList, *Pos.TVector2D, IsShooting.a, ZoomFactor.f, *DrawList.TDrawList)
-  InitGameObject(*Player, *Pos, #Player1, @UpdatePlayer(), @DrawPlayer(), #True, ZoomFactor,
+Procedure InitPlayer(*Player.TPlayer, *MapCoords.TVector2D, ZoomFactor.f, *DrawList.TDrawList, *GameMap.TMap)
+  ;the player has a reference to the game map
+  *Player\GameMap = *GameMap
+  *Player\PositionMapCoords\x = *MapCoords\x
+  *Player\PositionMapCoords\y = *MapCoords\y
+  
+  Protected Position.TVector2D\x = *GameMap\Position\x + (*Player\PositionMapCoords\x * #MAP_GRID_TILE_WIDTH)
+  Position\y = *GameMap\Position\y + (*Player\PositionMapCoords\y * #MAP_GRID_TILE_HEIGHT)
+  
+  
+  InitGameObject(*Player, @Position, #Player1, @UpdatePlayer(), @DrawPlayer(), #True, ZoomFactor,
                  #PlayerDrawOrder)
+  
+  ClipSprite(#Player1, 0, 0, 16, 16)
   
   *Player\GetCollisionRect = @GetCollisionRectPlayer()
   

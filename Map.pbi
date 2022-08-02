@@ -60,6 +60,20 @@ Procedure MakeTileWalkable(*GameMap.TMap, TileX.u, TileY.u)
   ProcedureReturn #True
 EndProcedure
 
+Procedure IsTileWalkable(*GameMap.TMap, TileX.u, TileY.u)
+  If TileX < #MAP_PLAY_AREA_START_X Or TileX > #MAP_PLAY_AREA_END_X
+    ProcedureReturn #False
+  EndIf
+  
+  If TileY < #MAP_PLAY_AREA_START_Y Or TileY > #MAP_PLAY_AREA_END_Y
+    ProcedureReturn #False
+  EndIf
+  
+  ProcedureReturn *GameMap\MapGrid\TilesGrid(TileX, TileY)\Walkable
+  
+EndProcedure
+
+
 Procedure.i InitMapGrid(*MapGrid.TMapGrid, MapGridFile.s)
   Protected FileNum = ReadFile(#PB_Any, MapGridFile)
   If FileNum = 0

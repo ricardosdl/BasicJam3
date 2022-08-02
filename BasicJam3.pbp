@@ -7,20 +7,20 @@
   <section name="data">
     <explorer view="" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2022-08-01 13:37" user="ricardo.lima" host="686-D-02700820"/>
+    <lastopen date="2022-08-01 16:58" user="ricardo.lima" host="686-D-02700820"/>
   </section>
   <section name="files">
     <file name="Main.pb">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
     </file>
     <file name="BananaEnemy.pbi">
       <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
     </file>
     <file name="DrawList.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
     </file>
     <file name="DrawOrders.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
     </file>
     <file name="DrawText.pbi">
       <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
@@ -29,31 +29,31 @@
       <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
     </file>
     <file name="GameObject.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
     </file>
     <file name="GameState.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
     </file>
     <file name="Ground.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
     </file>
     <file name="Math.pbi">
       <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
     </file>
     <file name="Player.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
     </file>
     <file name="Projectile.pbi">
       <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
     </file>
     <file name="Resources.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
     </file>
     <file name="Util.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
     </file>
     <file name="Map.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
     </file>
   </section>
   <section name="targets">
