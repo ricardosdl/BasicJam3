@@ -14,7 +14,7 @@ EndEnumeration
 
 Structure TTile
   Walkable.a
-  Destructable.a
+  Breakable.a
   DrawOrder.u
   SpriteNum.i
   Health.f
@@ -52,7 +52,7 @@ Procedure MakeTileWalkable(*GameMap.TMap, TileX.u, TileY.u)
     ProcedureReturn #False
   EndIf
   
-  *GameMap\MapGrid\TilesGrid(TileX, TileY)\Destructable = #False
+  *GameMap\MapGrid\TilesGrid(TileX, TileY)\Breakable = #False
   *GameMap\MapGrid\TilesGrid(TileX, TileY)\Walkable = #True
   *GameMap\MapGrid\TilesGrid(TileX, TileY)\Health = 1.0
   *GameMap\MapGrid\TilesGrid(TileX, TileY)\SpriteNum = #Ground
@@ -73,6 +73,17 @@ Procedure IsTileWalkable(*GameMap.TMap, TileX.u, TileY.u)
   
 EndProcedure
 
+Procedure IsTileBreakable(*GameMap.TMap, TileX.u, TileY.u)
+  If TileX < #MAP_PLAY_AREA_START_X Or TileX > #MAP_PLAY_AREA_END_X
+    ProcedureReturn #False
+  EndIf
+  
+  If TileY < #MAP_PLAY_AREA_START_Y Or TileY > #MAP_PLAY_AREA_END_Y
+    ProcedureReturn #False
+  EndIf
+  
+  ProcedureReturn *GameMap\MapGrid\TilesGrid(TileX, TileY)\Breakable
+EndProcedure
 
 Procedure.i InitMapGrid(*MapGrid.TMapGrid, MapGridFile.s)
   Protected FileNum = ReadFile(#PB_Any, MapGridFile)
@@ -97,18 +108,18 @@ Procedure.i InitMapGrid(*MapGrid.TMapGrid, MapGridFile.s)
       
       Select ColumnValueInt
         Case #TILE_UNBREAKABLE_WALL
-          *MapGrid\TilesGrid(ColumnNum, LineNum)\Destructable = #False
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\Breakable = #False
           *MapGrid\TilesGrid(ColumnNum, LineNum)\Walkable = #False
           *MapGrid\TilesGrid(ColumnNum, LineNum)\Health = 1.0
           *MapGrid\TilesGrid(ColumnNum, LineNum)\SpriteNum = #UnbreakableWall
         Case #TILE_WALKABLE_PATH
-          *MapGrid\TilesGrid(ColumnNum, LineNum)\Destructable = #False
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\Breakable = #False
           *MapGrid\TilesGrid(ColumnNum, LineNum)\Walkable = #True
           *MapGrid\TilesGrid(ColumnNum, LineNum)\Health = 1.0
           *MapGrid\TilesGrid(ColumnNum, LineNum)\SpriteNum = #Ground
           
         Case #TILE_BREAKABLE_WALL_1
-          *MapGrid\TilesGrid(ColumnNum, LineNum)\Destructable = #True
+          *MapGrid\TilesGrid(ColumnNum, LineNum)\Breakable = #True
           *MapGrid\TilesGrid(ColumnNum, LineNum)\Walkable = #False
           *MapGrid\TilesGrid(ColumnNum, LineNum)\Health = 1.0
           *MapGrid\TilesGrid(ColumnNum, LineNum)\SpriteNum = #BreakableWall1
@@ -159,7 +170,7 @@ Procedure SetRandomBreakableWallsMap(*GameMap.TMap)
   For MapX = #MAP_PLAY_AREA_START_X To #MAP_PLAY_AREA_END_X
     For MapY = #MAP_PLAY_AREA_START_Y To #MAP_PLAY_AREA_END_Y
       If RandomFloat() <= 0.3
-        *GameMap\MapGrid\TilesGrid(MapX, MapY)\Destructable = #True
+        *GameMap\MapGrid\TilesGrid(MapX, MapY)\Breakable = #True
         *GameMap\MapGrid\TilesGrid(MapX, MapY)\Walkable = #False
         *GameMap\MapGrid\TilesGrid(MapX, MapY)\Health = 1.0
         *GameMap\MapGrid\TilesGrid(MapX, MapY)\SpriteNum = #BreakableWall1

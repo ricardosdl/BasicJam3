@@ -111,13 +111,26 @@ Procedure ExplodeProjectile(*Projectile.TProjectile, TimeSlice.f)
     
     Protected TilesToCheck = BombPower
     While TilesToCheck
-      If IsTileWalkable(*GameMap, CurrentPosition\x, CurrentPosition\y)
+      Protected IsWalkable = IsTileWalkable(*GameMap, CurrentPosition\x, CurrentPosition\y)
+      Protected IsBreakable = IsTileBreakable(*GameMap, CurrentPosition\x, CurrentPosition\y)
+      
+      If IsWalkable And Not IsBreakable
+        ;hit clear path
         ;TODO: something to do later?
-        Continue
-      ;TODO: check if the current tile in the currentposition is breakable
+      ElseIf IsBreakable And Not IsWalkable
+        ;hit a breakabe wall
+        MakeTileWalkable(*GameMap, CurrentPosition\x, CurrentPosition\y)
+        ;the explosion ends here
+        Break
+      ElseIf (Not IsWalkable) And (Not IsBreakable)
+        ;hit a unbreakable wall
+        ;the explosion ends here
+        Break
       EndIf
       
       TilesToCheck - 1
+      CurrentPosition\x + Sign(PositionsToCheck(i)\x)
+      CurrentPosition\y + Sign(PositionsToCheck(i)\y)
     Wend
     
     
