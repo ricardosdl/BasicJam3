@@ -161,7 +161,7 @@ Procedure SetProjectileAliveTimer(*Projectile.TProjectile, ProjectileType.a)
   Select ProjectileType
     Case #ProjectileBomb1
       *Projectile\HasAliveTimer = #True
-      *Projectile\AliveTimer = 2.0;in seconds
+      *Projectile\AliveTimer = 3.0;in seconds
   EndSelect
 EndProcedure
 
