@@ -15,6 +15,7 @@ Structure TPlayer Extends TGameObject
   *ProjectileList.TProjectileList
   CurrentBombType.a
   *DrawList.TDrawList
+  CollisionRect.a
 EndStructure
 
 Procedure PutBombPlayer(*Player.TPlayer)
@@ -33,40 +34,108 @@ Procedure PutBombPlayer(*Player.TPlayer)
   
 EndProcedure
 
+Procedure GetMapCollisionRectPlayer(*Player.TPlayer, *CollisionRect.TRect)
+  *CollisionRect\Width = *Player\Width - 4
+  *CollisionRect\Height = *Player\Height - 4
+  *CollisionRect\Position\x = (*Player\Position\x + *Player\Width / 2) - (*CollisionRect\Width / 2)
+  *CollisionRect\Position\y = (*Player\Position\y + *Player\Height / 2) - (*CollisionRect\Height / 2)
+EndProcedure
+
+Procedure UpdateGameObjectPlayer(*Player.TPlayer, TimeSlice.f)
+  *Player\LastPosition = *Player\Position
+  
+  ;update the horizontal axis position
+  *Player\Position\x + *Player\Velocity\x * TimeSlice
+  
+  ;check collision with gamemap tiles around the player
+  Protected StartColumn.u = Int(*Player\Position\x / #MAP_GRID_TILE_WIDTH)
+  Protected EndColumn.u = Int((*Player\Position\x + *Player\Width) / #MAP_GRID_TILE_WIDTH)
+  
+  Protected StartRow.u = Int(*Player\Position\y / #MAP_GRID_TILE_HEIGHT)
+  Protected EndRow.u = Int((*Player\Position\y + *Player\Height) / #MAP_GRID_TILE_HEIGHT)
+  
+  Protected CollisionRect.TRect
+  GetMapCollisionRectPlayer(*Player, @CollisionRect)
+  
+  Protected TileRect.TRect\Width = #MAP_GRID_TILE_WIDTH
+  TileRect\Height = #MAP_GRID_TILE_HEIGHT
+  
+  Protected IsTileWalkable.a
+  
+  Protected Column.u, Row.u
+  For Column = StartColumn To EndColumn
+    For Row = StartRow To EndRow
+      If IsTileWalkable(*Player\GameMap, Column, Row)
+        Continue
+      EndIf
+      
+      TileRect.TRect\Position\x = Column * #MAP_GRID_TILE_WIDTH
+      TileRect\Position\y = Row * #MAP_GRID_TILE_HEIGHT
+      If CollisionRectRect(TileRect\Position\x, TileRect\Position\y, TileRect\Width, TileRect\Height,
+                           CollisionRect\Position\x, CollisionRect\Position\y, CollisionRect\Width, CollisionRect\Height)
+        ;if collided with the gamemap tiles we revert to the last position
+        *Player\Position = *Player\LastPosition
+        ;changed the position, we need to update the collisionrect
+        GetMapCollisionRectPlayer(*Player, @CollisionRect)
+        Debug "collided x movement"
+      EndIf
+    Next
+  Next
+  
+  ;update the vertical axis position
+  *Player\Position\y + *Player\Velocity\y * TimeSlice
+  
+  GetMapCollisionRectPlayer(*Player, @CollisionRect)
+  
+  ;check collision with the gamemap tiles
+  For Column = StartColumn To EndColumn
+    For Row = StartRow To EndRow
+      If IsTileWalkable(*Player\GameMap, Column, Row)
+        Continue
+      EndIf
+      
+      TileRect.TRect\Position\x = Column * #MAP_GRID_TILE_WIDTH
+      TileRect\Position\y = Row * #MAP_GRID_TILE_HEIGHT
+      If CollisionRectRect(TileRect\Position\x, TileRect\Position\y, TileRect\Width, TileRect\Height,
+                           CollisionRect\Position\x, CollisionRect\Position\y, CollisionRect\Width, CollisionRect\Height)
+        ;if collided with the gamemap tiles we revert to the last position
+        *Player\Position = *Player\LastPosition
+        ;changed the position, we need to update the collisionrect
+        GetMapCollisionRectPlayer(*Player, @CollisionRect)
+        Debug "collided"
+      EndIf
+    Next
+  Next
+  
+  *Player\MiddlePosition\x = *Player\Position\x + *Player\Width / 2
+  *Player\MiddlePosition\y = *Player\Position\y + *Player\Height / 2
+  
+  
+  
+EndProcedure
+
 Procedure UpdatePlayer(*Player.TPlayer, TimeSlice.f)
+  *Player\Velocity\x = 0
+  *Player\Velocity\y = 0
+  
   Protected Up, Right, Down, Left, PutBomb
-  Up = KeyboardReleased(#PB_Key_Up)
-  Right = KeyboardReleased(#PB_Key_Right)
-  Down = KeyboardReleased(#PB_Key_Down)
-  Left = KeyboardReleased(#PB_Key_Left)
+  Up = KeyboardPushed(#PB_Key_Up)
+  Right = KeyboardPushed(#PB_Key_Right)
+  Down = KeyboardPushed(#PB_Key_Down)
+  Left = KeyboardPushed(#PB_Key_Left)
   PutBomb = KeyboardReleased(#PB_Key_Z)
   
-  Protected NextCoords.TVector2D = *Player\PositionMapCoords
-  
   If Up
-    NextCoords\y - 1
+    *Player\Velocity\y = -100
+  ElseIf Down
+    *Player\Velocity\y = 100
   EndIf
   
   If Right
-    NextCoords\x + 1
+    *Player\Velocity\x = 100
+  ElseIf Left
+    *Player\Velocity\x = -100
   EndIf
-  
-  If Down
-    NextCoords\y + 1
-  EndIf
-  
-  If Left
-    NextCoords\x - 1
-  EndIf
-  
-  If IsTileWalkable(*Player\GameMap, NextCoords\x, NextCoords\y)
-    *Player\PositionMapCoords = NextCoords
-  EndIf
-  
-  Protected NewPosition.TVector2D\x = *Player\GameMap\Position\x + (*Player\PositionMapCoords\x * #MAP_GRID_TILE_WIDTH)
-  NewPosition\y = *Player\GameMap\Position\y + (*Player\PositionMapCoords\y * #MAP_GRID_TILE_HEIGHT)
-  
-  *Player\Position = NewPosition
   
   If PutBomb
     ;pressed the key to put a bomb
@@ -82,13 +151,23 @@ Procedure UpdatePlayer(*Player.TPlayer, TimeSlice.f)
   EndIf
   
   
-  UpdateGameObject(*Player, TimeSlice)
+  UpdateGameObjectPlayer(*Player, TimeSlice)
+  
+  
   
   
 EndProcedure
 
 Procedure DrawPlayer(*Player.TPlayer)
   DrawGameObject(*Player)
+  Protected CollisionRect.TRect\Width = *Player\Width - 2
+  CollisionRect\Height = *Player\Height - 2
+  CollisionRect\Position\x = (*Player\Position\x + *Player\Width / 2) - (CollisionRect\Width / 2)
+  CollisionRect\Position\y = (*Player\Position\y + *Player\Height / 2) - (CollisionRect\Height / 2)
+  StartDrawing(ScreenOutput())
+  DrawingMode(#PB_2DDrawing_Outlined)
+  Box(CollisionRect\Position\x, CollisionRect\Position\y, CollisionRect\Width, CollisionRect\Height, RGB(255, 0, 0))
+  StopDrawing()
 EndProcedure
 
 Procedure.a GetCollisionRectPlayer(*Player.TPlayer, *CollisionRect.TRect)
@@ -113,10 +192,13 @@ Procedure InitPlayer(*Player.TPlayer, *MapCoords.TVector2D, ZoomFactor.f, *DrawL
   Position\y = *GameMap\Position\y + (*Player\PositionMapCoords\y * #MAP_GRID_TILE_HEIGHT)
   
   
-  InitGameObject(*Player, @Position, #Player1, @UpdatePlayer(), @DrawPlayer(), #True, ZoomFactor,
+  InitGameObject(*Player, @Position, #Player1, @UpdatePlayer(), @DrawPlayer(), #True, 16, 16, ZoomFactor,
                  #PlayerDrawOrder)
   
   ClipSprite(#Player1, 0, 0, 16, 16)
+  
+  *Player\MaxVelocity\x = 200
+  *Player\MaxVelocity\y = 200
   
   *Player\DrawList = *DrawList
   
