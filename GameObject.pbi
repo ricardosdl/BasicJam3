@@ -65,6 +65,11 @@ Procedure.a GetCollisionRectGameObject(*GameObject.TGameObject, *CollisionRect.T
   ProcedureReturn #True
 EndProcedure
 
+Macro UpdateMiddlePositionGameObject(GameObject)
+  GameObject\MiddlePosition\x = GameObject\Position\x + GameObject\Width / 2
+  GameObject\MiddlePosition\y = GameObject\Position\y + GameObject\Height / 2
+EndMacro
+
 
 Procedure InitGameObject(*GameObject.TGameObject, *Position.TVector2D, SpriteNum.i,
                          *UpdateProc.UpdateGameObjectProc, *DrawProc.DrawGameObjectProc,
@@ -72,6 +77,8 @@ Procedure InitGameObject(*GameObject.TGameObject, *Position.TVector2D, SpriteNum
   
   *GameObject\Position\x = *Position\x
   *GameObject\Position\y = *Position\y
+  
+  UpdateMiddlePositionGameObject(*GameObject)
   
   *GameObject\LastPosition = *GameObject\Position
   
@@ -109,11 +116,6 @@ Procedure DrawGameObject(*GameObject.TGameObject, Intensity = 255)
   DisplayTransparentSprite(*GameObject\SpriteNum, Int(*GameObject\Position\x),
                            Int(*GameObject\Position\y), Intensity)
 EndProcedure
-
-Macro UpdateMiddlePositionGameObject(GameObject)
-  GameObject\MiddlePosition\x = GameObject\Position\x + GameObject\Width / 2
-  GameObject\MiddlePosition\y = GameObject\Position\y + GameObject\Height / 2
-EndMacro
 
 Procedure UpdateGameObject(*GameObject.TGameObject, TimeSlice.f)
   *GameObject\Velocity\x + *GameObject\Acceleration\x * TimeSlice

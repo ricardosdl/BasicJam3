@@ -53,6 +53,8 @@ Structure TPlayState Extends TGameState
   
   ProjectileList.TProjectileList
   
+  Array Enemies.TEnemy(#MAX_ENEMIES - 1)
+  
 EndStructure
 
 Structure TMainMenuState Extends TGameState
@@ -98,6 +100,20 @@ Procedure SwitchGameState(*GameStateManager.TGameStateManager, NewGameState.a)
   *NewGameState\StartGameState(*NewGameState)
 EndProcedure
 
+Procedure.i GetInactiveEnemyPlayState(*PlayState.TPlayState)
+  Protected i = 0, EnemiesSize = ArraySize(*PlayState\Enemies())
+  For i = 0 To EnemiesSize
+    Protected *Enemy.TEnemy = @*PlayState\Enemies(i)
+    If *Enemy\Active = #False
+      ProcedureReturn *Enemy
+    EndIf
+  Next
+  
+  ProcedureReturn #Null
+  
+    
+EndProcedure
+
 Procedure InitGroundPlayState(*PlayState.TPlayState)
   InitGround(*PlayState\Ground)
   
@@ -125,10 +141,30 @@ Procedure InitMapPlayState(*PlayState.TPlayState)
   AddDrawItemDrawList(@*PlayState\DrawList, @*PlayState\GameMap)
 EndProcedure
 
+Procedure InitEnemiesPlayState(*PlayState.TPlayState)
+  Protected *Enemy.TEnemy = GetInactiveEnemyPlayState(*PlayState)
+  
+  Protected RandomCoords.TVector2D
+  If Not GetRandomWalkableTile(@*PlayState\GameMap, @RandomCoords)
+    Debug "could not find a random walkable tile"
+    ProcedureReturn
+  EndIf
+  
+  InitEnemyRedDemon(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, *PlayState\DrawList,
+                    @*PlayState\GameMap, @RandomCoords)
+  
+  AddDrawItemDrawList(@*PlayState\DrawList, *Enemy)
+  
+  
+  
+EndProcedure
+
 Procedure StartPlayState(*PlayState.TPlayState)
   InitMapPlayState(*PlayState)
   
   InitPlayerPlayState(*PlayState)
+  
+  InitEnemiesPlayState(*PlayState)
   
   
 EndProcedure
@@ -145,6 +181,15 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
     EndIf
     
   Next
+  
+  Protected EnemyIdx, EndEnemiesIdx = ArraySize(*PlayState\Enemies())
+  For EnemyIdx = 0 To EndEnemiesIdx
+    If *PlayState\Enemies(EnemyIdx)\Active
+      *PlayState\Enemies(EnemyIdx)\Update(@*PlayState\Enemies(EnemyIdx), TimeSlice)
+    EndIf
+    
+  Next
+  
   
   
 EndProcedure

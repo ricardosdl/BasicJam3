@@ -9,6 +9,7 @@ Enumeration ESprites
   #BreakableWall1
   #Player1
   #Bomb1
+  #EnemyRedDemonSprite
 EndEnumeration
 
 DisableExplicit
