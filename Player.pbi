@@ -24,7 +24,10 @@ Procedure PutBombPlayer(*Player.TPlayer)
     ProcedureReturn #False
   EndIf
   
-  InitProjectile(*Projectile, @*Player\PositionMapCoords, #True, #SPRITES_ZOOM, *Player\CurrentBombType, *Player\GameMap,
+  Protected BombTileCoords.TVector2D
+  GetTileCoordsByPosition(*Player\MiddlePosition, @BombTileCoords)
+  
+  InitProjectile(*Projectile, @BombTileCoords, #True, #SPRITES_ZOOM, *Player\CurrentBombType, *Player\GameMap,
                  *Player\DrawList, *Player\BombPower, *Player)
   
   AddDrawItemDrawList(*Player\DrawList, *Projectile)

@@ -85,6 +85,11 @@ Procedure IsTileBreakable(*GameMap.TMap, TileX.u, TileY.u)
   ProcedureReturn *GameMap\MapGrid\TilesGrid(TileX, TileY)\Breakable
 EndProcedure
 
+Procedure GetTileCoordsByPosition(*Position.TVector2D, *TileCoords.TVector2D)
+  *TileCoords\x = Int(*Position\x / #MAP_GRID_TILE_WIDTH)
+  *TileCoords\y = Int(*Position\y / #MAP_GRID_TILE_HEIGHT)
+EndProcedure
+
 Procedure.i InitMapGrid(*MapGrid.TMapGrid, MapGridFile.s)
   Protected FileNum = ReadFile(#PB_Any, MapGridFile)
   If FileNum = 0
