@@ -80,13 +80,22 @@ EndProcedure
 
 Procedure DrawEnemy(*Enemy.TEnemy)
   DrawGameObject(*Enemy)
+  If *Enemy\CurrentState = #EnemyStateGoingToObjectiveTile
+    StartDrawing(ScreenOutput())
+    DrawingMode(#PB_2DDrawing_Outlined)
+    Protected x.f = *Enemy\ObjectiveTileCoords\x * #MAP_GRID_TILE_WIDTH
+    Protected y.f = *Enemy\ObjectiveTileCoords\y * #MAP_GRID_TILE_HEIGHT
+    Box(x, y, 16, 16, RGB(255, 0, 0))
+    StopDrawing()
+  EndIf
+  
 EndProcedure
 
 Procedure UpdateEnemyRedDemon(*RedDemon.TEnemy, TimeSlice.f)
   If *RedDemon\CurrentState = #EnemyStateNoState
     Protected TileCoords.TVector2D
     GetTileCoordsByPosition(*RedDemon\MiddlePosition, @TileCoords)
-    Protected FreeRandomDirection.a = GetRandomFreeDirectionFromOriginTile(*RedDemon\GameMap, TileCoords\x, TileCoords\y)
+    Protected FreeRandomDirection.a = GetRandomWalkableDirectionFromOriginTile(*RedDemon\GameMap, TileCoords\x, TileCoords\y)
     If FreeRandomDirection = #MAP_DIRECTION_NONE
       ;no free random direction for the enemy
       ;let's just wait
@@ -98,7 +107,7 @@ Procedure UpdateEnemyRedDemon(*RedDemon.TEnemy, TimeSlice.f)
     Debug "free random direction:" + FreeRandomDirection
     
     Protected ObjectiveRandomTileCoords.TVector2D
-    GetRandomFreeTileFromOriginTile(*RedDemon\GameMap, TileCoords\x, TileCoords\y, FreeRandomDirection,
+    GetRandomWalkableTileFromOriginTile(*RedDemon\GameMap, TileCoords\x, TileCoords\y, FreeRandomDirection,
                                     @ObjectiveRandomTileCoords)
     
     SwitchToGoingToObjectiveTile(*RedDemon, @ObjectiveRandomTileCoords)

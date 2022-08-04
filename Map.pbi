@@ -249,7 +249,7 @@ Procedure.a GetRandomWalkableTile(*GameMap.TMap, *TileCoords.TVector2D)
   
 EndProcedure
 
-Procedure.a GetRandomFreeDirectionFromOriginTile(*GameMap.TMap, OriginTileX.w, OriginTileY.w)
+Procedure.a GetRandomWalkableDirectionFromOriginTile(*GameMap.TMap, OriginTileX.w, OriginTileY.w)
   Protected i.a
   NewList FreeDirections.a()
   For i = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
@@ -273,8 +273,48 @@ Procedure.a GetRandomFreeDirectionFromOriginTile(*GameMap.TMap, OriginTileX.w, O
   
 EndProcedure
 
-Procedure GetRandomFreeTileFromOriginTile(*GameMap.TMap, OriginTileX.w, OriginTileY.w, Direction.a, *ReturnTileCoords.TVector2D)
+Procedure.a GetRandomWalkableTileFromOriginTile(*GameMap.TMap, OriginTileX.w, OriginTileY.w, Direction.a, *ReturnTileCoords.TVector2D)
+  If Direction = #MAP_DIRECTION_NONE
+    ;no direction to follow
+    ProcedureReturn #False
+  EndIf
+  
   ;TODO: implement this
+  NewList RandomTileCoords.TVector2D()
+  Protected MapDirection.TMapDirection = Map_All_Directions(Direction)
+  
+  Protected CurrentTileX.w = OriginTileX + MapDirection\x
+  Protected CurrentTileY.w = OriginTileY + MapDirection\y
+  
+  While IsTileWalkable(*GameMap, CurrentTileX, CurrentTileY)
+    ;this current tile in this direction is walkable
+    AddElement(RandomTileCoords())
+    RandomTileCoords()\x = CurrentTileX
+    RandomTileCoords()\y = CurrentTileY
+    
+    ;update the current tile in the direction given
+    CurrentTileX + MapDirection\x
+    CurrentTileY + MapDirection\y
+    
+  Wend
+  
+  If ListSize(RandomTileCoords()) = 0
+    ;no walkable tile found
+    ProcedureReturn #False
+  EndIf
+  
+  RandomizeList(RandomTileCoords())
+  SelectElement(RandomTileCoords(), 0)
+  *ReturnTileCoords\x = RandomTileCoords()\x
+  *ReturnTileCoords\y = RandomTileCoords()\y
+  
+  
+  
+  
+  
+  
+  
+  
 EndProcedure
 
 
