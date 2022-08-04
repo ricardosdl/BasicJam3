@@ -35,8 +35,8 @@ Procedure PutBombPlayer(*Player.TPlayer)
 EndProcedure
 
 Procedure GetMapCollisionRectPlayer(*Player.TPlayer, *CollisionRect.TRect)
-  *CollisionRect\Width = *Player\Width - 4
-  *CollisionRect\Height = *Player\Height - 4
+  *CollisionRect\Width = *Player\Width  * 0.6
+  *CollisionRect\Height = *Player\Height * 0.6
   *CollisionRect\Position\x = (*Player\Position\x + *Player\Width / 2) - (*CollisionRect\Width / 2)
   *CollisionRect\Position\y = (*Player\Position\y + *Player\Height / 2) - (*CollisionRect\Height / 2)
 EndProcedure
@@ -77,13 +77,21 @@ Procedure UpdateGameObjectPlayer(*Player.TPlayer, TimeSlice.f)
         *Player\Position = *Player\LastPosition
         ;changed the position, we need to update the collisionrect
         GetMapCollisionRectPlayer(*Player, @CollisionRect)
-        Debug "collided x movement"
       EndIf
     Next
   Next
   
+  ;if we updated the x position, we se the last positon here
+  *Player\LastPosition\x = *Player\Position\x
+  
   ;update the vertical axis position
   *Player\Position\y + *Player\Velocity\y * TimeSlice
+  
+  StartColumn = Int(*Player\Position\x / #MAP_GRID_TILE_WIDTH)
+  EndColumn = Int((*Player\Position\x + *Player\Width) / #MAP_GRID_TILE_WIDTH)
+  
+  StartRow = Int(*Player\Position\y / #MAP_GRID_TILE_HEIGHT)
+  EndRow = Int((*Player\Position\y + *Player\Height) / #MAP_GRID_TILE_HEIGHT)
   
   GetMapCollisionRectPlayer(*Player, @CollisionRect)
   
@@ -102,16 +110,12 @@ Procedure UpdateGameObjectPlayer(*Player.TPlayer, TimeSlice.f)
         *Player\Position = *Player\LastPosition
         ;changed the position, we need to update the collisionrect
         GetMapCollisionRectPlayer(*Player, @CollisionRect)
-        Debug "collided"
       EndIf
     Next
   Next
   
   *Player\MiddlePosition\x = *Player\Position\x + *Player\Width / 2
   *Player\MiddlePosition\y = *Player\Position\y + *Player\Height / 2
-  
-  
-  
 EndProcedure
 
 Procedure UpdatePlayer(*Player.TPlayer, TimeSlice.f)
@@ -158,27 +162,25 @@ Procedure UpdatePlayer(*Player.TPlayer, TimeSlice.f)
   
 EndProcedure
 
-Procedure DrawPlayer(*Player.TPlayer)
-  DrawGameObject(*Player)
-  Protected CollisionRect.TRect\Width = *Player\Width - 2
-  CollisionRect\Height = *Player\Height - 2
-  CollisionRect\Position\x = (*Player\Position\x + *Player\Width / 2) - (CollisionRect\Width / 2)
-  CollisionRect\Position\y = (*Player\Position\y + *Player\Height / 2) - (CollisionRect\Height / 2)
-  StartDrawing(ScreenOutput())
-  DrawingMode(#PB_2DDrawing_Outlined)
-  Box(CollisionRect\Position\x, CollisionRect\Position\y, CollisionRect\Width, CollisionRect\Height, RGB(255, 0, 0))
-  StopDrawing()
-EndProcedure
-
 Procedure.a GetCollisionRectPlayer(*Player.TPlayer, *CollisionRect.TRect)
-  *CollisionRect\Width = *Player\Width * 0.3
-  *CollisionRect\Height = *Player\Height * 0.3
+  *CollisionRect\Width = *Player\Width * 0.5
+  *CollisionRect\Height = *Player\Height * 0.5
   
   *CollisionRect\Position\x = (*Player\Position\x + *Player\Width / 2) - *CollisionRect\Width / 2
   *CollisionRect\Position\y = (*Player\Position\y + *Player\Height / 2) - *CollisionRect\Height / 2
   
   ProcedureReturn #True
   
+EndProcedure
+
+Procedure DrawPlayer(*Player.TPlayer)
+  DrawGameObject(*Player)
+  Protected CollisionRect.TRect
+  GetMapCollisionRectPlayer(*Player, @CollisionRect)
+  StartDrawing(ScreenOutput())
+  DrawingMode(#PB_2DDrawing_Outlined)
+  Box(CollisionRect\Position\x, CollisionRect\Position\y, CollisionRect\Width, CollisionRect\Height, RGB(255, 0, 0))
+  StopDrawing()
 EndProcedure
 
 Procedure InitPlayer(*Player.TPlayer, *MapCoords.TVector2D, ZoomFactor.f, *DrawList.TDrawList, *GameMap.TMap,
