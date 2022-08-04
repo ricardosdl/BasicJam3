@@ -1,6 +1,6 @@
 ﻿XIncludeFile "Math.pbi"
 XIncludeFile "GameObject.pbi"
-;XIncludeFile "Enemy.pbi"
+XIncludeFile "Enemy.pbi"
 XIncludeFile "Player.pbi"
 XIncludeFile "Projectile.pbi"
 XIncludeFile "Resources.pbi"

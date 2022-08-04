@@ -3,6 +3,7 @@ XIncludeFile "Resources.pbi"
 XIncludeFile "Util.pbi"
 XIncludeFile "DrawOrders.pbi"
 XIncludeFile "DrawList.pbi"
+XIncludeFile "Map.pbi"
 
 EnableExplicit
 
