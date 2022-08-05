@@ -117,8 +117,8 @@ Procedure GoToObjectiveTileEnemy(*Enemy.TEnemy, TimeSlice)
   GetTileCoordsByPosition(@*Enemy\MiddlePosition, @EnemyPositonCoords)
   
   Protected DeltaSign.TVector2D
-  DeltaSign\x = Sign(*Enemy\ObjectiveTileCoords\x - EnemyPositonCoords\x)
-  DeltaSign\y = Sign(*Enemy\ObjectiveTileCoords\y - EnemyPositonCoords\y)
+  DeltaSign\x = Sign(ObjectiveTilePosition\x - *Enemy\Position\x)
+  DeltaSign\y = Sign(ObjectiveTilePosition\y - *Enemy\Position\y)
   
   Protected CurrentDirecton.a = GetMapDirectionByDeltaSign(DeltaSign\x, DeltaSign\y)
   If CurrentDirecton <> *Enemy\ObjectiveTileDirection
