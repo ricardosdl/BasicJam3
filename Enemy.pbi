@@ -12,14 +12,18 @@ Enumeration EEnemyStates
   #EnemyStateNoState
   #EnemyStateGoingToObjectiveTile
   #EnemyStateWaiting
+  #EnemyStateDropingBomb
+  #EnemyStateGoingToSafety
 EndEnumeration
 
 Enumeration EEnemyType
   #EnemyRedDemon
+  #EnemyRedArmoredDemon
 EndEnumeration
 
 Prototype SetPatrollingEnemyProc(*Enemy)
 Prototype.a SpawnEnemyProc(*Data)
+Prototype.a ChooseTileToDropBomb(*Enemy, *ReturnDropBombTileCoords, *ReturnSafetyTileCoords)
 
 Structure TEnemy Extends TGameObject
   *Player.TGameObject
@@ -32,6 +36,8 @@ Structure TEnemy Extends TGameObject
   *DrawList.TDrawList
   ObjectiveTileCoords.TVector2D
   ObjectiveTileDirection.a
+  ObjectiveSafetyTileCoords.TVector2D
+  BombPower.f
 EndStructure
 
 Procedure InitEnemy(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TProjectileList,
@@ -80,6 +86,112 @@ Procedure SwitchToGoingToObjectiveTile(*Enemy.TEnemy, *ObjectiveTileCoords.TVect
   
   SwitchStateEnemy(*Enemy, #EnemyStateGoingToObjectiveTile)
   
+EndProcedure
+
+Procedure.a ChooseRandomTileToDropBombEnemy(*Enemy.TEnemy, *ReturnDropBombTileCoords.TVector2D, *SafetyTileCoords.TVector2D)
+  Protected EnemyTileCoords.TVector2D
+  GetTileCoordsByPosition(*Enemy\MiddlePosition, @EnemyTileCoords)
+  Protected WalkableRandomDirection.a = GetRandomWalkableDirectionFromOriginTile(*Enemy\GameMap, EnemyTileCoords\x, EnemyTileCoords\y)
+  If WalkableRandomDirection = #MAP_DIRECTION_NONE
+    ;no free random direction, so we can't choose a tile tp drop a bomb
+    ProcedureReturn #False
+  EndIf
+  
+  Protected ObjectiveRandomTileCoords.TVector2D
+  GetRandomWalkableTileFromOriginTile(*Enemy\GameMap, EnemyTileCoords\x, EnemyTileCoords\y, WalkableRandomDirection,
+                                      @ObjectiveRandomTileCoords)
+  
+  ;can we drop the bomb and go to safety?
+  ;WalkableRandomDirection is the direction we'll head to
+  ;let's just check on the opposite direction, one more tile thatn the bomb power
+  Protected OppositeDirection.TMapDirection
+  OppositeDirection\x = Map_All_Directions(WalkableRandomDirection)\x * -1
+  OppositeDirection\y = Map_All_Directions(WalkableRandomDirection)\y * -1
+  
+  If IsTileWalkable(*Enemy\GameMap, ObjectiveRandomTileCoords\x + (OppositeDirection\x * *Enemy\BombPower) + (OppositeDirection\x),
+                    ObjectiveRandomTileCoords\y + (OppositeDirection\y * *Enemy\BombPower) + (OppositeDirection\y))
+    ;great we can go to safety
+    *SafetyTileCoords\x = ObjectiveRandomTileCoords\x + (OppositeDirection\x * *Enemy\BombPower) + (OppositeDirection\x)
+    *SafetyTileCoords\y = ObjectiveRandomTileCoords\y + (OppositeDirection\y * *Enemy\BombPower) + (OppositeDirection\y)
+    
+    *ReturnDropBombTileCoords\x = ObjectiveRandomTileCoords\x
+    *ReturnDropBombTileCoords\y = ObjectiveRandomTileCoords\y
+    
+    ProcedureReturn #True
+    
+  EndIf
+  
+  ;we can't find a safety tile after dropping the bomb
+  ProcedureReturn #False
+  
+EndProcedure
+
+Procedure.a SwitchToDropingBomb(*Enemy.TEnemy, *GetTileToDropBomb.ChooseTileToDropBomb = #Null)
+  If *GetTileToDropBomb = #Null
+    *GetTileToDropBomb = @ChooseRandomTileToDropBombEnemy()
+  EndIf
+  
+  Protected TileToDropBombCoords.TVector2D, SafetyTileCoords.TVector2D
+  If Not *GetTileToDropBomb(*Enemy, @TileToDropBombCoords, @SafetyTileCoords)
+    ;couldn't find a tile do drop a bomb
+    ProcedureReturn #False
+  EndIf
+  
+  ;stop movement for now
+  *Enemy\Velocity\x = 0
+  *Enemy\Velocity\y = 0
+  
+  ;set the coords for the objective tile
+  *Enemy\ObjectiveTileCoords\x = TileToDropBombCoords\x
+  *Enemy\ObjectiveTileCoords\y = TileToDropBombCoords\y
+  
+  ;get the current enemy middle position coords 
+  Protected EnemyTileCoords.TVector2D
+  GetTileCoordsByPosition(@*Enemy\MiddlePosition, @EnemyTileCoords)
+  
+  Protected DeltaSignX.f, DeltaSignY.f
+  DeltaSignX = Sign(*Enemy\ObjectiveTileCoords\x - EnemyTileCoords\x)
+  DeltaSignY = Sign(*Enemy\ObjectiveTileCoords\y - EnemyTileCoords\y)
+  
+  ;set the direction for the objective tile
+  *Enemy\ObjectiveTileDirection = GetMapDirectionByDeltaSign(DeltaSignX, DeltaSignY)
+  
+  *Enemy\Velocity\x = Cos(ATan2(DeltaSignX, DeltaSignY)) * 50
+  *Enemy\Velocity\y = Sin(ATan2(DeltaSignX, DeltaSignY)) * 50
+  
+  *Enemy\ObjectiveSafetyTileCoords = SafetyTileCoords
+  
+  SwitchStateEnemy(*Enemy, #EnemyStateDropingBomb)
+  
+  ProcedureReturn #True
+  
+  
+EndProcedure
+
+Procedure SwitchToGoingToSafety(*Enemy.TEnemy)
+  ;stop movement for now
+  *Enemy\Velocity\x = 0
+  *Enemy\Velocity\y = 0
+  
+  ;set the coords for the objective tile
+  *Enemy\ObjectiveTileCoords\x = *Enemy\ObjectiveSafetyTileCoords\x
+  *Enemy\ObjectiveTileCoords\y = *Enemy\ObjectiveSafetyTileCoords\y
+  
+  ;get the current enemy middle position coords 
+  Protected EnemyTileCoords.TVector2D
+  GetTileCoordsByPosition(@*Enemy\MiddlePosition, @EnemyTileCoords)
+  
+  Protected DeltaSignX.f, DeltaSignY.f
+  DeltaSignX = Sign(*Enemy\ObjectiveTileCoords\x - EnemyTileCoords\x)
+  DeltaSignY = Sign(*Enemy\ObjectiveTileCoords\y - EnemyTileCoords\y)
+  
+  ;set the direction for the objective tile
+  *Enemy\ObjectiveTileDirection = GetMapDirectionByDeltaSign(DeltaSignX, DeltaSignY)
+  
+  *Enemy\Velocity\x = Cos(ATan2(DeltaSignX, DeltaSignY)) * 50
+  *Enemy\Velocity\y = Sin(ATan2(DeltaSignX, DeltaSignY)) * 50
+  
+  SwitchStateEnemy(*Enemy, #EnemyStateGoingToSafety)
 EndProcedure
 
 Procedure KillEnemy(*Enemy.TEnemy)
@@ -138,6 +250,24 @@ Procedure GoToObjectiveTileEnemy(*Enemy.TEnemy, TimeSlice)
   ProcedureReturn #False
 EndProcedure
 
+Procedure.a DropBombEnemy(*Enemy.TEnemy)
+  Protected *Projectile.TProjectile = GetInactiveProjectile(*Enemy\Projectiles)
+  If *Projectile = #Null
+    ;couldn't allocate the memory for a bomb :(
+    ProcedureReturn #False
+  EndIf
+  
+  Protected BombTileCoords.TVector2D
+  GetTileCoordsByPosition(*Enemy\MiddlePosition, @BombTileCoords)
+  
+  InitProjectile(*Projectile, @BombTileCoords, #True, #SPRITES_ZOOM, #ProjectileBomb1, *Enemy\GameMap,
+                 *Enemy\DrawList, *Enemy\BombPower, *Enemy)
+  
+  AddDrawItemDrawList(*Enemy\DrawList, *Projectile)
+  
+  ProcedureReturn #True
+EndProcedure
+
 Procedure UpdateEnemyRedDemon(*RedDemon.TEnemy, TimeSlice.f)
   If *RedDemon\CurrentState = #EnemyStateNoState
     Protected TileCoords.TVector2D
@@ -171,17 +301,37 @@ Procedure UpdateEnemyRedDemon(*RedDemon.TEnemy, TimeSlice.f)
     ;going to tile
     If GoToObjectiveTileEnemy(*RedDemon, TimeSlice)
       ;reached the objetive tile
-      SwitchToWaitingEnemy(*RedDemon, 3.0)
+      If RandomFloat() <= 0.5
+        Debug "try to drop bomb"
+        If Not SwitchToDropingBomb(*RedDemon)
+          ;could not drop bomb let's just wait
+          SwitchToWaitingEnemy(*RedDemon, 3.0)
+        EndIf
+        ProcedureReturn
+      Else
+        SwitchToWaitingEnemy(*RedDemon, 3.0)
+      EndIf
+      
+      
       ProcedureReturn
     EndIf
+  ElseIf *RedDemon\CurrentState = #EnemyStateDropingBomb
+    If GoToObjectiveTileEnemy(*RedDemon, TimeSlice)
+      ;reached the objective tile, time to drop the bomb
+      DropBombEnemy(*RedDemon)
+      SwitchToGoingToSafety(*RedDemon)
+    EndIf
+    
+  ElseIf *RedDemon\CurrentState = #EnemyStateGoingToSafety
+    If GoToObjectiveTileEnemy(*RedDemon, TimeSlice)
+      ;reached the safety tile
+      Debug "safety"
+      SwitchToWaitingEnemy(*RedDemon, 3.0)
+    EndIf
+    
   EndIf
   
-  
-  
-  
   UpdateGameObject(*RedDemon, TimeSlice)
-  
-  
   
 EndProcedure
 
@@ -204,6 +354,8 @@ Procedure InitEnemyRedDemon(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.
   
   InitEnemy(*Enemy, *Player, *ProjectileList, *DrawList, #EnemyRedDemon, *GameMap)
   
+  *Enemy\BombPower = 1.0
+  
   *Enemy\MaxVelocity\x = 500
   *Enemy\MaxVelocity\y = 500
   
@@ -214,6 +366,47 @@ Procedure InitEnemyRedDemon(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.
   
   
 EndProcedure
+
+Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
+  If *RedArmoredDemon\CurrentState = #EnemyStateNoState
+    Protected TileCoords.TVector2D
+    GetTileCoordsByPosition(*RedArmoredDemon\MiddlePosition, @TileCoords)
+    
+    
+    
+  EndIf
+EndProcedure
+
+Procedure InitEnemyRedArmoredDemon(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TProjectileList,
+                                   *DrawList.TDrawList, *GameMap.TMap, *PosMapCoords.TVector2D)
+  
+  ;store the middle x and y of the grid at *PosMapCoords
+  Protected GridTileMiddlePosition.TVector2D\x = *PosMapCoords\x * #MAP_GRID_TILE_WIDTH + #MAP_GRID_TILE_WIDTH / 2
+  GridTileMiddlePosition\y = *PosMapCoords\y * #MAP_GRID_TILE_HEIGHT + #MAP_GRID_TILE_HEIGHT / 2
+  
+  Protected EnemyWidth.u, EnemyHeight.u
+  EnemyWidth = 16 * #SPRITES_ZOOM
+  EnemyHeight = 16 * #SPRITES_ZOOM
+  
+  Protected Position.TVector2D\x = GridTileMiddlePosition\x - EnemyWidth / 2
+  Position\y = GridTileMiddlePosition\y - EnemyHeight / 2
+  
+  InitGameObject(*Enemy, @Position, #EnemyRedArmoredDemonSprite, @UpdateEnemyRedArmoredDemon(), @DrawEnemy(), #True, 16, 16,
+                 #SPRITES_ZOOM, #EnemyDrawOrder)
+  
+  InitEnemy(*Enemy, *Player, *ProjectileList, *DrawList, #EnemyRedArmoredDemon, *GameMap)
+  
+  *Enemy\BombPower = 2.0
+  
+  *Enemy\MaxVelocity\x = 500
+  *Enemy\MaxVelocity\y = 500
+  
+  SwitchStateEnemy(*Enemy, #EnemyStateNoState)
+  
+  ClipSprite(#EnemyRedDemonSprite, 0, 0, 16, 16)
+  
+EndProcedure
+
 
 
 DisableExplicit

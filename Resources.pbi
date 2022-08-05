@@ -10,6 +10,7 @@ Enumeration ESprites
   #Player1
   #Bomb1
   #EnemyRedDemonSprite
+  #EnemyRedArmoredDemonSprite
 EndEnumeration
 
 DisableExplicit
