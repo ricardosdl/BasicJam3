@@ -74,6 +74,10 @@ Procedure SwitchToGoingToObjectiveTile(*Enemy.TEnemy, *ObjectiveTileCoords.TVect
   
   ;set the direction for the objective tile
   *Enemy\ObjectiveTileDirection = GetMapDirectionByDeltaSign(DeltaSignX, DeltaSignY)
+  
+  *Enemy\Velocity\x = Cos(ATan2(DeltaSignX, DeltaSignY)) * 50
+  *Enemy\Velocity\y = Sin(ATan2(DeltaSignX, DeltaSignY)) * 50
+  
   SwitchStateEnemy(*Enemy, #EnemyStateGoingToObjectiveTile)
   
 EndProcedure
@@ -129,9 +133,6 @@ Procedure GoToObjectiveTileEnemy(*Enemy.TEnemy, TimeSlice)
     ;returning true means that we arrrived
     ProcedureReturn #True
   EndIf
-  
-  *Enemy\Velocity\x = Cos(ATan2(DeltaSign\x, DeltaSign\y)) * 50
-  *Enemy\Velocity\y = Sin(ATan2(DeltaSign\x, DeltaSign\y)) * 50
   
   ;returning false means that we didn't arrive yet
   ProcedureReturn #False
