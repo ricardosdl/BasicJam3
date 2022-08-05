@@ -71,6 +71,24 @@ Map_All_Directions(#MAP_DIRECTION_LEFT)\x = -1 : Map_All_Directions(#MAP_DIRECTI
 
 Map_All_Directions(#MAP_DIRECTION_NONE)\x = 0 : Map_All_Directions(#MAP_DIRECTION_NONE)\y = 0
 
+Procedure.a GetMapDirectionByDeltaSign(DeltaSignX.f, DeltaSignY.f, *ReturnDirection.TMapDirection = #Null)
+  Protected IdxDirection.a
+  For IdxDirection = #MAP_DIRECTION_UP To #MAP_DIRECTION_NONE
+    If Map_All_Directions(IdxDirection)\x = DeltaSignX And Map_All_Directions(IdxDirection)\y = DeltaSignY
+      If *ReturnDirection <> #Null
+        *ReturnDirection = Map_All_Directions(IdxDirection)
+      EndIf
+      
+      ProcedureReturn IdxDirection
+    EndIf
+  Next
+  
+  If *ReturnDirection <> #Null
+    *ReturnDirection = Map_All_Directions(#MAP_DIRECTION_NONE)
+  EndIf
+  ProcedureReturn #MAP_DIRECTION_NONE
+  
+EndProcedure
 
 Procedure MakeTileWalkable(*GameMap.TMap, TileX.w, TileY.w)
   If TileX < #MAP_PLAY_AREA_START_X Or TileX > #MAP_PLAY_AREA_END_X

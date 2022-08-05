@@ -31,6 +31,7 @@ Structure TEnemy Extends TGameObject
   *Projectiles.TProjectileList
   *DrawList.TDrawList
   ObjectiveTileCoords.TVector2D
+  ObjectiveTileDirection.a
 EndStructure
 
 Procedure InitEnemy(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TProjectileList,
@@ -56,11 +57,23 @@ Procedure SwitchToWaitingEnemy(*Enemy.TEnemy, WaitTimer.f = 1.5)
 EndProcedure
 
 Procedure SwitchToGoingToObjectiveTile(*Enemy.TEnemy, *ObjectiveTileCoords.TVector2D)
+  ;stop movement for now
   *Enemy\Velocity\x = 0
   *Enemy\Velocity\y = 0
   
+  ;set the coords for the objective tile
   *Enemy\ObjectiveTileCoords\x = *ObjectiveTileCoords\x
   *Enemy\ObjectiveTileCoords\y = *ObjectiveTileCoords\y
+  ;get the current enemy middle position coords 
+  Protected EnemyTileCoords.TVector2D
+  GetTileCoordsByPosition(@*Enemy\MiddlePosition, @EnemyTileCoords)
+  
+  Protected DeltaSignX.f, DeltaSignY.f
+  DeltaSignX = Sign(*Enemy\ObjectiveTileCoords\x - EnemyTileCoords\x)
+  DeltaSignY = Sign(*Enemy\ObjectiveTileCoords\y - EnemyTileCoords\y)
+  
+  ;set the direction for the objective tile
+  *Enemy\ObjectiveTileDirection = GetMapDirectionByDeltaSign(DeltaSignX, DeltaSignY)
   SwitchStateEnemy(*Enemy, #EnemyStateGoingToObjectiveTile)
   
 EndProcedure
@@ -91,23 +104,53 @@ Procedure DrawEnemy(*Enemy.TEnemy)
   
 EndProcedure
 
+Procedure GoToObjectiveTileEnemy(*Enemy.TEnemy, TimeSlice)
+  Protected ObjectiveTilePosition.TVector2D
+  ObjectiveTilePosition\x = *Enemy\ObjectiveTileCoords\x * #MAP_GRID_TILE_WIDTH
+  ObjectiveTilePosition\y = *Enemy\ObjectiveTileCoords\y * #MAP_GRID_TILE_HEIGHT
+  
+  Protected ObjectiveTileMiddlePosition.TVector2D
+  ObjectiveTileMiddlePosition\x = ObjectiveTilePosition\x + #MAP_GRID_TILE_WIDTH / 2
+  ObjectiveTileMiddlePosition\y = ObjectiveTilePosition\y + #MAP_GRID_TILE_HEIGHT / 2
+  
+  Protected EnemyPositonCoords.TVector2D
+  GetTileCoordsByPosition(@*Enemy\MiddlePosition, @EnemyPositonCoords)
+  
+  Protected DeltaSign.TVector2D
+  DeltaSign\x = Sign(*Enemy\ObjectiveTileCoords\x - EnemyPositonCoords\x)
+  DeltaSign\y = Sign(*Enemy\ObjectiveTileCoords\y - EnemyPositonCoords\y)
+  
+  Protected CurrentDirecton.a = GetMapDirectionByDeltaSign(DeltaSign\x, DeltaSign\y)
+  If CurrentDirecton <> *Enemy\ObjectiveTileDirection
+    ;the direction changed so we passed the objective tile
+    ;we must position the enemy on the objective tile and signal the we arrived
+    *Enemy\Position\x = (ObjectiveTileMiddlePosition\x) - *Enemy\Width / 2
+    *Enemy\Position\y = (ObjectiveTileMiddlePosition\y) - *Enemy\Height / 2
+    ;returning true means that we arrrived
+    ProcedureReturn #True
+  EndIf
+  
+  *Enemy\Velocity\x = Cos(ATan2(DeltaSign\x, DeltaSign\y)) * 50
+  *Enemy\Velocity\y = Sin(ATan2(DeltaSign\x, DeltaSign\y)) * 50
+  
+  ;returning false means that we didn't arrive yet
+  ProcedureReturn #False
+EndProcedure
+
 Procedure UpdateEnemyRedDemon(*RedDemon.TEnemy, TimeSlice.f)
   If *RedDemon\CurrentState = #EnemyStateNoState
     Protected TileCoords.TVector2D
     GetTileCoordsByPosition(*RedDemon\MiddlePosition, @TileCoords)
-    Protected FreeRandomDirection.a = GetRandomWalkableDirectionFromOriginTile(*RedDemon\GameMap, TileCoords\x, TileCoords\y)
-    If FreeRandomDirection = #MAP_DIRECTION_NONE
+    Protected WalkableRandomDirection.a = GetRandomWalkableDirectionFromOriginTile(*RedDemon\GameMap, TileCoords\x, TileCoords\y)
+    If WalkableRandomDirection = #MAP_DIRECTION_NONE
       ;no free random direction for the enemy
       ;let's just wait
       SwitchToWaitingEnemy(*RedDemon, 3.0)
-      Debug "no free direction"
       ProcedureReturn
     EndIf
     
-    Debug "free random direction:" + FreeRandomDirection
-    
     Protected ObjectiveRandomTileCoords.TVector2D
-    GetRandomWalkableTileFromOriginTile(*RedDemon\GameMap, TileCoords\x, TileCoords\y, FreeRandomDirection,
+    GetRandomWalkableTileFromOriginTile(*RedDemon\GameMap, TileCoords\x, TileCoords\y, WalkableRandomDirection,
                                     @ObjectiveRandomTileCoords)
     
     SwitchToGoingToObjectiveTile(*RedDemon, @ObjectiveRandomTileCoords)
@@ -125,8 +168,13 @@ Procedure UpdateEnemyRedDemon(*RedDemon.TEnemy, TimeSlice.f)
     
   ElseIf *RedDemon\CurrentState = #EnemyStateGoingToObjectiveTile
     ;going to tile
-    Debug "going to tile"
+    If GoToObjectiveTileEnemy(*RedDemon, TimeSlice)
+      ;reached the objetive tile
+      SwitchToWaitingEnemy(*RedDemon, 3.0)
+      ProcedureReturn
+    EndIf
   EndIf
+  
   
   
   
@@ -154,6 +202,9 @@ Procedure InitEnemyRedDemon(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.
                  #SPRITES_ZOOM, #EnemyDrawOrder)
   
   InitEnemy(*Enemy, *Player, *ProjectileList, *DrawList, #EnemyRedDemon, *GameMap)
+  
+  *Enemy\MaxVelocity\x = 500
+  *Enemy\MaxVelocity\y = 500
   
   SwitchStateEnemy(*Enemy, #EnemyStateNoState)
   
