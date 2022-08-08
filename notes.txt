@@ -8,5 +8,8 @@ Afeter eating a hotdog with a dynamite and lots of hot sauce,
 you gained the hability of , eh... evacuating bombs. Now
 it is the time to use this new skill and escape the demon prison forever!
 
+The enemies have terrible peripheral vision, they can only see when looking up,
+right, down and left.
+
 ==gameplay
 the player should star with 2 hearts, after beating a level we can increase it.
