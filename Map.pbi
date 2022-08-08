@@ -21,6 +21,7 @@ Enumeration EMapDirections
 EndEnumeration
 
 #MAP_NUM_DIRECTIONS = 5
+#MAP_NUM_LOOKING_DIRECTIONS = 4
 
 Structure TTile
   Walkable.a

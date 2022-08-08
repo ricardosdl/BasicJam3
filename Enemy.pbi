@@ -14,6 +14,8 @@ Enumeration EEnemyStates
   #EnemyStateWaiting
   #EnemyStateDropingBomb
   #EnemyStateGoingToSafety
+  #EnemyStateLookingForPlayer
+  #EnemyStateFollowingPlayer
 EndEnumeration
 
 Enumeration EEnemyType
@@ -24,6 +26,12 @@ EndEnumeration
 Prototype SetPatrollingEnemyProc(*Enemy)
 Prototype.a SpawnEnemyProc(*Data)
 Prototype.a ChooseTileToDropBomb(*Enemy, *ReturnDropBombTileCoords, *ReturnSafetyTileCoords)
+
+Structure TEnemyLookingDirection
+  CurrentLookingDirection.a
+  TimePerLookingDirection.f
+  CurrentTimePerLookingDirection.f
+EndStructure
 
 Structure TEnemy Extends TGameObject
   *Player.TGameObject
@@ -38,6 +46,7 @@ Structure TEnemy Extends TGameObject
   ObjectiveTileDirection.a
   ObjectiveSafetyTileCoords.TVector2D
   BombPower.f
+  EnemyLookingDirection.TEnemyLookingDirection
 EndStructure
 
 Procedure InitEnemy(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TProjectileList,
@@ -192,6 +201,47 @@ Procedure SwitchToGoingToSafety(*Enemy.TEnemy)
   *Enemy\Velocity\y = Sin(ATan2(DeltaSignX, DeltaSignY)) * 50
   
   SwitchStateEnemy(*Enemy, #EnemyStateGoingToSafety)
+EndProcedure
+
+Procedure SwitchToLookingForPlayer(*Enemy.TEnemy)
+  *Enemy\Velocity\x = 0
+  *Enemy\Velocity\y = 0
+  
+  *Enemy\EnemyLookingDirection\CurrentLookingDirection = #MAP_DIRECTION_UP
+  *Enemy\StateTimer = 4.0;one second for each direction
+  *Enemy\EnemyLookingDirection\TimePerLookingDirection = *Enemy\StateTimer / #MAP_NUM_LOOKING_DIRECTIONS
+  *Enemy\EnemyLookingDirection\CurrentTimePerLookingDirection = *Enemy\EnemyLookingDirection\TimePerLookingDirection
+  
+  SwitchStateEnemy(*Enemy, #EnemyStateLookingForPlayer)
+  
+  
+EndProcedure
+
+Procedure SwitchToFollowingPlayer(*Enemy.TEnemy, *PlayerCoords.TVector2D, *Velocity.TVector2D)
+  *Enemy\Velocity\x = 0
+  *Enemy\Velocity\y = 0
+  
+  *Enemy\ObjectiveTileCoords\x = *PlayerCoords\x
+  *Enemy\ObjectiveTileCoords\y = *PlayerCoords\y
+  
+  ;get the current enemy middle position coords 
+  Protected EnemyTileCoords.TVector2D
+  GetTileCoordsByPosition(@*Enemy\MiddlePosition, @EnemyTileCoords)
+  
+  Protected DeltaSignX.f, DeltaSignY.f
+  DeltaSignX = Sign(*Enemy\ObjectiveTileCoords\x - EnemyTileCoords\x)
+  DeltaSignY = Sign(*Enemy\ObjectiveTileCoords\y - EnemyTileCoords\y)
+  
+  ;set the direction for the objective tile
+  *Enemy\ObjectiveTileDirection = GetMapDirectionByDeltaSign(DeltaSignX, DeltaSignY)
+  
+  *Enemy\Velocity\x = Cos(ATan2(DeltaSignX, DeltaSignY)) * *Velocity\x
+  *Enemy\Velocity\y = Sin(ATan2(DeltaSignX, DeltaSignY)) * *Velocity\y
+  
+  SwitchStateEnemy(*Enemy, #EnemyStateFollowingPlayer)
+  
+  
+  
 EndProcedure
 
 Procedure KillEnemy(*Enemy.TEnemy)
@@ -367,14 +417,141 @@ Procedure InitEnemyRedDemon(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.
   
 EndProcedure
 
+Procedure LookForPlayerInDirection(*Enemy.TEnemy, Direction.a, *ReturnPlayerTileCoords.TVector2D)
+  Protected CurrentDirection.TMapDirection = Map_All_Directions(Direction)
+  
+  Protected CurrentEnemyMapCoords.TVector2D
+  GetTileCoordsByPosition(@*Enemy\MiddlePosition, @CurrentEnemyMapCoords)
+  
+  Protected PlayerMapCoords.TVector2D
+  GetTileCoordsByPosition(@*Enemy\Player\MiddlePosition, @PlayerMapCoords)
+  
+  Protected CurrentTileX.w = CurrentEnemyMapCoords\x + CurrentDirection\x
+  Protected CurrentTileY.w = CurrentEnemyMapCoords\y + CurrentDirection\y
+  
+  While IsTileWalkable(*Enemy\GameMap, CurrentTileX, CurrentTileY)
+    If PlayerMapCoords\x = CurrentTileX And PlayerMapCoords\y = CurrentTileY
+      ;found the player
+      *ReturnPlayerTileCoords\x = CurrentTileX : *ReturnPlayerTileCoords\y = CurrentTileY
+      ProcedureReturn #True
+    EndIf
+    CurrentTileX + CurrentDirection\x
+    CurrentTileY + CurrentDirection\y
+  Wend
+  
+  
+EndProcedure
+
+Procedure LookForPlayerInAllDirections(*Enemy.TEnemy, *ReturnPlayerTileCoords.TVector2D)
+  Protected CurrentEnemyMapCoords.TVector2D
+  GetTileCoordsByPosition(@*Enemy\MiddlePosition, @CurrentEnemyMapCoords)
+  
+  Protected PlayerMapCoords.TVector2D
+  GetTileCoordsByPosition(@*Enemy\Player\MiddlePosition, @PlayerMapCoords)
+  
+  Protected CurrentDirection.a = #MAP_DIRECTION_UP
+  For CurrentDirection = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
+    Protected Direction.TMapDirection = Map_All_Directions(CurrentDirection)
+    
+    Protected CurrentTileX.w = CurrentEnemyMapCoords\x + Direction\x
+    Protected CurrentTileY.w = CurrentEnemyMapCoords\y + Direction\y
+    
+    While IsTileWalkable(*Enemy\GameMap, CurrentTileX, CurrentTileY)
+      If PlayerMapCoords\x = CurrentTileX And PlayerMapCoords\y = CurrentTileY
+        ;found the player
+        *ReturnPlayerTileCoords\x = CurrentTileX : *ReturnPlayerTileCoords\y = CurrentTileY
+        ProcedureReturn #True
+      EndIf
+      CurrentTileX + Direction\x
+      CurrentTileY + Direction\y
+    Wend
+  Next
+  
+  ProcedureReturn #False
+  
+EndProcedure
+
+
 Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
   If *RedArmoredDemon\CurrentState = #EnemyStateNoState
     Protected TileCoords.TVector2D
     GetTileCoordsByPosition(*RedArmoredDemon\MiddlePosition, @TileCoords)
+    Protected WalkableRandomDirection.a = GetRandomWalkableDirectionFromOriginTile(*RedArmoredDemon\GameMap, TileCoords\x, TileCoords\y)
+    If WalkableRandomDirection = #MAP_DIRECTION_NONE
+      ;no free random direction for the enemy
+      ;let's just wait
+      SwitchToWaitingEnemy(*RedArmoredDemon, 3.0)
+      ProcedureReturn
+    EndIf
+    
+    Protected ObjectiveRandomTileCoords.TVector2D
+    GetRandomWalkableTileFromOriginTile(*RedArmoredDemon\GameMap, TileCoords\x, TileCoords\y, WalkableRandomDirection,
+                                    @ObjectiveRandomTileCoords)
+    
+    SwitchToGoingToObjectiveTile(*RedArmoredDemon, @ObjectiveRandomTileCoords)
+    
+    ProcedureReturn
+    
+    
+  EndIf
+  
+  Protected PlayerCoords.TVector2D
+  
+  If *RedArmoredDemon\CurrentState = #EnemyStateWaiting
+    If *RedArmoredDemon\StateTimer <= 0
+      SwitchStateEnemy(*RedArmoredDemon, #EnemyStateNoState)
+      ProcedureReturn
+    EndIf
+    
+    *RedArmoredDemon\StateTimer - TimeSlice
+    
+  ElseIf *RedArmoredDemon\CurrentState = #EnemyStateGoingToObjectiveTile
+    ;going to tile
+    If GoToObjectiveTileEnemy(*RedArmoredDemon, TimeSlice)
+      ;reached the objetive tile
+      SwitchToLookingForPlayer(*RedArmoredDemon)
+      
+      
+      ProcedureReturn
+    EndIf
+    
+  ElseIf *RedArmoredDemon\CurrentState = #EnemyStateLookingForPlayer
+    If *RedArmoredDemon\StateTimer <= 0
+      SwitchStateEnemy(*RedArmoredDemon, #EnemyStateNoState)
+      ProcedureReturn
+    EndIf
+    *RedArmoredDemon\StateTimer - TimeSlice
+    
+    If *RedArmoredDemon\EnemyLookingDirection\CurrentTimePerLookingDirection <= 0
+      If *RedArmoredDemon\EnemyLookingDirection\CurrentLookingDirection = #MAP_DIRECTION_LEFT
+        ;we looked at the last direction
+      Else
+        ;the directions go from #MAP_DIRECTION_UP to #MAP_DIRECTION_LEFT
+        *RedArmoredDemon\EnemyLookingDirection\CurrentLookingDirection + 1
+        *RedArmoredDemon\EnemyLookingDirection\CurrentTimePerLookingDirection = *RedArmoredDemon\EnemyLookingDirection\TimePerLookingDirection
+      EndIf
+    EndIf
+    *RedArmoredDemon\EnemyLookingDirection\CurrentTimePerLookingDirection - TimeSlice
+    
+    If LookForPlayerInDirection(*RedArmoredDemon, *RedArmoredDemon\EnemyLookingDirection\CurrentLookingDirection, @PlayerCoords)
+      ;found the player in this direction
+      Protected FollowingVelocity.TVector2D\x = 150
+      FollowingVelocity\y = 150
+      SwitchToFollowingPlayer(*RedArmoredDemon, @PlayerCoords, @FollowingVelocity)
+      ProcedureReturn
+    EndIf
+    
+  ElseIf  *RedArmoredDemon\CurrentState = #EnemyStateFollowingPlayer
+    If LookForPlayerInAllDirections(*RedArmoredDemon, @PlayerCoords)
+      
+    EndIf
     
     
     
   EndIf
+  
+  UpdateGameObject(*RedArmoredDemon, TimeSlice)
+  
 EndProcedure
 
 Procedure InitEnemyRedArmoredDemon(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TProjectileList,
@@ -403,7 +580,7 @@ Procedure InitEnemyRedArmoredDemon(*Enemy.TEnemy, *Player.TGameObject, *Projecti
   
   SwitchStateEnemy(*Enemy, #EnemyStateNoState)
   
-  ClipSprite(#EnemyRedDemonSprite, 0, 0, 16, 16)
+  ClipSprite(#EnemyRedArmoredDemonSprite, 0, 0, 16, 16)
   
 EndProcedure
 

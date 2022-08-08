@@ -13,3 +13,5 @@ right, down and left.
 
 ==gameplay
 the player should star with 2 hearts, after beating a level we can increase it.
+
+we can add an item witch is a sword, this sword can hit the player/enemies doing damage to them.
