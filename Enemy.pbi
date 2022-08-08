@@ -71,9 +71,17 @@ Procedure SwitchToWaitingEnemy(*Enemy.TEnemy, WaitTimer.f = 1.5)
   SwitchStateEnemy(*Enemy, #EnemyStateWaiting)
 EndProcedure
 
-Procedure SetPathObjectiveTile(*Enemy.TEnemy, *GoalTileCoords.TVector2D)
+Procedure SetPathObjectiveTile(*Enemy.TEnemy, *GoalTileCoords.TVector2D, *FirstObjectiveTile.TVector2D = #Null)
   ;clear the list of objectivetilecoords
   ClearList(*Enemy\ObjectiveTileCoords())
+  
+  If *FirstObjectiveTile <> #Null
+    AddElement(*Enemy\ObjectiveTileCoords())
+    *Enemy\ObjectiveTileCoords()\x = *FirstObjectiveTile\x
+    *Enemy\ObjectiveTileCoords()\y = *FirstObjectiveTile\y
+  EndIf
+  
+    
   
   ;get the current enemy middle position coords 
   Protected EnemyTileCoords.TVector2D
@@ -241,11 +249,11 @@ Procedure SwitchToLookingForPlayer(*Enemy.TEnemy)
   
 EndProcedure
 
-Procedure SwitchToFollowingPlayer(*Enemy.TEnemy, *PlayerCoords.TVector2D, *Velocity.TVector2D)
+Procedure SwitchToFollowingPlayer(*Enemy.TEnemy, *PlayerCoords.TVector2D, *Velocity.TVector2D, *FirstObjectiveTile.TVector2D = #Null)
   *Enemy\Velocity\x = 0
   *Enemy\Velocity\y = 0
   
-  SetPathObjectiveTile(*Enemy, *PlayerCoords)
+  SetPathObjectiveTile(*Enemy, *PlayerCoords, *FirstObjectiveTile)
   
   ;get the current enemy middle position coords 
   Protected EnemyTileCoords.TVector2D
@@ -293,7 +301,7 @@ Procedure DrawEnemy(*Enemy.TEnemy)
   
 EndProcedure
 
-Procedure GoToObjectiveTileEnemy(*Enemy.TEnemy, TimeSlice)
+Procedure GoToObjectiveTileEnemy(*Enemy.TEnemy, *ReturnReachedCurrentObjectiveTile.Ascii = #Null)
   Protected ObjectiveTilePosition.TVector2D
   FirstElement(*Enemy\ObjectiveTileCoords())
   ObjectiveTilePosition\x = *Enemy\ObjectiveTileCoords()\x * #MAP_GRID_TILE_WIDTH
@@ -316,6 +324,13 @@ Procedure GoToObjectiveTileEnemy(*Enemy.TEnemy, TimeSlice)
     ;we must position the enemy on the objective tile and signal the we arrived
     *Enemy\Position\x = (ObjectiveTileMiddlePosition\x) - *Enemy\Width / 2
     *Enemy\Position\y = (ObjectiveTileMiddlePosition\y) - *Enemy\Height / 2
+    
+    ;since the enemy is now on the current tile we can signal it
+    If *ReturnReachedCurrentObjectiveTile <> #Null
+      *ReturnReachedCurrentObjectiveTile\a = #True
+    EndIf
+    
+    
     DeleteElement(*Enemy\ObjectiveTileCoords())
     FirstElement(*Enemy\ObjectiveTileCoords())
     If ListSize(*Enemy\ObjectiveTileCoords()) = 0
@@ -499,6 +514,82 @@ Procedure LookForPlayerInAllDirections(*Enemy.TEnemy, *ReturnPlayerTileCoords.TV
   
 EndProcedure
 
+Procedure CloseEnoughToPlayerInAnyDirection(*Enemy.TEnemy, *ReturnPlayerDirection.TMapDirection, CloseEnoughDistance.u = 2)
+  Protected CurrentEnemyCoords.TVector2D
+  GetTileCoordsByPosition(@*Enemy\MiddlePosition, @CurrentEnemyCoords)
+  
+  Protected PlayerCoords.TVector2D
+  GetTileCoordsByPosition(*Enemy\Player\MiddlePosition, @PlayerCoords)
+  
+  Protected Direction.a, Distance.u
+  For Direction = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
+    Distance = CloseEnoughDistance
+    Protected CurrentDirection.TMapDirection = Map_All_Directions(Direction)
+    
+    While Distance
+      CurrentEnemyCoords\x + CurrentDirection\x
+      CurrentEnemyCoords\y + CurrentDirection\y
+      If IsTileWalkable(*Enemy\GameMap, CurrentEnemyCoords\x, CurrentEnemyCoords\y)
+        If PlayerCoords\x = CurrentEnemyCoords\x And PlayerCoords\y = CurrentEnemyCoords\y
+          *ReturnPlayerDirection\x = Map_All_Directions(Direction)\x
+          *ReturnPlayerDirection\y = Map_All_Directions(Direction)\y
+          ProcedureReturn #True
+        EndIf
+        
+      Else
+        Break
+      EndIf
+      
+      Distance - 1
+    Wend
+    
+  Next
+  
+  ProcedureReturn #False
+  
+EndProcedure
+
+Procedure GetTileToDropBombPlayer(*Enemy.TEnemy, *ReturnDropBombTileCoords.TVector2D, *ReturnSafetyTileCoords.TVector2D)
+  Protected EnemyTileCoords.TVector2D
+  GetTileCoordsByPosition(*Enemy\MiddlePosition, @EnemyTileCoords)
+  
+  Protected PlayerTileCoords.TVector2D
+  GetTileCoordsByPosition(@*Enemy\Player\MiddlePosition, @PlayerTileCoords)
+  
+  Protected PlayerDirection.TMapDirection
+  PlayerDirection\x = Sign(*Enemy\Player\MiddlePosition\x - *Enemy\MiddlePosition\x)
+  PlayerDirection\y = Sign(*Enemy\Player\MiddlePosition\y - *Enemy\MiddlePosition\y)
+  
+  Protected PlayerDirectionIdx.a = GetMapDirectionByDeltaSign(PlayerDirection\x, PlayerDirection\y)
+  
+  ;drop the bomb on the player position
+  ;TODO: choose a random postion between the current enemy position and the player position
+  *ReturnDropBombTileCoords\x = PlayerTileCoords\x
+  *ReturnDropBombTileCoords\y = PlayerTileCoords\y
+  
+  ;can we drop the bomb and go to safety?
+  ;WalkableRandomDirection is the direction we'll head to
+  ;let's just check on the opposite direction, one more tile thatn the bomb power
+  Protected OppositeDirection.TMapDirection
+  OppositeDirection\x = PlayerDirection\x * -1
+  OppositeDirection\y = PlayerDirection\y * -1
+  
+  If IsTileWalkable(*Enemy\GameMap, PlayerTileCoords\x + (OppositeDirection\x * *Enemy\BombPower) + (OppositeDirection\x),
+                    PlayerTileCoords\y + (OppositeDirection\y * *Enemy\BombPower) + (OppositeDirection\y))
+    ;great we can go to safety
+    *ReturnSafetyTileCoords\x = PlayerTileCoords\x + (OppositeDirection\x * *Enemy\BombPower) + (OppositeDirection\x)
+    *ReturnSafetyTileCoords\y = PlayerTileCoords\y + (OppositeDirection\y * *Enemy\BombPower) + (OppositeDirection\y)
+    
+  Else
+    ;there is no safety tile
+    ;the safety will be the current player coords
+    *ReturnSafetyTileCoords\x = PlayerTileCoords\x
+    *ReturnSafetyTileCoords\y = PlayerTileCoords\y
+    
+  EndIf
+  
+  ProcedureReturn #True
+EndProcedure
 
 Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
   If *RedArmoredDemon\CurrentState = #EnemyStateNoState
@@ -524,6 +615,9 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
   EndIf
   
   Protected PlayerCoords.TVector2D
+  
+  Protected FollowingVelocity.TVector2D\x = 100
+  FollowingVelocity\y = 100
   
   If *RedArmoredDemon\CurrentState = #EnemyStateWaiting
     If *RedArmoredDemon\StateTimer <= 0
@@ -562,19 +656,49 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
     *RedArmoredDemon\EnemyLookingDirection\CurrentTimePerLookingDirection - TimeSlice
     
     If LookForPlayerInDirection(*RedArmoredDemon, *RedArmoredDemon\EnemyLookingDirection\CurrentLookingDirection, @PlayerCoords)
+      Debug "found player"
       ;found the player in this direction
-      Protected FollowingVelocity.TVector2D\x = 150
-      FollowingVelocity\y = 150
+      
       SwitchToFollowingPlayer(*RedArmoredDemon, @PlayerCoords, @FollowingVelocity)
       ProcedureReturn
     EndIf
     
   ElseIf  *RedArmoredDemon\CurrentState = #EnemyStateFollowingPlayer
-    If LookForPlayerInAllDirections(*RedArmoredDemon, @PlayerCoords)
-      
+    Protected PlayerDirecton.TMapDirection
+    If CloseEnoughToPlayerInAnyDirection(*RedArmoredDemon, @PlayerDirecton)
+      ;should drop bomb
+      Debug "should drop bomb"
+      SwitchToDropingBomb(*RedArmoredDemon, @GetTileToDropBombPlayer())
     EndIf
     
+    Protected ReachedCurrentObjectiveTile.Ascii
+    If GoToObjectiveTileEnemy(*RedArmoredDemon, @ReachedCurrentObjectiveTile)
+      SwitchStateEnemy(*RedArmoredDemon, #EnemyStateNoState)
+      ProcedureReturn
+    EndIf
     
+    If ReachedCurrentObjectiveTile\a = #True And LookForPlayerInAllDirections(*RedArmoredDemon, @PlayerCoords)
+      ;if we reached the current objective tile, but not reached the end of path
+      ;and found the player when looking in all for directions
+      Debug "found player again"
+      SwitchToFollowingPlayer(*RedArmoredDemon, @PlayerCoords, @FollowingVelocity, #Null)
+      ProcedureReturn
+    EndIf
+    
+  ElseIf *RedArmoredDemon\CurrentState = #EnemyStateDropingBomb
+    If GoToObjectiveTileEnemy(*RedArmoredDemon)
+      ;reached the objective tile, time to drop the bomb
+      DropBombEnemy(*RedArmoredDemon)
+      SwitchToGoingToSafety(*RedArmoredDemon)
+    EndIf
+    
+  ElseIf *RedArmoredDemon\CurrentState = #EnemyStateGoingToSafety
+    If GoToObjectiveTileEnemy(*RedArmoredDemon)
+      ;reached the safety tile
+      Debug "safety"
+      SwitchStateEnemy(*RedArmoredDemon, #EnemyStateNoState)
+      ProcedureReturn
+    EndIf
     
   EndIf
   

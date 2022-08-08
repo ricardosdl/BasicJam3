@@ -150,8 +150,8 @@ Procedure InitEnemiesPlayState(*PlayState.TPlayState)
     ProcedureReturn
   EndIf
   
-  InitEnemyRedDemon(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, *PlayState\DrawList,
-                    @*PlayState\GameMap, @RandomCoords)
+  InitEnemyRedArmoredDemon(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, *PlayState\DrawList, @*PlayState\GameMap,
+                           @RandomCoords)
   
   AddDrawItemDrawList(@*PlayState\DrawList, *Enemy)
   
