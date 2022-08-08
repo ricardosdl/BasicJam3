@@ -42,7 +42,7 @@ Structure TEnemy Extends TGameObject
   *GameMap.TMap
   *Projectiles.TProjectileList
   *DrawList.TDrawList
-  ObjectiveTileCoords.TVector2D
+  List ObjectiveTileCoords.TVector2D()
   ObjectiveTileDirection.a
   ObjectiveSafetyTileCoords.TVector2D
   BombPower.f
@@ -71,21 +71,47 @@ Procedure SwitchToWaitingEnemy(*Enemy.TEnemy, WaitTimer.f = 1.5)
   SwitchStateEnemy(*Enemy, #EnemyStateWaiting)
 EndProcedure
 
+Procedure SetPathObjectiveTile(*Enemy.TEnemy, *GoalTileCoords.TVector2D)
+  ;clear the list of objectivetilecoords
+  ClearList(*Enemy\ObjectiveTileCoords())
+  
+  ;get the current enemy middle position coords 
+  Protected EnemyTileCoords.TVector2D
+  GetTileCoordsByPosition(@*Enemy\MiddlePosition, @EnemyTileCoords)
+  ;used to get the path of tiles
+  Protected CurrentTileCoords.TVector2D = EnemyTileCoords
+  
+  Protected DeltaSign.TVector2D
+  DeltaSign\x = Sign(*GoalTileCoords\x - EnemyTileCoords\x)
+  DeltaSign\y = Sign(*GoalTileCoords\y - EnemyTileCoords\y)
+  
+  Repeat
+    CurrentTileCoords\x + DeltaSign\x
+    CurrentTileCoords\y + DeltaSign\y
+    AddElement(*Enemy\ObjectiveTileCoords())
+    *Enemy\ObjectiveTileCoords()\x = CurrentTileCoords\x
+    *Enemy\ObjectiveTileCoords()\y = CurrentTileCoords\y
+    
+  Until CurrentTileCoords\x = *GoalTileCoords\x And CurrentTileCoords\y = *GoalTileCoords\y
+  
+  
+  ;set the first element
+  FirstElement(*Enemy\ObjectiveTileCoords())
+EndProcedure
+
 Procedure SwitchToGoingToObjectiveTile(*Enemy.TEnemy, *ObjectiveTileCoords.TVector2D)
   ;stop movement for now
   *Enemy\Velocity\x = 0
   *Enemy\Velocity\y = 0
   
-  ;set the coords for the objective tile
-  *Enemy\ObjectiveTileCoords\x = *ObjectiveTileCoords\x
-  *Enemy\ObjectiveTileCoords\y = *ObjectiveTileCoords\y
-  ;get the current enemy middle position coords 
+  SetPathObjectiveTile(*Enemy, *ObjectiveTileCoords)
+  
   Protected EnemyTileCoords.TVector2D
   GetTileCoordsByPosition(@*Enemy\MiddlePosition, @EnemyTileCoords)
   
   Protected DeltaSignX.f, DeltaSignY.f
-  DeltaSignX = Sign(*Enemy\ObjectiveTileCoords\x - EnemyTileCoords\x)
-  DeltaSignY = Sign(*Enemy\ObjectiveTileCoords\y - EnemyTileCoords\y)
+  DeltaSignX = Sign(*Enemy\ObjectiveTileCoords()\x - EnemyTileCoords\x)
+  DeltaSignY = Sign(*Enemy\ObjectiveTileCoords()\y - EnemyTileCoords\y)
   
   ;set the direction for the objective tile
   *Enemy\ObjectiveTileDirection = GetMapDirectionByDeltaSign(DeltaSignX, DeltaSignY)
@@ -151,16 +177,15 @@ Procedure.a SwitchToDropingBomb(*Enemy.TEnemy, *GetTileToDropBomb.ChooseTileToDr
   *Enemy\Velocity\y = 0
   
   ;set the coords for the objective tile
-  *Enemy\ObjectiveTileCoords\x = TileToDropBombCoords\x
-  *Enemy\ObjectiveTileCoords\y = TileToDropBombCoords\y
+  SetPathObjectiveTile(*Enemy, @TileToDropBombCoords)
   
   ;get the current enemy middle position coords 
   Protected EnemyTileCoords.TVector2D
   GetTileCoordsByPosition(@*Enemy\MiddlePosition, @EnemyTileCoords)
   
   Protected DeltaSignX.f, DeltaSignY.f
-  DeltaSignX = Sign(*Enemy\ObjectiveTileCoords\x - EnemyTileCoords\x)
-  DeltaSignY = Sign(*Enemy\ObjectiveTileCoords\y - EnemyTileCoords\y)
+  DeltaSignX = Sign(*Enemy\ObjectiveTileCoords()\x - EnemyTileCoords\x)
+  DeltaSignY = Sign(*Enemy\ObjectiveTileCoords()\y - EnemyTileCoords\y)
   
   ;set the direction for the objective tile
   *Enemy\ObjectiveTileDirection = GetMapDirectionByDeltaSign(DeltaSignX, DeltaSignY)
@@ -183,16 +208,15 @@ Procedure SwitchToGoingToSafety(*Enemy.TEnemy)
   *Enemy\Velocity\y = 0
   
   ;set the coords for the objective tile
-  *Enemy\ObjectiveTileCoords\x = *Enemy\ObjectiveSafetyTileCoords\x
-  *Enemy\ObjectiveTileCoords\y = *Enemy\ObjectiveSafetyTileCoords\y
+  SetPathObjectiveTile(*Enemy, @*Enemy\ObjectiveSafetyTileCoords)
   
   ;get the current enemy middle position coords 
   Protected EnemyTileCoords.TVector2D
   GetTileCoordsByPosition(@*Enemy\MiddlePosition, @EnemyTileCoords)
   
   Protected DeltaSignX.f, DeltaSignY.f
-  DeltaSignX = Sign(*Enemy\ObjectiveTileCoords\x - EnemyTileCoords\x)
-  DeltaSignY = Sign(*Enemy\ObjectiveTileCoords\y - EnemyTileCoords\y)
+  DeltaSignX = Sign(*Enemy\ObjectiveTileCoords()\x - EnemyTileCoords\x)
+  DeltaSignY = Sign(*Enemy\ObjectiveTileCoords()\y - EnemyTileCoords\y)
   
   ;set the direction for the objective tile
   *Enemy\ObjectiveTileDirection = GetMapDirectionByDeltaSign(DeltaSignX, DeltaSignY)
@@ -221,16 +245,15 @@ Procedure SwitchToFollowingPlayer(*Enemy.TEnemy, *PlayerCoords.TVector2D, *Veloc
   *Enemy\Velocity\x = 0
   *Enemy\Velocity\y = 0
   
-  *Enemy\ObjectiveTileCoords\x = *PlayerCoords\x
-  *Enemy\ObjectiveTileCoords\y = *PlayerCoords\y
+  SetPathObjectiveTile(*Enemy, *PlayerCoords)
   
   ;get the current enemy middle position coords 
   Protected EnemyTileCoords.TVector2D
   GetTileCoordsByPosition(@*Enemy\MiddlePosition, @EnemyTileCoords)
   
   Protected DeltaSignX.f, DeltaSignY.f
-  DeltaSignX = Sign(*Enemy\ObjectiveTileCoords\x - EnemyTileCoords\x)
-  DeltaSignY = Sign(*Enemy\ObjectiveTileCoords\y - EnemyTileCoords\y)
+  DeltaSignX = Sign(*Enemy\ObjectiveTileCoords()\x - EnemyTileCoords\x)
+  DeltaSignY = Sign(*Enemy\ObjectiveTileCoords()\y - EnemyTileCoords\y)
   
   ;set the direction for the objective tile
   *Enemy\ObjectiveTileDirection = GetMapDirectionByDeltaSign(DeltaSignX, DeltaSignY)
@@ -262,8 +285,8 @@ Procedure DrawEnemy(*Enemy.TEnemy)
   If *Enemy\CurrentState = #EnemyStateGoingToObjectiveTile
     StartDrawing(ScreenOutput())
     DrawingMode(#PB_2DDrawing_Outlined)
-    Protected x.f = *Enemy\ObjectiveTileCoords\x * #MAP_GRID_TILE_WIDTH
-    Protected y.f = *Enemy\ObjectiveTileCoords\y * #MAP_GRID_TILE_HEIGHT
+    Protected x.f = *Enemy\ObjectiveTileCoords()\x * #MAP_GRID_TILE_WIDTH
+    Protected y.f = *Enemy\ObjectiveTileCoords()\y * #MAP_GRID_TILE_HEIGHT
     Box(x, y, 16, 16, RGB(255, 0, 0))
     StopDrawing()
   EndIf
@@ -272,8 +295,9 @@ EndProcedure
 
 Procedure GoToObjectiveTileEnemy(*Enemy.TEnemy, TimeSlice)
   Protected ObjectiveTilePosition.TVector2D
-  ObjectiveTilePosition\x = *Enemy\ObjectiveTileCoords\x * #MAP_GRID_TILE_WIDTH
-  ObjectiveTilePosition\y = *Enemy\ObjectiveTileCoords\y * #MAP_GRID_TILE_HEIGHT
+  FirstElement(*Enemy\ObjectiveTileCoords())
+  ObjectiveTilePosition\x = *Enemy\ObjectiveTileCoords()\x * #MAP_GRID_TILE_WIDTH
+  ObjectiveTilePosition\y = *Enemy\ObjectiveTileCoords()\y * #MAP_GRID_TILE_HEIGHT
   
   Protected ObjectiveTileMiddlePosition.TVector2D
   ObjectiveTileMiddlePosition\x = ObjectiveTilePosition\x + #MAP_GRID_TILE_WIDTH / 2
@@ -292,8 +316,12 @@ Procedure GoToObjectiveTileEnemy(*Enemy.TEnemy, TimeSlice)
     ;we must position the enemy on the objective tile and signal the we arrived
     *Enemy\Position\x = (ObjectiveTileMiddlePosition\x) - *Enemy\Width / 2
     *Enemy\Position\y = (ObjectiveTileMiddlePosition\y) - *Enemy\Height / 2
-    ;returning true means that we arrrived
-    ProcedureReturn #True
+    DeleteElement(*Enemy\ObjectiveTileCoords())
+    FirstElement(*Enemy\ObjectiveTileCoords())
+    If ListSize(*Enemy\ObjectiveTileCoords()) = 0
+      ;returning true means that we arrrived
+      ProcedureReturn #True
+    EndIf
   EndIf
   
   ;returning false means that we didn't arrive yet
