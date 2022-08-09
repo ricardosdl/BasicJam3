@@ -77,7 +77,8 @@ Procedure.a GetMapDirectionByDeltaSign(DeltaSignX.f, DeltaSignY.f, *ReturnDirect
   For IdxDirection = #MAP_DIRECTION_UP To #MAP_DIRECTION_NONE
     If Map_All_Directions(IdxDirection)\x = DeltaSignX And Map_All_Directions(IdxDirection)\y = DeltaSignY
       If *ReturnDirection <> #Null
-        *ReturnDirection = Map_All_Directions(IdxDirection)
+        *ReturnDirection\x = Map_All_Directions(IdxDirection)\x
+        *ReturnDirection\y = Map_All_Directions(IdxDirection)\y
       EndIf
       
       ProcedureReturn IdxDirection

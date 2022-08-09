@@ -27,12 +27,6 @@ Prototype SetPatrollingEnemyProc(*Enemy)
 Prototype.a SpawnEnemyProc(*Data)
 Prototype.a ChooseTileToDropBomb(*Enemy, *ReturnDropBombTileCoords, *ReturnSafetyTileCoords)
 
-Structure TEnemyLookingDirection
-  CurrentLookingDirection.a
-  TimePerLookingDirection.f
-  CurrentTimePerLookingDirection.f
-EndStructure
-
 Structure TEnemy Extends TGameObject
   *Player.TGameObject
   CurrentState.a
@@ -46,7 +40,7 @@ Structure TEnemy Extends TGameObject
   ObjectiveTileDirection.a
   ObjectiveSafetyTileCoords.TVector2D
   BombPower.f
-  EnemyLookingDirection.TEnemyLookingDirection
+  LookingDirection.TMapDirection
 EndStructure
 
 Procedure InitEnemy(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TProjectileList,
@@ -235,20 +229,6 @@ Procedure SwitchToGoingToSafety(*Enemy.TEnemy)
   SwitchStateEnemy(*Enemy, #EnemyStateGoingToSafety)
 EndProcedure
 
-Procedure SwitchToLookingForPlayer(*Enemy.TEnemy)
-  *Enemy\Velocity\x = 0
-  *Enemy\Velocity\y = 0
-  
-  *Enemy\EnemyLookingDirection\CurrentLookingDirection = #MAP_DIRECTION_UP
-  *Enemy\StateTimer = 4.0;one second for each direction
-  *Enemy\EnemyLookingDirection\TimePerLookingDirection = *Enemy\StateTimer / #MAP_NUM_LOOKING_DIRECTIONS
-  *Enemy\EnemyLookingDirection\CurrentTimePerLookingDirection = *Enemy\EnemyLookingDirection\TimePerLookingDirection
-  
-  SwitchStateEnemy(*Enemy, #EnemyStateLookingForPlayer)
-  
-  
-EndProcedure
-
 Procedure SwitchToFollowingPlayer(*Enemy.TEnemy, *PlayerCoords.TVector2D, *Velocity.TVector2D, *FirstObjectiveTile.TVector2D = #Null)
   *Enemy\Velocity\x = 0
   *Enemy\Velocity\y = 0
@@ -318,7 +298,7 @@ Procedure GoToObjectiveTileEnemy(*Enemy.TEnemy, *ReturnReachedCurrentObjectiveTi
   DeltaSign\x = Sign(ObjectiveTilePosition\x - *Enemy\Position\x)
   DeltaSign\y = Sign(ObjectiveTilePosition\y - *Enemy\Position\y)
   
-  Protected CurrentDirecton.a = GetMapDirectionByDeltaSign(DeltaSign\x, DeltaSign\y)
+  Protected CurrentDirecton.a = GetMapDirectionByDeltaSign(DeltaSign\x, DeltaSign\y, @*Enemy\LookingDirection)
   If CurrentDirecton <> *Enemy\ObjectiveTileDirection
     ;the direction changed so we passed the objective tile
     ;we must position the enemy on the objective tile and signal the we arrived
@@ -392,7 +372,7 @@ Procedure UpdateEnemyRedDemon(*RedDemon.TEnemy, TimeSlice.f)
     
   ElseIf *RedDemon\CurrentState = #EnemyStateGoingToObjectiveTile
     ;going to tile
-    If GoToObjectiveTileEnemy(*RedDemon, TimeSlice)
+    If GoToObjectiveTileEnemy(*RedDemon)
       ;reached the objetive tile
       If RandomFloat() <= 0.5
         Debug "try to drop bomb"
@@ -409,14 +389,14 @@ Procedure UpdateEnemyRedDemon(*RedDemon.TEnemy, TimeSlice.f)
       ProcedureReturn
     EndIf
   ElseIf *RedDemon\CurrentState = #EnemyStateDropingBomb
-    If GoToObjectiveTileEnemy(*RedDemon, TimeSlice)
+    If GoToObjectiveTileEnemy(*RedDemon)
       ;reached the objective tile, time to drop the bomb
       DropBombEnemy(*RedDemon)
       SwitchToGoingToSafety(*RedDemon)
     EndIf
     
   ElseIf *RedDemon\CurrentState = #EnemyStateGoingToSafety
-    If GoToObjectiveTileEnemy(*RedDemon, TimeSlice)
+    If GoToObjectiveTileEnemy(*RedDemon)
       ;reached the safety tile
       Debug "safety"
       SwitchToWaitingEnemy(*RedDemon, 3.0)
@@ -461,6 +441,11 @@ Procedure InitEnemyRedDemon(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.
 EndProcedure
 
 Procedure LookForPlayerInDirection(*Enemy.TEnemy, Direction.a, *ReturnPlayerTileCoords.TVector2D)
+  If Direction = #MAP_DIRECTION_NONE
+    ;no direction to look
+    ProcedureReturn #False
+  EndIf
+  
   Protected CurrentDirection.TMapDirection = Map_All_Directions(Direction)
   
   Protected CurrentEnemyMapCoords.TVector2D
@@ -618,6 +603,7 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
   EndIf
   
   Protected PlayerCoords.TVector2D
+  Protected LookingDirection.TMapDirection
   
   Protected FollowingVelocity.TVector2D\x = 100
   FollowingVelocity\y = 100
@@ -632,33 +618,15 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
     
   ElseIf *RedArmoredDemon\CurrentState = #EnemyStateGoingToObjectiveTile
     ;going to tile
-    If GoToObjectiveTileEnemy(*RedArmoredDemon, TimeSlice)
-      ;reached the objetive tile
-      SwitchToLookingForPlayer(*RedArmoredDemon)
-      
-      
-      ProcedureReturn
-    EndIf
-    
-  ElseIf *RedArmoredDemon\CurrentState = #EnemyStateLookingForPlayer
-    If *RedArmoredDemon\StateTimer <= 0
+    If GoToObjectiveTileEnemy(*RedArmoredDemon)
       SwitchStateEnemy(*RedArmoredDemon, #EnemyStateNoState)
       ProcedureReturn
     EndIf
-    *RedArmoredDemon\StateTimer - TimeSlice
     
-    If *RedArmoredDemon\EnemyLookingDirection\CurrentTimePerLookingDirection <= 0
-      If *RedArmoredDemon\EnemyLookingDirection\CurrentLookingDirection = #MAP_DIRECTION_LEFT
-        ;we looked at the last direction
-      Else
-        ;the directions go from #MAP_DIRECTION_UP to #MAP_DIRECTION_LEFT
-        *RedArmoredDemon\EnemyLookingDirection\CurrentLookingDirection + 1
-        *RedArmoredDemon\EnemyLookingDirection\CurrentTimePerLookingDirection = *RedArmoredDemon\EnemyLookingDirection\TimePerLookingDirection
-      EndIf
-    EndIf
-    *RedArmoredDemon\EnemyLookingDirection\CurrentTimePerLookingDirection - TimeSlice
+    Protected CurrentLookingDirection.a = GetMapDirectionByDeltaSign(*RedArmoredDemon\LookingDirection\x,
+                                                                     *RedArmoredDemon\LookingDirection\y)
     
-    If LookForPlayerInDirection(*RedArmoredDemon, *RedArmoredDemon\EnemyLookingDirection\CurrentLookingDirection, @PlayerCoords)
+    If LookForPlayerInDirection(*RedArmoredDemon, CurrentLookingDirection, @PlayerCoords)
       Debug "found player"
       ;found the player in this direction
       
