@@ -619,7 +619,16 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
   ElseIf *RedArmoredDemon\CurrentState = #EnemyStateGoingToObjectiveTile
     ;going to tile
     If GoToObjectiveTileEnemy(*RedArmoredDemon)
-      SwitchStateEnemy(*RedArmoredDemon, #EnemyStateNoState)
+      If RandomFloat() <= 0.25
+        If Not SwitchToDropingBomb(*RedArmoredDemon)
+          Debug "drop tha bomb"
+          ;could not drop bomb let's just wait
+          SwitchToWaitingEnemy(*RedArmoredDemon, 1.0)
+        EndIf
+        ProcedureReturn
+      Else
+        SwitchStateEnemy(*RedArmoredDemon, #EnemyStateNoState)
+      EndIf
       ProcedureReturn
     EndIf
     
