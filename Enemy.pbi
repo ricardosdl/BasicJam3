@@ -525,12 +525,15 @@ Procedure CloseEnoughToPlayerInAnyDirection(*Enemy.TEnemy, *ReturnPlayerDirectio
   For Direction = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
     Distance = CloseEnoughDistance
     Protected CurrentDirection.TMapDirection = Map_All_Directions(Direction)
-    
+    Protected CurrentLookingTile.TVector2D
+    CurrentLookingTile\x = CurrentEnemyCoords\x
+    CurrentLookingTile\y = CurrentEnemyCoords\y
     While Distance
-      CurrentEnemyCoords\x + CurrentDirection\x
-      CurrentEnemyCoords\y + CurrentDirection\y
-      If IsTileWalkable(*Enemy\GameMap, CurrentEnemyCoords\x, CurrentEnemyCoords\y)
-        If PlayerCoords\x = CurrentEnemyCoords\x And PlayerCoords\y = CurrentEnemyCoords\y
+      CurrentLookingTile\x + CurrentDirection\x
+      CurrentLookingTile\y + CurrentDirection\y
+      If IsTileWalkable(*Enemy\GameMap, CurrentLookingTile\x, CurrentLookingTile\y)
+        If PlayerCoords\x = CurrentLookingTile\x And PlayerCoords\y = CurrentLookingTile\y
+          ;CallDebugger
           *ReturnPlayerDirection\x = Map_All_Directions(Direction)\x
           *ReturnPlayerDirection\y = Map_All_Directions(Direction)\y
           ProcedureReturn #True
@@ -557,8 +560,8 @@ Procedure GetTileToDropBombPlayer(*Enemy.TEnemy, *ReturnDropBombTileCoords.TVect
   GetTileCoordsByPosition(@*Enemy\Player\MiddlePosition, @PlayerTileCoords)
   
   Protected PlayerDirection.TMapDirection
-  PlayerDirection\x = Sign(*Enemy\Player\MiddlePosition\x - *Enemy\MiddlePosition\x)
-  PlayerDirection\y = Sign(*Enemy\Player\MiddlePosition\y - *Enemy\MiddlePosition\y)
+  PlayerDirection\x = Sign(PlayerTileCoords\x - EnemyTileCoords\x)
+  PlayerDirection\y = Sign(PlayerTileCoords\y - EnemyTileCoords\y)
   
   Protected PlayerDirectionIdx.a = GetMapDirectionByDeltaSign(PlayerDirection\x, PlayerDirection\y)
   
@@ -668,7 +671,11 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
     If CloseEnoughToPlayerInAnyDirection(*RedArmoredDemon, @PlayerDirecton)
       ;should drop bomb
       Debug "should drop bomb"
-      SwitchToDropingBomb(*RedArmoredDemon, @GetTileToDropBombPlayer())
+      If Not SwitchToDropingBomb(*RedArmoredDemon, @GetTileToDropBombPlayer())
+        ;could not drop bomb
+        SwitchToWaitingEnemy(*RedArmoredDemon, 1.0)
+      EndIf
+      ProcedureReturn
     EndIf
     
     Protected ReachedCurrentObjectiveTile.Ascii
@@ -696,7 +703,7 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
     If GoToObjectiveTileEnemy(*RedArmoredDemon)
       ;reached the safety tile
       Debug "safety"
-      SwitchStateEnemy(*RedArmoredDemon, #EnemyStateNoState)
+      SwitchToWaitingEnemy(*RedArmoredDemon, 2.5)
       ProcedureReturn
     EndIf
     
