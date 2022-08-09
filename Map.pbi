@@ -57,7 +57,15 @@ EndStructure
 Structure TMapDirection Extends TVector2D
   
 EndStructure
-  
+
+Structure TNode
+  x.w
+  y.w
+  *Parent.TNode
+  g.w
+  h.w
+  f.w
+EndStructure
 
 Global.TMapDirection Map_Direction_Up, Map_Direction_Right, Map_Direction_Down, Map_Direction_Left, Map_Direction_None
 Global Dim Map_All_Directions.TMapDirection(#MAP_NUM_DIRECTIONS - 1)
@@ -71,6 +79,198 @@ Map_All_Directions(#MAP_DIRECTION_DOWN)\x = 0 : Map_All_Directions(#MAP_DIRECTIO
 Map_All_Directions(#MAP_DIRECTION_LEFT)\x = -1 : Map_All_Directions(#MAP_DIRECTION_LEFT)\y = 0
 
 Map_All_Directions(#MAP_DIRECTION_NONE)\x = 0 : Map_All_Directions(#MAP_DIRECTION_NONE)\y = 0
+
+Procedure IsTileWalkable(*GameMap.TMap, TileX.w, TileY.w)
+  If TileX < #MAP_PLAY_AREA_START_X Or TileX > #MAP_PLAY_AREA_END_X
+    ProcedureReturn #False
+  EndIf
+  
+  If TileY < #MAP_PLAY_AREA_START_Y Or TileY > #MAP_PLAY_AREA_END_Y
+    ProcedureReturn #False
+  EndIf
+  
+  ProcedureReturn *GameMap\MapGrid\TilesGrid(TileX, TileY)\Walkable
+  
+EndProcedure
+
+Procedure InitNode(*Node.TNode, *Parent.TNode, x.w, y.w)
+  *Node\Parent = *Parent
+  *Node\x = x
+  *Node\y = y
+  *Node\g = 0
+  *Node\h = 0
+  *Node\f = 0
+EndProcedure
+
+Procedure.a IsEqualNodes(*Node1.TNode, *Node2.TNode)
+  ProcedureReturn Bool((*Node1\x = *Node2\x) And (*Node1\y = *Node2\y))
+EndProcedure
+
+Procedure ReversePathList(List PathList.TVector2D(), List ReversedList.TVector2D())
+  ClearList(ReversedList())
+  
+  While ListSize(PathList()) > 0
+    LastElement(PathList())
+    AddElement(ReversedList())
+    ReversedList()\x = PathList()\x
+    ReversedList()\y = PathList()\y
+    DeleteElement(PathList())
+  Wend
+  
+  
+EndProcedure
+
+Procedure AStar(*GameMap.TMap, StartX.w, StartY.w, EndX.w, EndY.w, List PathList.TVector2D())
+  ;auxiliary list where all nodes will be allocated
+  NewList Nodes.TNode()
+  
+  ;create the star and end node
+  Protected *StartNode.TNode = AddElement(Nodes())
+  InitNode(*StartNode, #Null, StartX, StartY)
+  
+  *StartNode\g = 0
+  *StartNode\h = 0
+  *StartNode\f = 0
+  
+  Protected *EndNode.TNode = AddElement(Nodes())
+  InitNode(*EndNode, #Null, EndX, EndY)
+  *EndNode\g = 0
+  *EndNode\h = 0
+  *EndNode\f = 0
+  
+  ;initialize both open and closed lists
+  NewList OpenList()
+  NewList ClosedList()
+  
+  AddElement(OpenList())
+  OpenList() = *StartNode
+  
+  ;Adding a stop condition
+  Protected OuterIterations = 0
+  Protected MaxIterations = #MAP_GRID_WIDTH * #MAP_GRID_HEIGHT / 2
+  
+  While ListSize(OpenList()) > 0
+    
+    OuterIterations + 1
+    If OuterIterations > MaxIterations
+      ;If we hit this point Return the path such As it is
+      ;it will Not contain the destination
+      ProcedureReturn #False
+    EndIf
+    
+    
+    
+    ;get the current node
+    SelectElement(OpenList(), 0)
+    Protected *CurrentNode.TNode = OpenList()
+    DeleteElement(OpenList())
+    
+    AddElement(ClosedList())
+    ClosedList() = *CurrentNode
+    
+    ;found the goal
+    If IsEqualNodes(*CurrentNode, *EndNode)
+      NewList Path.TVector2D()
+      Protected *Current.TNode = *CurrentNode
+      While *Current <> #Null
+        Protected *NewPathElement.TVector2D = AddElement(Path())
+        *NewPathElement\x = *Current\x
+        *NewPathElement\y = *Current\y
+        
+        *Current = *Current\Parent
+      Wend
+      
+      ReversePathList(Path(), PathList())
+      ProcedureReturn #True
+      
+    EndIf
+    
+    NewList Children()
+    
+    Protected DirectionIdx.a
+    For DirectionIdx = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
+      ;get node position
+      Protected NodePosition.TVector2D\x = *CurrentNode\x + Map_All_Directions(DirectionIdx)\x
+      NodePosition\y = *CurrentNode\y + Map_All_Directions(DirectionIdx)\y
+      
+      ;make sure within range
+      If NodePosition\x < #MAP_PLAY_AREA_START_X Or NodePosition\x > #MAP_PLAY_AREA_END_X
+        Continue
+      EndIf
+  
+      If NodePosition\y < #MAP_PLAY_AREA_START_Y Or NodePosition\y > #MAP_PLAY_AREA_END_Y
+        Continue
+      EndIf
+      
+      ;make sure is walkable tile
+      If Not IsTileWalkable(*GameMap, NodePosition\x, NodePosition\y)
+        Continue
+      EndIf
+      
+      ;create a new node
+      Protected *NewNode.TNode = AddElement(Nodes())
+      InitNode(*NewNode, *CurrentNode, NodePosition\x, NodePosition\y)
+      
+      ;append
+      AddElement(Children())
+      Children() = *NewNode
+      
+    Next
+    
+    
+    ForEach Children()
+      Protected *Child.TNode = Children()
+      
+      Protected IsOnClosedList.a = #False
+      ForEach ClosedList()
+        Protected *ClosedChild.TNode = ClosedList()
+        If IsEqualNodes(*Child, *ClosedChild)
+          IsOnClosedList = #True
+          Continue
+        EndIf
+      Next
+      If IsOnClosedList
+        Continue
+      EndIf
+      
+      
+      ;Create the f, g, And h values
+      *Child\g = *CurrentNode\g + 1
+      *Child\h = Abs(*Child\x - *EndNode\x) + Abs(*Child\y - *EndNode\y)
+      *Child\f = *Child\g + *Child\h
+      
+      ;Child is already in the open List
+      Protected IsOnOpenList.a = #False
+      ForEach OpenList()
+        Protected *OpenNode.TNode = OpenList()
+        If IsEqualNodes(*Child, *OpenNode) And *Child\g > *OpenNode\g
+          IsOnOpenList = #True
+          Continue
+        EndIf
+      Next
+      If IsOnOpenList
+        Continue
+      EndIf
+      
+      
+      ;add the child to open list
+      AddElement(OpenList())
+      OpenList() = *Child
+      
+      
+    Next
+    
+    
+    
+    
+    
+  Wend
+  
+  ProcedureReturn #False
+  
+  
+  
+EndProcedure
 
 Procedure.a GetMapDirectionByDeltaSign(DeltaSignX.f, DeltaSignY.f, *ReturnDirection.TMapDirection = #Null)
   Protected IdxDirection.a
@@ -106,19 +306,6 @@ Procedure MakeTileWalkable(*GameMap.TMap, TileX.w, TileY.w)
   *GameMap\MapGrid\TilesGrid(TileX, TileY)\SpriteNum = #Ground
   
   ProcedureReturn #True
-EndProcedure
-
-Procedure IsTileWalkable(*GameMap.TMap, TileX.w, TileY.w)
-  If TileX < #MAP_PLAY_AREA_START_X Or TileX > #MAP_PLAY_AREA_END_X
-    ProcedureReturn #False
-  EndIf
-  
-  If TileY < #MAP_PLAY_AREA_START_Y Or TileY > #MAP_PLAY_AREA_END_Y
-    ProcedureReturn #False
-  EndIf
-  
-  ProcedureReturn *GameMap\MapGrid\TilesGrid(TileX, TileY)\Walkable
-  
 EndProcedure
 
 Procedure IsTileBreakable(*GameMap.TMap, TileX.w, TileY.w)

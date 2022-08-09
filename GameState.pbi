@@ -150,8 +150,8 @@ Procedure InitEnemiesPlayState(*PlayState.TPlayState)
     ProcedureReturn
   EndIf
   
-  InitEnemyRedDemon(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, *PlayState\DrawList,
-                    @*PlayState\GameMap, @RandomCoords)
+  InitEnemyRedArmoredDemon(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, *PlayState\DrawList, @*PlayState\GameMap,
+                           @RandomCoords)
   
   AddDrawItemDrawList(@*PlayState\DrawList, *Enemy)
   
@@ -189,6 +189,16 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
     EndIf
     
   Next
+  
+  NewList Path.TVector2d()
+  AStar(@*PlayState\GameMap, 0, 1, 3, 1, Path())
+  Protected i = 0
+  ForEach Path()
+    i + 1
+    Debug "Node " + Str(i) + ": x " + StrF(Path()\x)
+    Debug "Node " + Str(i) + ": y " + StrF(Path()\y)
+  Next
+  
   
   
   
