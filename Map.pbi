@@ -183,6 +183,7 @@ Procedure AStar2(*GameMap.TMap, StartX.w, StartY.w, EndX.w, EndY.w, List PathLis
   
   
   NewList *OpenList.TNode()
+  NewList *ClosedList.TNode()
   
   AddElement(*OpenList())
   *OpenList() = *StartNode
@@ -207,6 +208,9 @@ Procedure AStar2(*GameMap.TMap, StartX.w, StartY.w, EndX.w, EndY.w, List PathLis
     
     ChangeCurrentElement(*OpenList(), *CurrentElement)
     DeleteElement(*OpenList())
+    
+    AddElement(*ClosedList())
+    *ClosedList() = *Current
     
     NewList *Neighbors.TNode()
     
@@ -249,35 +253,35 @@ Procedure AStar2(*GameMap.TMap, StartX.w, StartY.w, EndX.w, EndY.w, List PathLis
     Protected *CurrentNeighbor.TNode = *Neighbors()
     Protected NeighborLowestF = *CurrentNeighbor\f
     ForEach *Neighbors()
-      If *Neighbors()\f < NeighborLowestF
-        *CurrentNeighbor = *Neighbors()
-        NeighborLowestF = *Current\f
-        *NeighborCurrentElement = @*Neighbors()
+      
+      Protected IsOnClosedList.a = #False
+      ForEach *ClosedList()
+        If IsEqualNodes(*Neighbors(), *ClosedList())
+          IsOnClosedList = #True
+          Break
+        EndIf
+      Next
+      If IsOnClosedList
+        Continue
       EndIf
-    Next
-    
-    Protected IsOnOpenList.a = #False
-    ForEach *OpenList()
-      If IsEqualNodes(*OpenList(), *CurrentNeighbor)
-        IsOnOpenList = #True
-        Break
+      
+      Protected IsOnOpenList.a = #False
+      ForEach *OpenList()
+        If IsEqualNodes(*Neighbors(), *OpenList()) And *Neighbors()\g > *OpenList()\g
+          IsOnOpenList = #True
+          Break
+        EndIf
+      Next
+      If IsOnOpenList
+        Continue
       EndIf
-    Next
-    If Not IsOnOpenList
+      
       AddElement(*OpenList())
-      *OpenList() = *CurrentNeighbor
-    EndIf
-    
+      *OpenList() = *Neighbors()
+    Next
   Wend
   
   ProcedureReturn #False
-  
-  
-  
-  
-  
-  
-  
   
 EndProcedure
 
