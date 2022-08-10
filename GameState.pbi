@@ -55,6 +55,12 @@ Structure TPlayState Extends TGameState
   
   Array Enemies.TEnemy(#MAX_ENEMIES - 1)
   
+  SelectedStartTile.TVector2D
+  SelectedEndTile.TVector2D
+  ShowAStar.a
+  List AStarPath.TVector2D()
+  
+  
 EndStructure
 
 Structure TMainMenuState Extends TGameState
@@ -166,6 +172,12 @@ Procedure StartPlayState(*PlayState.TPlayState)
   
   InitEnemiesPlayState(*PlayState)
   
+  *PlayState\SelectedStartTile\x = -1
+  *PlayState\SelectedStartTile\y = -1
+  
+  *PlayState\SelectedEndTile\x = -1
+  *PlayState\SelectedEndTile\y = -1
+  
   
 EndProcedure
 
@@ -190,12 +202,102 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
     
   Next
   
+  Protected MousePosition.TVector2D
+  
+  If MouseButton(#PB_MouseButton_Left)
+    MousePosition\x = MouseX()
+    MousePosition\y = MouseY()
+    
+    Protected MouseCoords.TVector2D
+    
+    
+      ;already selected the start tile so we want to change it
+      If IsPositionOnMap(@*PlayState\GameMap, @MousePosition, @MouseCoords)
+        *PlayState\SelectedStartTile\x = MouseCoords\x
+        *PlayState\SelectedStartTile\y = MouseCoords\y
+      EndIf
+    
+  EndIf
+  
+  If MouseButton(#PB_MouseButton_Right)
+    MousePosition\x = MouseX()
+    MousePosition\y = MouseY()
+    
+    
+    If IsPositionOnMap(@*PlayState\GameMap, @MousePosition, @MouseCoords)
+      *PlayState\SelectedEndTile\x = MouseCoords\x
+      *PlayState\SelectedEndTile\y = MouseCoords\y
+      
+    EndIf
+    
+    
+  EndIf
+  
+  
+  If KeyboardReleased(#PB_Key_Space)
+    If *PlayState\ShowAStar
+      *PlayState\ShowAStar = #False
+    Else
+      *PlayState\ShowAStar = #True
+    EndIf
+    If *PlayState\ShowAStar
+      ClearList(*PlayState\AStarPath())
+      If Not AStar2(@*PlayState\GameMap, *PlayState\SelectedStartTile\x, *PlayState\SelectedStartTile\y,
+                    *PlayState\SelectedEndTile\x, *PlayState\SelectedEndTile\y, *PlayState\AStarPath())
+        
+        Debug "no path"
+        
+      EndIf
+      
+    EndIf
+    
+  EndIf
+  
+  
+  
+  
+  
+  
+;   NewList Path.TVector2d()
+;   AStar2(@*PlayState\GameMap, 1, 1, 5, 6, Path())
+;   Protected i = 0
+;   ForEach Path()
+;     i + 1
+;     Debug "Node " + Str(i) + ": x " + StrF(Path()\x)
+;     Debug "Node " + Str(i) + ": y " + StrF(Path()\y)
+;   Next
+;   Debug "============"
+  
+  
   
   
 EndProcedure
 
 Procedure DrawPlayState(*PlayState.TPlayState)
   DrawDrawList(*PlayState\DrawList)
+  
+  ;draw cursor
+  Protected DrawCursor.a = #True
+  If DrawCursor
+    Protected MouseX.l = MouseX()
+    Protected MouseY.l = MouseY()
+    
+    DisplayTransparentSprite(#CursorSprite, MouseX, MouseY)
+  EndIf
+  
+  StartDrawing(ScreenOutput())
+  DrawingMode(#PB_2DDrawing_Outlined)
+  If *PlayState\ShowAStar
+    ForEach *PlayState\AStarPath()
+      Protected XPath.u = *PlayState\GameMap\Position\x + *PlayState\AStarPath()\x * #MAP_GRID_TILE_WIDTH
+      Protected YPath.u = *PlayState\GameMap\Position\y + *PlayState\AStarPath()\y * #MAP_GRID_TILE_HEIGHT
+      Box(XPath, YPath, #MAP_GRID_TILE_WIDTH, #MAP_GRID_TILE_HEIGHT, RGB(0, 214, 0))
+    Next
+    
+  EndIf
+  
+  StopDrawing()
+  
 EndProcedure
 
 Procedure StartMainMenuState(*MainMenuState.TMainMenuState)

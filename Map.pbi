@@ -3,6 +3,7 @@ XIncludeFile "Math.pbi"
 XIncludeFile "Util.pbi"
 XIncludeFile "DrawList.pbi"
 XIncludeFile "DrawOrders.pbi"
+XIncludeFile "DrawText.pbi"
 
 EnableExplicit
 
@@ -57,7 +58,15 @@ EndStructure
 Structure TMapDirection Extends TVector2D
   
 EndStructure
-  
+
+Structure TNode
+  x.w
+  y.w
+  *Parent.TNode
+  g.w
+  h.w
+  f.w
+EndStructure
 
 Global.TMapDirection Map_Direction_Up, Map_Direction_Right, Map_Direction_Down, Map_Direction_Left, Map_Direction_None
 Global Dim Map_All_Directions.TMapDirection(#MAP_NUM_DIRECTIONS - 1)
@@ -71,6 +80,210 @@ Map_All_Directions(#MAP_DIRECTION_DOWN)\x = 0 : Map_All_Directions(#MAP_DIRECTIO
 Map_All_Directions(#MAP_DIRECTION_LEFT)\x = -1 : Map_All_Directions(#MAP_DIRECTION_LEFT)\y = 0
 
 Map_All_Directions(#MAP_DIRECTION_NONE)\x = 0 : Map_All_Directions(#MAP_DIRECTION_NONE)\y = 0
+
+Procedure IsTileWalkable(*GameMap.TMap, TileX.w, TileY.w)
+  If TileX < #MAP_PLAY_AREA_START_X Or TileX > #MAP_PLAY_AREA_END_X
+    ProcedureReturn #False
+  EndIf
+  
+  If TileY < #MAP_PLAY_AREA_START_Y Or TileY > #MAP_PLAY_AREA_END_Y
+    ProcedureReturn #False
+  EndIf
+  
+  ProcedureReturn *GameMap\MapGrid\TilesGrid(TileX, TileY)\Walkable
+  
+EndProcedure
+
+Procedure GetTileCoordsByPosition(*Position.TVector2D, *TileCoords.TVector2D)
+  *TileCoords\x = Int(*Position\x / #MAP_GRID_TILE_WIDTH)
+  *TileCoords\y = Int(*Position\y / #MAP_GRID_TILE_HEIGHT)
+EndProcedure
+
+Procedure.a IsPositionOnMap(*GameMap.TMap, *Position.TVector2D, *ReturnMapCoords.TVector2D)
+  Protected MinMapPositionX.w = *GameMap\Position\x
+  Protected MinMapPositionY.w = *GameMap\Position\y
+  
+  Protected MaxMapPositionX.w = *GameMap\Position\x + #MAP_GRID_WIDTH * #MAP_GRID_TILE_WIDTH
+  Protected MaxMapPositionY.w = *GameMap\Position\y + #MAP_GRID_HEIGHT * #MAP_GRID_TILE_HEIGHT
+  
+  If *Position\x < MinMapPositionX Or *Position\x > MaxMapPositionX
+    ProcedureReturn #False
+  EndIf
+  
+  If *Position\y < MinMapPositionY Or *Position\y > MaxMapPositionY
+    ProcedureReturn #False
+  EndIf
+  
+  GetTileCoordsByPosition(*Position, *ReturnMapCoords)
+  
+  ProcedureReturn #True
+  
+  
+    
+  
+EndProcedure
+
+Procedure InitNode(*Node.TNode, *Parent.TNode, x.w, y.w)
+  *Node\Parent = *Parent
+  *Node\x = x
+  *Node\y = y
+  *Node\g = 0
+  *Node\h = 0
+  *Node\f = 0
+EndProcedure
+
+Procedure.a IsEqualNodes(*Node1.TNode, *Node2.TNode)
+  ProcedureReturn Bool((*Node1\x = *Node2\x) And (*Node1\y = *Node2\y))
+EndProcedure
+
+Procedure ReversePathList(List PathList.TVector2D(), List ReversedList.TVector2D())
+  ClearList(ReversedList())
+  
+  While ListSize(PathList()) > 0
+    LastElement(PathList())
+    AddElement(ReversedList())
+    ReversedList()\x = PathList()\x
+    ReversedList()\y = PathList()\y
+    DeleteElement(PathList())
+  Wend
+  
+  
+EndProcedure
+
+Procedure ReconstructPath(*Node.TNode, List PathList.TVector2d())
+  NewList Path.TVector2D()
+  Protected *Current.TNode = *Node
+  While *Current <> #Null
+    Protected *NewPathElement.TVector2D = AddElement(Path())
+    *NewPathElement\x = *Current\x
+    *NewPathElement\y = *Current\y
+    *Current = *Current\Parent
+  Wend
+  ReversePathList(Path(), PathList())
+EndProcedure
+
+
+Procedure AStar2(*GameMap.TMap, StartX.w, StartY.w, EndX.w, EndY.w, List PathList.TVector2D())
+  ;list of TNodes that we use to allocate all nodes
+  NewList Nodes.TNode()
+  
+  Protected *StartNode.TNode = AddElement(Nodes())
+  InitNode(*StartNode, #Null, StartX, StartY)
+  
+  Protected *EndNode.TNode = AddElement(Nodes())
+  InitNode(*EndNode, #Null, EndX, EndY)
+  
+  If Not IsTileWalkable(*GameMap, *StartNode\x, *StartNode\y)
+    ProcedureReturn #False
+  EndIf
+  
+  If Not IsTileWalkable(*GameMap, *EndNode\x, *EndNode\y)
+    ProcedureReturn #False
+  EndIf
+  
+  
+  NewList *OpenList.TNode()
+  NewList *ClosedList.TNode()
+  
+  AddElement(*OpenList())
+  *OpenList() = *StartNode
+  
+  While ListSize(*OpenList()) > 0
+    Protected *CurrentElement = SelectElement(*OpenList(), 0)
+    Protected *Current.TNode = *OpenList()
+    Protected LowestF = *Current\f
+    
+    ForEach *OpenList()
+      If *OpenList()\f < *Current\f
+        *Current = *OpenList()
+        LowestF = *Current\f
+        *CurrentElement = @*OpenList()
+      EndIf
+    Next
+    
+    If IsEqualNodes(*Current, *EndNode)
+      ReconstructPath(*Current, PathList())
+      ProcedureReturn #True
+    EndIf
+    
+    ChangeCurrentElement(*OpenList(), *CurrentElement)
+    DeleteElement(*OpenList())
+    
+    AddElement(*ClosedList())
+    *ClosedList() = *Current
+    
+    NewList *Neighbors.TNode()
+    
+    Protected DirectionIdx.a
+    For DirectionIdx = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
+      ;get node position
+      Protected NodePosition.TVector2D\x = *Current\x + Map_All_Directions(DirectionIdx)\x
+      NodePosition\y = *Current\y + Map_All_Directions(DirectionIdx)\y
+      
+      ;make sure within range
+      If NodePosition\x < #MAP_PLAY_AREA_START_X Or NodePosition\x > #MAP_PLAY_AREA_END_X
+        Continue
+      EndIf
+  
+      If NodePosition\y < #MAP_PLAY_AREA_START_Y Or NodePosition\y > #MAP_PLAY_AREA_END_Y
+        Continue
+      EndIf
+      
+      ;make sure is walkable tile
+      If Not IsTileWalkable(*GameMap, NodePosition\x, NodePosition\y)
+        Continue
+      EndIf
+      
+      ;create a new node
+      Protected *NewNode.TNode = AddElement(Nodes())
+      InitNode(*NewNode, *Current, NodePosition\x, NodePosition\y)
+      
+      *NewNode\g = *Current\g + 1
+      *NewNode\h = Abs(*NewNode\x - *EndNode\x) + Abs(*NewNode\y - *EndNode\y)
+      *NewNode\f = *NewNode\g + *NewNode\h
+      
+      ;append
+      AddElement(*Neighbors())
+      *Neighbors() = *NewNode
+      
+    Next
+    
+    
+    Protected *NeighborCurrentElement = SelectElement(*Neighbors(), 0)
+    Protected *CurrentNeighbor.TNode = *Neighbors()
+    Protected NeighborLowestF = *CurrentNeighbor\f
+    ForEach *Neighbors()
+      
+      Protected IsOnClosedList.a = #False
+      ForEach *ClosedList()
+        If IsEqualNodes(*Neighbors(), *ClosedList())
+          IsOnClosedList = #True
+          Break
+        EndIf
+      Next
+      If IsOnClosedList
+        Continue
+      EndIf
+      
+      Protected IsOnOpenList.a = #False
+      ForEach *OpenList()
+        If IsEqualNodes(*Neighbors(), *OpenList()) And *Neighbors()\g > *OpenList()\g
+          IsOnOpenList = #True
+          Break
+        EndIf
+      Next
+      If IsOnOpenList
+        Continue
+      EndIf
+      
+      AddElement(*OpenList())
+      *OpenList() = *Neighbors()
+    Next
+  Wend
+  
+  ProcedureReturn #False
+  
+EndProcedure
 
 Procedure.a GetMapDirectionByDeltaSign(DeltaSignX.f, DeltaSignY.f, *ReturnDirection.TMapDirection = #Null)
   Protected IdxDirection.a
@@ -109,19 +322,6 @@ Procedure MakeTileWalkable(*GameMap.TMap, TileX.w, TileY.w)
   ProcedureReturn #True
 EndProcedure
 
-Procedure IsTileWalkable(*GameMap.TMap, TileX.w, TileY.w)
-  If TileX < #MAP_PLAY_AREA_START_X Or TileX > #MAP_PLAY_AREA_END_X
-    ProcedureReturn #False
-  EndIf
-  
-  If TileY < #MAP_PLAY_AREA_START_Y Or TileY > #MAP_PLAY_AREA_END_Y
-    ProcedureReturn #False
-  EndIf
-  
-  ProcedureReturn *GameMap\MapGrid\TilesGrid(TileX, TileY)\Walkable
-  
-EndProcedure
-
 Procedure IsTileBreakable(*GameMap.TMap, TileX.w, TileY.w)
   If TileX < #MAP_PLAY_AREA_START_X Or TileX > #MAP_PLAY_AREA_END_X
     ProcedureReturn #False
@@ -132,11 +332,6 @@ Procedure IsTileBreakable(*GameMap.TMap, TileX.w, TileY.w)
   EndIf
   
   ProcedureReturn *GameMap\MapGrid\TilesGrid(TileX, TileY)\Breakable
-EndProcedure
-
-Procedure GetTileCoordsByPosition(*Position.TVector2D, *TileCoords.TVector2D)
-  *TileCoords\x = Int(*Position\x / #MAP_GRID_TILE_WIDTH)
-  *TileCoords\y = Int(*Position\y / #MAP_GRID_TILE_HEIGHT)
 EndProcedure
 
 Procedure.i InitMapGrid(*MapGrid.TMapGrid, MapGridFile.s)
@@ -204,12 +399,21 @@ Procedure DrawMap(*GameMap.TMap)
       
       If IsSprite(SpriteToDraw)
         DisplayTransparentSprite(SpriteToDraw, StartX + MapX * #MAP_GRID_TILE_WIDTH, StartY + MapY * #MAP_GRID_TILE_HEIGHT)
+        Protected.f FontWidth = 3.5, Fontheight = 6
+        Protected PositonText.s = Str(Mapx) + "," + Str(MapY)
+        Protected PositionTextWidth.u = Len(PositonText) * FontWidth
+        Protected FontX.f = (StartX + MapX * #MAP_GRID_TILE_WIDTH) + (#MAP_GRID_TILE_WIDTH / 2) - (PositionTextWidth / 2)
+        Protected FontY.f = (StartY + MapY * #MAP_GRID_TILE_HEIGHT) + (#MAP_GRID_TILE_HEIGHT / 2) - (Fontheight / 2)
+        DrawTextWithStandardFont(FontX, FontY, Str(Mapx) + "," + Str(MapY), FontWidth, Fontheight)
       EndIf
  
       
       
     Next MapY
   Next MapX
+  
+  ;draw tiles positions
+  
   
   
   
