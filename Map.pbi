@@ -399,12 +399,13 @@ Procedure DrawMap(*GameMap.TMap)
       
       If IsSprite(SpriteToDraw)
         DisplayTransparentSprite(SpriteToDraw, StartX + MapX * #MAP_GRID_TILE_WIDTH, StartY + MapY * #MAP_GRID_TILE_HEIGHT)
-        Protected.f FontWidth = 3.5, Fontheight = 6
-        Protected PositonText.s = Str(Mapx) + "," + Str(MapY)
-        Protected PositionTextWidth.u = Len(PositonText) * FontWidth
-        Protected FontX.f = (StartX + MapX * #MAP_GRID_TILE_WIDTH) + (#MAP_GRID_TILE_WIDTH / 2) - (PositionTextWidth / 2)
-        Protected FontY.f = (StartY + MapY * #MAP_GRID_TILE_HEIGHT) + (#MAP_GRID_TILE_HEIGHT / 2) - (Fontheight / 2)
-        DrawTextWithStandardFont(FontX, FontY, Str(Mapx) + "," + Str(MapY), FontWidth, Fontheight)
+        ;can be used to draw the tiles positions
+;         Protected.f FontWidth = 3.5, Fontheight = 6
+;         Protected PositonText.s = Str(Mapx) + "," + Str(MapY)
+;         Protected PositionTextWidth.u = Len(PositonText) * FontWidth
+;         Protected FontX.f = (StartX + MapX * #MAP_GRID_TILE_WIDTH) + (#MAP_GRID_TILE_WIDTH / 2) - (PositionTextWidth / 2)
+;         Protected FontY.f = (StartY + MapY * #MAP_GRID_TILE_HEIGHT) + (#MAP_GRID_TILE_HEIGHT / 2) - (Fontheight / 2)
+;         DrawTextWithStandardFont(FontX, FontY, Str(Mapx) + "," + Str(MapY), FontWidth, Fontheight)
       EndIf
  
       

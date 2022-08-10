@@ -71,7 +71,7 @@ Repeat
   Define Event = WindowEvent()
   
   ExamineKeyboard()
-  ExamineMouse()
+  ;ExamineMouse()
   
   ;Update
   While SimulationTime < LastTimeInMs
