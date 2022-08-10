@@ -4,6 +4,7 @@ EnableExplicit
 
 InitSprite()
 InitKeyboard()
+InitMouse()
 
 OpenWindow(1, 0,0,640,480,"Foo Game", #PB_Window_ScreenCentered | #PB_Window_SystemMenu)
 OpenWindowedScreen(WindowID(1),0,0,640,480,0,0,0)
@@ -21,6 +22,7 @@ Procedure.a LoadSprites()
   LoadedAll = LoadedAll & Bool(LoadSprite(#Bomb1, "data\img\FireballProjectile.png", #PB_Sprite_AlphaBlending))
   LoadedAll = LoadedAll & Bool(LoadSprite(#EnemyRedDemonSprite, "data\img\RedDemon.png", #PB_Sprite_AlphaBlending))
   LoadedAll = LoadedAll & Bool(LoadSprite(#EnemyRedArmoredDemonSprite, "data\img\ArmouredRedDemon.png", #PB_Sprite_AlphaBlending))
+  LoadedAll = LoadedAll & Bool(LoadSprite(#CursorSprite, "data\img\cursor.png", #PB_Sprite_AlphaBlending))
   ProcedureReturn LoadedAll
 EndProcedure
 
@@ -69,6 +71,7 @@ Repeat
   Define Event = WindowEvent()
   
   ExamineKeyboard()
+  ExamineMouse()
   
   ;Update
   While SimulationTime < LastTimeInMs
