@@ -87,28 +87,11 @@ Procedure ExplodeProjectile(*Projectile.TProjectile, TimeSlice.f)
   Protected *GameMap.TMap = *Projectile\GameMap
   
   Protected BombPower.a = *Projectile\Power
-  Protected NumPositions = 4
-  Dim PositionsToCheck.TVector2D(NumPositions - 1)
-  ;up position
-  PositionsToCheck(0)\x = 0
-  PositionsToCheck(0)\y = -1
   
-  ;right position
-  PositionsToCheck(1)\x = 1
-  PositionsToCheck(1)\y = 0
-  
-  ;down position
-  PositionsToCheck(2)\x = 0
-  PositionsToCheck(2)\y = 1
-  
-  ;left position
-  PositionsToCheck(3)\x = -1
-  PositionsToCheck(3)\y = 0
-  
-  Protected i
-  For i = 0 To NumPositions - 1
-    Protected CurrentPosition.TVector2D\x = PositionsToCheck(i)\x + CurrentTileX
-    CurrentPosition\y = PositionsToCheck(i)\y + CurrentTileY
+  Protected Direction.a
+  For Direction = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
+    Protected CurrentPosition.TVector2D\x = Map_All_Directions(Direction)\x + CurrentTileX
+    CurrentPosition\y = Map_All_Directions(Direction)\y + CurrentTileY
     
     Protected TilesToCheck = BombPower
     While TilesToCheck
@@ -130,8 +113,8 @@ Procedure ExplodeProjectile(*Projectile.TProjectile, TimeSlice.f)
       EndIf
       
       TilesToCheck - 1
-      CurrentPosition\x + Sign(PositionsToCheck(i)\x)
-      CurrentPosition\y + Sign(PositionsToCheck(i)\y)
+      CurrentPosition\x + Sign(Map_All_Directions(Direction)\x)
+      CurrentPosition\y + Sign(Map_All_Directions(Direction)\y)
     Wend
     
     
