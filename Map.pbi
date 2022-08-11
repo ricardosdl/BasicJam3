@@ -19,9 +19,15 @@ Enumeration EMapDirections
   #MAP_DIRECTION_DOWN
   #MAP_DIRECTION_LEFT
   #MAP_DIRECTION_NONE
+  
+  #MAP_DIRECTION_UP_RIGHT
+  #MAP_DIRECTION_DOWN_RIGHT
+  #MAP_DIRECTION_DOWN_LEFT
+  #MAP_DIRECTION_UP_LEFT
+  
 EndEnumeration
 
-#MAP_NUM_DIRECTIONS = 5
+#MAP_NUM_DIRECTIONS = 9
 #MAP_NUM_LOOKING_DIRECTIONS = 4
 
 Structure TTile
@@ -80,6 +86,14 @@ Map_All_Directions(#MAP_DIRECTION_DOWN)\x = 0 : Map_All_Directions(#MAP_DIRECTIO
 Map_All_Directions(#MAP_DIRECTION_LEFT)\x = -1 : Map_All_Directions(#MAP_DIRECTION_LEFT)\y = 0
 
 Map_All_Directions(#MAP_DIRECTION_NONE)\x = 0 : Map_All_Directions(#MAP_DIRECTION_NONE)\y = 0
+
+Map_All_Directions(#MAP_DIRECTION_UP_RIGHT)\x = 1 : Map_All_Directions(#MAP_DIRECTION_UP_RIGHT)\y = -1
+
+Map_All_Directions(#MAP_DIRECTION_DOWN_RIGHT)\x = 1 : Map_All_Directions(#MAP_DIRECTION_DOWN_RIGHT)\y = 1
+
+Map_All_Directions(#MAP_DIRECTION_DOWN_LEFT)\x = -1 : Map_All_Directions(#MAP_DIRECTION_DOWN_LEFT)\y = 1
+
+Map_All_Directions(#MAP_DIRECTION_UP_LEFT)\x = -1 : Map_All_Directions(#MAP_DIRECTION_UP_LEFT)\y = -1
 
 Procedure IsTileWalkable(*GameMap.TMap, TileX.w, TileY.w)
   If TileX < #MAP_PLAY_AREA_START_X Or TileX > #MAP_PLAY_AREA_END_X
@@ -533,15 +547,45 @@ Procedure.a GetRandomWalkableTileFromOriginTile(*GameMap.TMap, OriginTileX.w, Or
   *ReturnTileCoords\x = RandomTileCoords()\x
   *ReturnTileCoords\y = RandomTileCoords()\y
   
-  
-  
-  
-  
-  
-  
-  
 EndProcedure
 
+Procedure.a GetListWalkableTilesAroundOriginTile(*GameMap.TMap, *OriginTileCoords.TVector2D, BombPower.f, List SafetyTiles.TVector2D())
+  ClearList(SafetyTiles())
+  Protected DirectionIdx.a
+  
+  ;the direction which we'll analyze
+  Protected Direction.TMapDirection
+  ;the tile coords of candidate safety tile
+  Protected CandidateSafetyTile.TVector2D
+  
+  ;cardinal directions
+;   For DirectionIdx = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
+;     Direction = Map_All_Directions(DirectionIdx)
+;     CandidateSafetyTile\x = *OriginTileCoords\x + (Direction\x * (BombPower + 1))
+;     CandidateSafetyTile\y = *OriginTileCoords\y + (Direction\y * (BombPower + 1))
+;     
+;     If IsTileWalkable(*GameMap, CandidateSafetyTile\x, CandidateSafetyTile\y)
+;       AddElement(SafetyTiles())
+;       SafetyTiles() = CandidateSafetyTile
+;     EndIf
+;     
+;   Next
+  
+  ;in-between cardinal directions
+  For DirectionIdx = #MAP_DIRECTION_UP_RIGHT To #MAP_DIRECTION_UP_LEFT
+    Direction = Map_All_Directions(DirectionIdx)
+    ;bombs don't explode in diagonal direction
+    CandidateSafetyTile\x = *OriginTileCoords\x + Direction\x
+    CandidateSafetyTile\y = *OriginTileCoords\y + Direction\y
+    
+    If IsTileWalkable(*GameMap, CandidateSafetyTile\x, CandidateSafetyTile\y)
+      AddElement(SafetyTiles())
+      SafetyTiles() = CandidateSafetyTile
+    EndIf
+  Next
+  
+  ProcedureReturn Bool(ListSize(SafetyTiles()) > 0)
+EndProcedure
 
 Procedure InitMap(*GameMap.TMap, *Position.TVector2D)
   InitGameObject(*GameMap, *Position, -1, @UpdateGameObject(), @DrawMap(), #True, 1.0, #MapDrawOrder)
