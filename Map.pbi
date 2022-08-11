@@ -262,6 +262,12 @@ Procedure AStar2(*GameMap.TMap, StartX.w, StartY.w, EndX.w, EndY.w, List PathLis
       
     Next
     
+    If ListSize(*Neighbors()) = 0
+      ;no neighbors proabably menas a surrounded walkable tile
+      Continue
+    EndIf
+    
+    
     
     Protected *NeighborCurrentElement = SelectElement(*Neighbors(), 0)
     Protected *CurrentNeighbor.TNode = *Neighbors()
