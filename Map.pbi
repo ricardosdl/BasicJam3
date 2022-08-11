@@ -474,9 +474,7 @@ Procedure SetTopLeftCornerPlayableByPlayer(*GameMap.TMap)
   
 EndProcedure
 
-Procedure.a GetRandomWalkableTile(*GameMap.TMap, *TileCoords.TVector2D)
-  Protected MAX_TRIES = #MAP_GRID_WIDTH * #MAP_GRID_HEIGHT * 1.2
-  Protected NumTries = MAX_TRIES
+Procedure.a GetRandomWalkableTile(*GameMap.TMap, *TileCoords.TVector2D, NumTries.u = #MAP_GRID_WIDTH * #MAP_GRID_HEIGHT * 1.2)
   While NumTries
     Protected TileX.w, TileY.w
     TileX = Random(#MAP_PLAY_AREA_END_X, #MAP_PLAY_AREA_START_X)
