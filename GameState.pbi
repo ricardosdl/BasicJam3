@@ -148,18 +148,25 @@ Procedure InitMapPlayState(*PlayState.TPlayState)
 EndProcedure
 
 Procedure InitEnemiesPlayState(*PlayState.TPlayState)
-  Protected *Enemy.TEnemy = GetInactiveEnemyPlayState(*PlayState)
+  Protected NumEnemiesToAdd.a = 5
   
-  Protected RandomCoords.TVector2D
-  If Not GetRandomWalkableTile(@*PlayState\GameMap, @RandomCoords)
-    Debug "could not find a random walkable tile"
-    ProcedureReturn
-  EndIf
+  While NumEnemiesToAdd
+    Protected *Enemy.TEnemy = GetInactiveEnemyPlayState(*PlayState)
+    Protected RandomCoords.TVector2D
+    If Not GetRandomWalkableTile(@*PlayState\GameMap, @RandomCoords)
+      Continue
+    EndIf
+    
+    InitEnemyRedArmoredDemon(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, *PlayState\DrawList, @*PlayState\GameMap,
+                             @RandomCoords)
+    
+    AddDrawItemDrawList(@*PlayState\DrawList, *Enemy)
+    
+    NumEnemiesToAdd - 1
+    
+  Wend
   
-  InitEnemyRedArmoredDemon(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, *PlayState\DrawList, @*PlayState\GameMap,
-                           @RandomCoords)
   
-  AddDrawItemDrawList(@*PlayState\DrawList, *Enemy)
   
   
   
