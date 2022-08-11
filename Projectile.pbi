@@ -9,6 +9,7 @@ EnableExplicit
 
 Enumeration EProjectileTypes
   #ProjectileBomb1
+  #ProjectileExplosion
 EndEnumeration
 
 
@@ -144,24 +145,15 @@ EndProcedure
 Procedure SetProjectileAliveTimer(*Projectile.TProjectile, ProjectileType.a)
   Select ProjectileType
     Case #ProjectileBomb1
-      *Projectile\HasAliveTimer = #True
-      *Projectile\AliveTimer = 3.0;in seconds
+      
   EndSelect
 EndProcedure
 
-Procedure InitProjectile(*Projectile.TProjectile, *MapCoords.TVector2D, Active.a,
-                         ZoomFactor.f, ProjectileType.a, *GameMap.TMap, *DrawList.TDrawList, Power.a = 1, *Owner.TGameObject = #Null)
+Procedure InitProjectile(*Projectile.TProjectile, *MapCoords.TVector2D, ProjectileType.a, *GameMap.TMap,
+                         *DrawList.TDrawList, Power.a = 1, *Owner.TGameObject = #Null)
   
   *Projectile\PositionMapCoords\x = *MapCoords\x
   *Projectile\PositionMapCoords\y = *MapCoords\y
-  
-  Protected Position.TVector2D\x = *GameMap\Position\x + (*Projectile\PositionMapCoords\x * #MAP_GRID_TILE_WIDTH)
-  Position\y = *GameMap\Position\y + (*Projectile\PositionMapCoords\y * #MAP_GRID_TILE_HEIGHT)
-  
-  InitGameObject(*Projectile, @Position, #Bomb1, @UpdateProjectile(), @DrawProjectile(),
-                 Active, ZoomFactor, #ProjectileDrawOrder)
-  
-  ClipSprite(#Bomb1, 0, 0, 16, 16)
   
   *Projectile\ProjectileType = ProjectileType
   
@@ -171,11 +163,31 @@ Procedure InitProjectile(*Projectile.TProjectile, *MapCoords.TVector2D, Active.a
   
   *Projectile\Power = Power
   
+  *Projectile\Owner = *Owner
+  
+EndProcedure
+
+Procedure InitProjectileBomb1(*Projectile.TProjectile, *MapCoords.TVector2D, *GameMap.TMap, *DrawList.TDrawList, Power.f,
+                              *Owner.TGameObject)
+  
+  Protected Position.TVector2D\x = *GameMap\Position\x + (*MapCoords\x * #MAP_GRID_TILE_WIDTH)
+  Position\y = *GameMap\Position\y + (*MapCoords\y * #MAP_GRID_TILE_HEIGHT)
+  
+  InitGameObject(*Projectile, @Position, #Bomb1, @UpdateProjectile(), @DrawProjectile(),
+                 #True, 16, 16, #SPRITES_ZOOM, #ProjectileDrawOrder)
+  
+  InitProjectile(*Projectile, *MapCoords, #ProjectileBomb1, *GameMap, *DrawList, Power, *Owner)
+  
   *Projectile\Health = 1.0
   
-  SetProjectileAliveTimer(*Projectile, ProjectileType)
+  *Projectile\HasAliveTimer = #True
+  *Projectile\AliveTimer = 3.0;in seconds
   
-  *Projectile\Owner = *Owner
+  
+  
+  
+  
+  ClipSprite(#Bomb1, 0, 0, 16, 16)
   
 EndProcedure
 

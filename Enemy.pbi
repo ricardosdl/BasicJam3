@@ -356,8 +356,7 @@ Procedure.a DropBombEnemy(*Enemy.TEnemy)
   Protected BombTileCoords.TVector2D
   GetTileCoordsByPosition(*Enemy\MiddlePosition, @BombTileCoords)
   
-  InitProjectile(*Projectile, @BombTileCoords, #True, #SPRITES_ZOOM, #ProjectileBomb1, *Enemy\GameMap,
-                 *Enemy\DrawList, *Enemy\BombPower, *Enemy)
+  InitProjectileBomb1(*Projectile, @BombTileCoords, *Enemy\GameMap, *Enemy\Drag, *Enemy\BombPower, *Enemy)
   
   AddDrawItemDrawList(*Enemy\DrawList, *Projectile)
   
