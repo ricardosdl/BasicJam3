@@ -398,7 +398,7 @@ Procedure UpdateEnemyRedDemon(*RedDemon.TEnemy, TimeSlice.f)
     If GoToObjectiveTileEnemy(*RedDemon)
       ;reached the objetive tile
       If RandomFloat() <= 0.5
-        Debug "try to drop bomb"
+        ;Debug "try to drop bomb"
         If Not SwitchToDropingBomb(*RedDemon)
           ;could not drop bomb let's just wait
           SwitchToWaitingEnemy(*RedDemon, 3.0)
@@ -421,7 +421,7 @@ Procedure UpdateEnemyRedDemon(*RedDemon.TEnemy, TimeSlice.f)
   ElseIf *RedDemon\CurrentState = #EnemyStateGoingToSafety
     If GoToObjectiveTileEnemy(*RedDemon)
       ;reached the safety tile
-      Debug "safety"
+      ;Debug "safety"
       SwitchToWaitingEnemy(*RedDemon, 3.0)
     EndIf
     
@@ -642,7 +642,7 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
           SwitchToWaitingEnemy(*RedArmoredDemon, 1.0)
           ProcedureReturn
         EndIf
-        Debug "dropped tha bomb"
+        ;Debug "dropped tha bomb"
         ProcedureReturn
       Else
         SwitchStateEnemy(*RedArmoredDemon, #EnemyStateNoState)
@@ -654,7 +654,7 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
                                                                      *RedArmoredDemon\LookingDirection\y)
     
     If LookForPlayerInDirection(*RedArmoredDemon, CurrentLookingDirection, @PlayerCoords)
-      Debug "found player"
+      ;Debug "found player"
       ;found the player in this direction
       
       SwitchToFollowingPlayer(*RedArmoredDemon, @PlayerCoords, @FollowingVelocity)
@@ -667,9 +667,10 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
       If Not SwitchToDropingBomb(*RedArmoredDemon, @GetTileToDropBombPlayer())
         ;could not drop bomb
         SwitchToWaitingEnemy(*RedArmoredDemon, 1.0)
+        ProcedureReturn
       EndIf
       
-      Debug "should drop bomb on player!!!"
+      ;Debug "should drop bomb on player!!!"
       ProcedureReturn
     EndIf
     
@@ -680,9 +681,10 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
     EndIf
     
     If ReachedCurrentObjectiveTile\a = #True And LookForPlayerInAllDirections(*RedArmoredDemon, @PlayerCoords)
+      
       ;if we reached the current objective tile, but not reached the end of path
       ;and found the player when looking in all for directions
-      Debug "found player again"
+      ;Debug "found player again"
       SwitchToFollowingPlayer(*RedArmoredDemon, @PlayerCoords, @FollowingVelocity, #Null)
       ProcedureReturn
     EndIf
@@ -697,7 +699,7 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
   ElseIf *RedArmoredDemon\CurrentState = #EnemyStateGoingToSafety
     If GoToObjectiveTileEnemy(*RedArmoredDemon)
       ;reached the safety tile
-      Debug "safety"
+      ;Debug "safety"
       SwitchToWaitingEnemy(*RedArmoredDemon, 2.5)
       ProcedureReturn
     EndIf
