@@ -13,10 +13,12 @@ Enumeration EProjectileTypes
   #ProjectileExplosion
 EndEnumeration
 
-Structure TProjectileExplosionAnimation Extends TSpriteAnimation
+#EXPLOSION_ANIMATION_FPS = 12
+
+Structure TExplosionAnimation Extends TSpriteAnimation
   Position.TVector2D
   Timer.f
-  
+  Active.a
 EndStructure
 
 
@@ -30,11 +32,32 @@ Structure TProjectile Extends TGameObject
   *Owner.TGameObject
   *DrawList.TDrawList
   ExplosionStarted.a
+  List *ExplosionAnimations.TExplosionAnimation()
+  ExplosionExpansionTimer.f;seconds after the explosion will expand to the next tile
 EndStructure
 
 Structure TProjectileList
   List Projectiles.TProjectile()
 EndStructure
+
+Global NewList ExplosionsAnimations.TExplosionAnimation()
+
+Procedure GetInactiveExplosionAnimaton(AddIfNotFound.a = #True)
+  ForEach ExplosionsAnimations()
+    If Not ExplosionsAnimations()\Active
+      ProcedureReturn @ExplosionsAnimations()
+    EndIf
+  Next
+  
+  If AddIfNotFound
+    AddElement(ExplosionsAnimations())
+    ProcedureReturn @ExplosionsAnimations()
+  EndIf
+  
+  ProcedureReturn #Null
+  
+EndProcedure
+
 
 
 Procedure GetActiveOwnedProjectile(*Owner.TGameObject, *Projectiles.TProjectileList)
@@ -205,11 +228,57 @@ Procedure DrawExplosion(*Explosion.TProjectile)
 EndProcedure
 
 Procedure UpdateExplosion(*Explosion.TProjectile, TimeSlice.f)
+  
+  Protected *ExplosionAnimation.TExplosionAnimation
+  
   If Not *Explosion\ExplosionStarted
     *Explosion\ExplosionStarted = #True
+    *Explosion\ExplosionExpansionTimer = 50 / 1000;50 ms
     ;add an explosion animation on the tile where the explosion starts
+    *ExplosionAnimation = GetInactiveExplosionAnimaton()
+    If *ExplosionAnimation = #Null
+      ;nothing to do? this is an error?
+      ProcedureReturn
+    EndIf
     
+    InitSpriteAnimation(*ExplosionAnimation, #ExplosionSprite, 16, 16, 10, 0, #EXPLOSION_ANIMATION_FPS, #True, #SPRITES_ZOOM)
+    
+    ;the explosionanimation timer allows for the full animation to be played
+    ;meaning all 10 frames will be displayed
+    *ExplosionAnimation\Timer = 1 / #EXPLOSION_ANIMATION_FPS * 10
+    *ExplosionAnimation\Active = #True
+    
+    *ExplosionAnimation\Position\x = (*Explosion\PositionMapCoords\x * #MAP_GRID_TILE_WIDTH) +
+                                     (#MAP_GRID_TILE_HALF_WIDTH) - (*ExplosionAnimation\ZoomedWidth / 2)
+    *ExplosionAnimation\Position\y = (*Explosion\PositionMapCoords\x * #MAP_GRID_TILE_HEIGHT) +
+                                     (#MAP_GRID_TILE_HALF_HEIGHT) - (*ExplosionAnimation\ZoomedHeight / 2)
+    
+    AddElement(*Explosion\ExplosionAnimations())
+    *Explosion\ExplosionAnimations() = *ExplosionAnimation
+    ProcedureReturn
   EndIf
+  
+  ForEach *Explosion\ExplosionAnimations()
+    *ExplosionAnimation = *Explosion\ExplosionAnimations()
+    
+    If *ExplosionAnimation\Timer <= 0
+      ;if the timer expired let's inactivate the animation and remove it from the current explosion list of animations
+      *ExplosionAnimation\Active = #False
+      DeleteElement(*Explosion\ExplosionAnimations())
+      Continue
+    EndIf
+    
+    ;the explosion animation is still active
+    *ExplosionAnimation\Timer - TimeSlice
+    ;update the animation
+    *ExplosionAnimation\Update(*ExplosionAnimation, TimeSlice)
+    
+  Next
+  
+  
+  
+  
+  
   
     
   
@@ -234,6 +303,10 @@ Procedure InitProjectileExplosion(*Projectile.TProjectile, *MapCoords.TVector2D,
   *Projectile\AliveTimer = 0
   
   *Projectile\ExplosionStarted = #False
+  
+  ClearList(*Projectile\ExplosionAnimations())
+  
+  *Projectile\ExplosionExpansionTimer = 50 / 1000;50 ms
   
   
   

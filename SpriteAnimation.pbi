@@ -9,6 +9,7 @@ Prototype DrawSpriteAnimation(*SpriteAnimation, x.l, y.l, Intensity.a = 255, *Co
 Structure TSpriteAnimation
   Sprite.i
   Width.u : Height.u;the original width and height of the sprite, before zooming
+  ZoomedWidth.f : ZoomedHeight.f;width and height after the zoom has been applyed
   NumFrames.a
   CurrentFrame.b
   AnimationFPS.f;frame per second for the animation
@@ -62,6 +63,8 @@ Procedure InitSpriteAnimation(*SpriteAnimation.TSpriteAnimation, Sprite.i, Width
     \Sprite = Sprite
     \Width = Width
     \Height = Height
+    \ZoomedWidth = Width * ZoomLevel
+    \ZoomedHeight = Height * ZoomLevel
     \NumFrames = NumFrames
     \CurrentFrame = CurrentFrame
     \AnimationFPS = AnimationFPS

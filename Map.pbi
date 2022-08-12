@@ -4,6 +4,7 @@ XIncludeFile "Util.pbi"
 XIncludeFile "DrawList.pbi"
 XIncludeFile "DrawOrders.pbi"
 XIncludeFile "DrawText.pbi"
+XIncludeFile "Resources.pbi"
 
 EnableExplicit
 
@@ -41,8 +42,10 @@ EndStructure
 #MAP_GRID_WIDTH = 30
 #MAP_GRID_HEIGHT = 30
 
-#MAP_GRID_TILE_WIDTH = 16
-#MAP_GRID_TILE_HEIGHT = 16
+#MAP_GRID_TILE_WIDTH = 16 * #SPRITES_ZOOM
+#MAP_GRID_TILE_HEIGHT = 16 * #SPRITES_ZOOM
+#MAP_GRID_TILE_HALF_WIDTH = #MAP_GRID_TILE_WIDTH / 2
+#MAP_GRID_TILE_HALF_HEIGHT = #MAP_GRID_TILE_HEIGHT / 2
 
 #MAP_PLAY_AREA_START_X = 1
 #MAP_PLAY_AREA_END_X = #MAP_GRID_WIDTH - 2
