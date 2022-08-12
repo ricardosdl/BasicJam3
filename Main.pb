@@ -23,6 +23,7 @@ Procedure.a LoadSprites()
   LoadedAll = LoadedAll & Bool(LoadSprite(#EnemyRedDemonSprite, "data\img\RedDemon.png", #PB_Sprite_AlphaBlending))
   LoadedAll = LoadedAll & Bool(LoadSprite(#EnemyRedArmoredDemonSprite, "data\img\ArmouredRedDemon.png", #PB_Sprite_AlphaBlending))
   LoadedAll = LoadedAll & Bool(LoadSprite(#CursorSprite, "data\img\cursor.png", #PB_Sprite_AlphaBlending))
+  LoadedAll = LoadedAll & Bool(LoadSprite(#ExplosionSprite, "data\img\Explosion.png", #PB_Sprite_AlphaBlending))
   ProcedureReturn LoadedAll
 EndProcedure
 

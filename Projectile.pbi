@@ -4,6 +4,7 @@ XIncludeFile "Util.pbi"
 XIncludeFile "DrawOrders.pbi"
 XIncludeFile "DrawList.pbi"
 XIncludeFile "Map.pbi"
+XIncludeFile "SpriteAnimation.pbi"
 
 EnableExplicit
 
@@ -11,6 +12,12 @@ Enumeration EProjectileTypes
   #ProjectileBomb1
   #ProjectileExplosion
 EndEnumeration
+
+Structure TProjectileExplosionAnimation Extends TSpriteAnimation
+  Position.TVector2D
+  Timer.f
+  
+EndStructure
 
 
 Structure TProjectile Extends TGameObject
@@ -22,11 +29,13 @@ Structure TProjectile Extends TGameObject
   AliveTimer.f
   *Owner.TGameObject
   *DrawList.TDrawList
+  ExplosionStarted.a
 EndStructure
 
 Structure TProjectileList
   List Projectiles.TProjectile()
 EndStructure
+
 
 Procedure GetActiveOwnedProjectile(*Owner.TGameObject, *Projectiles.TProjectileList)
   ForEach *Projectiles\Projectiles()
@@ -190,5 +199,49 @@ Procedure InitProjectileBomb1(*Projectile.TProjectile, *MapCoords.TVector2D, *Ga
   ClipSprite(#Bomb1, 0, 0, 16, 16)
   
 EndProcedure
+
+Procedure DrawExplosion(*Explosion.TProjectile)
+  
+EndProcedure
+
+Procedure UpdateExplosion(*Explosion.TProjectile, TimeSlice.f)
+  If Not *Explosion\ExplosionStarted
+    *Explosion\ExplosionStarted = #True
+    ;add an explosion animation on the tile where the explosion starts
+    
+  EndIf
+  
+    
+  
+  
+  UpdateGameObject(*Explosion, TimeSlice)
+EndProcedure
+
+Procedure InitProjectileExplosion(*Projectile.TProjectile, *MapCoords.TVector2D, *GameMap.TMap, *DrawList.TDrawList, Power.f,
+                                  *Owner.TGameObject)
+  
+  Protected Position.TVector2D\x = *GameMap\Position\x + (*MapCoords\x * #MAP_GRID_TILE_WIDTH)
+  Position\y = *GameMap\Position\y + (*MapCoords\y * #MAP_GRID_TILE_HEIGHT)
+  
+  InitGameObject(*Projectile, @Position, -1, @UpdateExplosion(), @DrawExplosion(),
+                 #True, 16, 16, #SPRITES_ZOOM, #ProjectileDrawOrder)
+  
+  InitProjectile(*Projectile, *MapCoords, #ProjectileExplosion, *GameMap, *DrawList, Power, *Owner)
+  
+  *Projectile\Health = 1.0
+  
+  *Projectile\HasAliveTimer = #False
+  *Projectile\AliveTimer = 0
+  
+  *Projectile\ExplosionStarted = #False
+  
+  
+  
+  ClipSprite(#Bomb1, 0, 0, 16, 16)
+  
+  
+  
+EndProcedure
+
 
 DisableExplicit
