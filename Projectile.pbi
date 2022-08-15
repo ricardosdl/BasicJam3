@@ -21,6 +21,11 @@ Structure TExplosionAnimation Extends TSpriteAnimation
   Active.a
 EndStructure
 
+Structure TExplosionExpansion
+  ExplosionExpansionTimer.f;seconds after the explosion will expand to the next tile
+  Array OpenDirections.a(#MAP_NUM_LOOKING_DIRECTIONS - 1)
+  CurrentExpansion.a
+EndStructure
 
 Structure TProjectile Extends TGameObject
   *GameMap.TMap
@@ -31,14 +36,18 @@ Structure TProjectile Extends TGameObject
   AliveTimer.f
   *Owner.TGameObject
   *DrawList.TDrawList
+  *ProjectileList.TProjectileList
   ExplosionStarted.a
   List *ExplosionAnimations.TExplosionAnimation()
-  ExplosionExpansionTimer.f;seconds after the explosion will expand to the next tile
+  ExplosionExpansion.TExplosionExpansion
 EndStructure
 
 Structure TProjectileList
   List Projectiles.TProjectile()
 EndStructure
+
+Declare InitProjectileExplosion(*Projectile.TProjectile, *MapCoords.TVector2D, *GameMap.TMap, *DrawList.TDrawList, Power.f,
+                                  *Owner.TGameObject)
 
 Global NewList ExplosionsAnimations.TExplosionAnimation()
 
@@ -117,41 +126,17 @@ Procedure ExplodeProjectile(*Projectile.TProjectile, TimeSlice.f)
   CurrentTileX = *Projectile\PositionMapCoords\x
   CurrentTileY = *Projectile\PositionMapCoords\y
   
-  Protected *GameMap.TMap = *Projectile\GameMap
+  Protected *Explosion.TProjectile = GetInactiveProjectile(*Projectile\ProjectileList)
+  If *Explosion = #Null
+    ;no explosion :(
+    ProcedureReturn
+  EndIf
   
-  Protected BombPower.a = *Projectile\Power
   
-  Protected Direction.a
-  For Direction = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
-    Protected CurrentPosition.TVector2D\x = Map_All_Directions(Direction)\x + CurrentTileX
-    CurrentPosition\y = Map_All_Directions(Direction)\y + CurrentTileY
-    
-    Protected TilesToCheck = BombPower
-    While TilesToCheck
-      Protected IsWalkable = IsTileWalkable(*GameMap, CurrentPosition\x, CurrentPosition\y)
-      Protected IsBreakable = IsTileBreakable(*GameMap, CurrentPosition\x, CurrentPosition\y)
-      
-      If IsWalkable And Not IsBreakable
-        ;hit clear path
-        ;TODO: something to do later?
-      ElseIf IsBreakable And Not IsWalkable
-        ;hit a breakabe wall
-        MakeTileWalkable(*GameMap, CurrentPosition\x, CurrentPosition\y)
-        ;the explosion ends here
-        Break
-      ElseIf (Not IsWalkable) And (Not IsBreakable)
-        ;hit a unbreakable wall
-        ;the explosion ends here
-        Break
-      EndIf
-      
-      TilesToCheck - 1
-      CurrentPosition\x + Sign(Map_All_Directions(Direction)\x)
-      CurrentPosition\y + Sign(Map_All_Directions(Direction)\y)
-    Wend
-    
-    
-  Next
+  InitProjectileExplosion(*Explosion, @*Projectile\PositionMapCoords, *Projectile\GameMap, *Projectile\DrawList,
+                          *Projectile\Power, #Null)
+  
+  AddDrawItemDrawList(*Projectile\DrawList, *Explosion)
   
   
   
@@ -182,7 +167,7 @@ Procedure SetProjectileAliveTimer(*Projectile.TProjectile, ProjectileType.a)
 EndProcedure
 
 Procedure InitProjectile(*Projectile.TProjectile, *MapCoords.TVector2D, ProjectileType.a, *GameMap.TMap,
-                         *DrawList.TDrawList, Power.a = 1, *Owner.TGameObject = #Null)
+                         *DrawList.TDrawList, *ProjectileList.TProjectileList, Power.a = 1, *Owner.TGameObject = #Null)
   
   *Projectile\PositionMapCoords\x = *MapCoords\x
   *Projectile\PositionMapCoords\y = *MapCoords\y
@@ -197,10 +182,12 @@ Procedure InitProjectile(*Projectile.TProjectile, *MapCoords.TVector2D, Projecti
   
   *Projectile\Owner = *Owner
   
+  *Projectile\ProjectileList = *ProjectileList
+  
 EndProcedure
 
 Procedure InitProjectileBomb1(*Projectile.TProjectile, *MapCoords.TVector2D, *GameMap.TMap, *DrawList.TDrawList, Power.f,
-                              *Owner.TGameObject)
+                              *Owner.TGameObject, *ProjectileList.TProjectileList)
   
   Protected Position.TVector2D\x = *GameMap\Position\x + (*MapCoords\x * #MAP_GRID_TILE_WIDTH)
   Position\y = *GameMap\Position\y + (*MapCoords\y * #MAP_GRID_TILE_HEIGHT)
@@ -208,7 +195,7 @@ Procedure InitProjectileBomb1(*Projectile.TProjectile, *MapCoords.TVector2D, *Ga
   InitGameObject(*Projectile, @Position, #Bomb1, @UpdateProjectile(), @DrawProjectile(),
                  #True, 16, 16, #SPRITES_ZOOM, #ProjectileDrawOrder)
   
-  InitProjectile(*Projectile, *MapCoords, #ProjectileBomb1, *GameMap, *DrawList, Power, *Owner)
+  InitProjectile(*Projectile, *MapCoords, #ProjectileBomb1, *GameMap, *DrawList, *ProjectileList, Power, *Owner)
   
   *Projectile\Health = 1.0
   
@@ -227,34 +214,88 @@ Procedure DrawExplosion(*Explosion.TProjectile)
   
 EndProcedure
 
+Procedure AddExplosionAnimation(*Explosion.TProjectile, *PositionCoords.TVector2D)
+  ;add an explosion animation on the tile where the explosion starts
+  Protected *ExplosionAnimation.TExplosionAnimation = GetInactiveExplosionAnimaton()
+  If *ExplosionAnimation = #Null
+    ;nothing to do? this is an error?
+    ProcedureReturn
+  EndIf
+  
+  InitSpriteAnimation(*ExplosionAnimation, #ExplosionSprite, 16, 16, 10, 0, #EXPLOSION_ANIMATION_FPS, #True, #SPRITES_ZOOM)
+  
+  ;the explosionanimation timer allows for the full animation to be played
+  ;meaning all 10 frames will be displayed
+  *ExplosionAnimation\Timer = 1 / #EXPLOSION_ANIMATION_FPS * 10
+  *ExplosionAnimation\Active = #True
+  
+  *ExplosionAnimation\Position\x = (*PositionCoords\x * #MAP_GRID_TILE_WIDTH) +
+                                   (#MAP_GRID_TILE_HALF_WIDTH) - (*ExplosionAnimation\ZoomedWidth / 2)
+  *ExplosionAnimation\Position\y = (*PositionCoords\y * #MAP_GRID_TILE_HEIGHT) +
+                                   (#MAP_GRID_TILE_HALF_HEIGHT) - (*ExplosionAnimation\ZoomedHeight / 2)
+  
+  AddElement(*Explosion\ExplosionAnimations())
+  *Explosion\ExplosionAnimations() = *ExplosionAnimation
+  ProcedureReturn *ExplosionAnimation
+EndProcedure
+
+Procedure UpdateExplosionExpansion(*Explosion.TProjectile, TimeSlice.f)
+  If *Explosion\ExplosionExpansion\ExplosionExpansionTimer <= 0
+    If *Explosion\ExplosionExpansion\CurrentExpansion > *Explosion\Power
+      ;the expansion has reached its maximum
+      ProcedureReturn
+    EndIf
+    
+    ;time to expand the explosion in the cardinal directions
+    Protected DirectionIdx.a
+    For DirectionIdx = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
+      If Not *Explosion\ExplosionExpansion\OpenDirections(DirectionIdx)
+        ;the explosion expansion ended in this direction, go to the next
+        Continue
+      EndIf
+      
+      Protected MapDirection.TMapDirection = Map_All_Directions(DirectionIdx)
+      
+      Protected PositionCoord.TVector2D
+      PositionCoord\x = *Explosion\PositionMapCoords\x + *Explosion\ExplosionExpansion\CurrentExpansion * MapDirection\x
+      PositionCoord\y = *Explosion\PositionMapCoords\y + *Explosion\ExplosionExpansion\CurrentExpansion * MapDirection\y
+      
+      If IsTileWalkable(*Explosion\GameMap, PositionCoord\x, PositionCoord\y)
+        ;this tile is walkable just add an explosion animation on it
+        AddExplosionAnimation(*Explosion, @PositionCoord)
+        Continue
+      EndIf
+      
+      Protected IsBreakable.a = IsTileBreakable(*Explosion\GameMap, PositionCoord\x, PositionCoord\y)
+      If IsBreakable
+        ;this tile is breakable, we add an explosion animation, but the explosion ends here in this current direction
+        ;this tile is walkable just add an explosion animation on it
+        AddExplosionAnimation(*Explosion, @PositionCoord)
+        *Explosion\ExplosionExpansion\OpenDirections(DirectionIdx) = #False
+        MakeTileWalkable(*Explosion\GameMap, PositionCoord\x, PositionCoord\y)
+        Continue
+      Else
+        ;the tile is unbreakable, don't add explosion animation, but end the expansion on this direction
+        *Explosion\ExplosionExpansion\OpenDirections(DirectionIdx) = #False
+      EndIf
+      
+      
+      
+    Next
+    *Explosion\ExplosionExpansion\CurrentExpansion + 1
+    
+  EndIf
+  
+  *Explosion\ExplosionExpansion\ExplosionExpansionTimer - TimeSlice
+EndProcedure
+
 Procedure UpdateExplosion(*Explosion.TProjectile, TimeSlice.f)
   
   Protected *ExplosionAnimation.TExplosionAnimation
   
   If Not *Explosion\ExplosionStarted
     *Explosion\ExplosionStarted = #True
-    *Explosion\ExplosionExpansionTimer = 50 / 1000;50 ms
-    ;add an explosion animation on the tile where the explosion starts
-    *ExplosionAnimation = GetInactiveExplosionAnimaton()
-    If *ExplosionAnimation = #Null
-      ;nothing to do? this is an error?
-      ProcedureReturn
-    EndIf
-    
-    InitSpriteAnimation(*ExplosionAnimation, #ExplosionSprite, 16, 16, 10, 0, #EXPLOSION_ANIMATION_FPS, #True, #SPRITES_ZOOM)
-    
-    ;the explosionanimation timer allows for the full animation to be played
-    ;meaning all 10 frames will be displayed
-    *ExplosionAnimation\Timer = 1 / #EXPLOSION_ANIMATION_FPS * 10
-    *ExplosionAnimation\Active = #True
-    
-    *ExplosionAnimation\Position\x = (*Explosion\PositionMapCoords\x * #MAP_GRID_TILE_WIDTH) +
-                                     (#MAP_GRID_TILE_HALF_WIDTH) - (*ExplosionAnimation\ZoomedWidth / 2)
-    *ExplosionAnimation\Position\y = (*Explosion\PositionMapCoords\x * #MAP_GRID_TILE_HEIGHT) +
-                                     (#MAP_GRID_TILE_HALF_HEIGHT) - (*ExplosionAnimation\ZoomedHeight / 2)
-    
-    AddElement(*Explosion\ExplosionAnimations())
-    *Explosion\ExplosionAnimations() = *ExplosionAnimation
+    *ExplosionAnimation = AddExplosionAnimation(*Explosion, @*Explosion\PositionMapCoords)
     ProcedureReturn
   EndIf
   
@@ -275,16 +316,27 @@ Procedure UpdateExplosion(*Explosion.TProjectile, TimeSlice.f)
     
   Next
   
+  If ListSize(*Explosion\ExplosionAnimations()) < 1
+    ;the explosion ended
+    *Explosion\Active = #False
+    ProcedureReturn
+  EndIf
   
-  
-  
-  
-  
-    
-  
+  UpdateExplosionExpansion(*Explosion, TimeSlice)
   
   UpdateGameObject(*Explosion, TimeSlice)
 EndProcedure
+
+Procedure InitExplosionExpansion(*ExplosionExpansion.TExplosionExpansion, ExpansionTimer.f)
+  *ExplosionExpansion\ExplosionExpansionTimer = ExpansionTimer
+  *ExplosionExpansion\CurrentExpansion = 1
+  Protected DirectionIdx.a
+  For DirectionIdx = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
+    *ExplosionExpansion\OpenDirections(DirectionIdx) = #True
+  Next
+  
+EndProcedure
+
 
 Procedure InitProjectileExplosion(*Projectile.TProjectile, *MapCoords.TVector2D, *GameMap.TMap, *DrawList.TDrawList, Power.f,
                                   *Owner.TGameObject)
@@ -295,7 +347,7 @@ Procedure InitProjectileExplosion(*Projectile.TProjectile, *MapCoords.TVector2D,
   InitGameObject(*Projectile, @Position, -1, @UpdateExplosion(), @DrawExplosion(),
                  #True, 16, 16, #SPRITES_ZOOM, #ProjectileDrawOrder)
   
-  InitProjectile(*Projectile, *MapCoords, #ProjectileExplosion, *GameMap, *DrawList, Power, *Owner)
+  InitProjectile(*Projectile, *MapCoords, #ProjectileExplosion, *GameMap, *DrawList, #Null, Power, *Owner)
   
   *Projectile\Health = 1.0
   
@@ -306,9 +358,7 @@ Procedure InitProjectileExplosion(*Projectile.TProjectile, *MapCoords.TVector2D,
   
   ClearList(*Projectile\ExplosionAnimations())
   
-  *Projectile\ExplosionExpansionTimer = 50 / 1000;50 ms
-  
-  
+  InitExplosionExpansion(@*Projectile\ExplosionExpansion, 50 / 1000)
   
   ClipSprite(#Bomb1, 0, 0, 16, 16)
   

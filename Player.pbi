@@ -28,7 +28,8 @@ Procedure PutBombPlayer(*Player.TPlayer)
   Protected BombTileCoords.TVector2D
   GetTileCoordsByPosition(*Player\MiddlePosition, @BombTileCoords)
   
-  InitProjectileBomb1(*Projectile, @BombTileCoords, *Player\GameMap, *Player\DrawList, *Player\BombPower, *Player)
+  InitProjectileBomb1(*Projectile, @BombTileCoords, *Player\GameMap, *Player\DrawList, *Player\BombPower, *Player,
+                      *Player\ProjectileList)
   
   AddDrawItemDrawList(*Player\DrawList, *Projectile)
   
