@@ -205,7 +205,14 @@ Procedure AStar2(*GameMap.TMap, StartX.w, StartY.w, EndX.w, EndY.w, List PathLis
   AddElement(*OpenList())
   *OpenList() = *StartNode
   
+  Protected.l NumIterations = 0, MaxIterations = #MAP_GRID_WIDTH * #MAP_GRID_HEIGHT / 2
+  
   While ListSize(*OpenList()) > 0
+    NumIterations + 1
+    If NumIterations > MaxIterations
+      ProcedureReturn #False
+    EndIf
+    
     Protected *CurrentElement = SelectElement(*OpenList(), 0)
     Protected *Current.TNode = *OpenList()
     Protected LowestF = *Current\f
