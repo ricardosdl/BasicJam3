@@ -13,6 +13,7 @@ Enumeration EProjectileTypes
   #ProjectileExplosion
 EndEnumeration
 
+#BOMB1_TIMER = 3.0
 #EXPLOSION_ANIMATION_FPS = 12
 #EXPLOSION_EXPANSION_TIMER = 250.0 / 1000.0
 
@@ -118,6 +119,28 @@ Procedure GetNumActiveOwnedProjectiles(*ProjectileList.TProjectileList, *Owner.T
   
 EndProcedure
 
+Procedure IsThereActiveBombOnTile(*ProjectileList.TProjectileList, *TileCoords.TVector2D, *Owner.TGameObject = #Null)
+  Protected *Bomb.TProjectile
+  ForEach *ProjectileList\Projectiles()
+    *Bomb = @*ProjectileList\Projectiles()
+    If Not *Bomb\Active
+      Continue
+    EndIf
+    
+    If *Bomb\ProjectileType <> #ProjectileBomb1
+      Continue
+    EndIf
+    
+    If *Bomb\PositionMapCoords\x = *TileCoords\x And *Bomb\PositionMapCoords\y = *TileCoords\y
+      ;is active and is a bomb, and is on the especified *tilecoords
+      ProcedureReturn #True
+    EndIf
+  Next
+  
+  ProcedureReturn #False
+  
+EndProcedure
+
 Procedure DrawProjectile(*Projectile.TProjectile)
   DrawGameObject(*Projectile)
 EndProcedure
@@ -201,7 +224,7 @@ Procedure InitProjectileBomb1(*Projectile.TProjectile, *MapCoords.TVector2D, *Ga
   *Projectile\Health = 1.0
   
   *Projectile\HasAliveTimer = #True
-  *Projectile\AliveTimer = 3.0;in seconds
+  *Projectile\AliveTimer = #BOMB1_TIMER;in seconds
   
   
   

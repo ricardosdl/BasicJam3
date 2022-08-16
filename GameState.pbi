@@ -148,7 +148,7 @@ Procedure InitMapPlayState(*PlayState.TPlayState)
 EndProcedure
 
 Procedure InitEnemiesPlayState(*PlayState.TPlayState)
-  Protected NumEnemiesToAdd.a = 5
+  Protected NumEnemiesToAdd.a = 1
   
   While NumEnemiesToAdd
     Protected *Enemy.TEnemy = GetInactiveEnemyPlayState(*PlayState)

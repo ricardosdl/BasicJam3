@@ -526,7 +526,28 @@ Procedure.a GetRandomWalkableDirectionFromOriginTile(*GameMap.TMap, OriginTileX.
   
 EndProcedure
 
-Procedure.a GetRandomWalkableTileFromOriginTile(*GameMap.TMap, OriginTileX.w, OriginTileY.w, Direction.a, *ReturnTileCoords.TVector2D)
+Procedure.a GetWalkableDirectionsFromOriginTile(*GameMap.TMap, OriginTileX.w, OriginTileY.w, List WalkableDirections.a())
+  Protected DirectionIdx.a
+  ClearList(WalkableDirections())
+  For DirectionIdx = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
+    Protected CurrentTileX.w, CurrentTileY.w
+    CurrentTileX = OriginTileX + Map_All_Directions(DirectionIdx)\x
+    CurrentTileY = OriginTileY + Map_All_Directions(DirectionIdx)\y
+    If IsTileWalkable(*GameMap, CurrentTileX, CurrentTileY)
+      AddElement(WalkableDirections())
+      WalkableDirections() = DirectionIdx
+    EndIf
+  Next
+  
+  If ListSize(WalkableDirections()) > 0
+    ProcedureReturn #True
+  EndIf
+  
+  ProcedureReturn #False
+EndProcedure
+
+Procedure.a GetRandomWalkableTileFromOriginTile(*GameMap.TMap, OriginTileX.w, OriginTileY.w, Direction.a, *ReturnTileCoords.TVector2D,
+                                                MaxDistance.w = 0)
   If Direction = #MAP_DIRECTION_NONE
     ;no direction to follow
     ProcedureReturn #False
@@ -539,6 +560,7 @@ Procedure.a GetRandomWalkableTileFromOriginTile(*GameMap.TMap, OriginTileX.w, Or
   Protected CurrentTileX.w = OriginTileX + MapDirection\x
   Protected CurrentTileY.w = OriginTileY + MapDirection\y
   
+  Protected CurrentDistance.a = 0
   While IsTileWalkable(*GameMap, CurrentTileX, CurrentTileY)
     ;this current tile in this direction is walkable
     AddElement(RandomTileCoords())
@@ -548,6 +570,13 @@ Procedure.a GetRandomWalkableTileFromOriginTile(*GameMap.TMap, OriginTileX.w, Or
     ;update the current tile in the direction given
     CurrentTileX + MapDirection\x
     CurrentTileY + MapDirection\y
+    
+    CurrentDistance + 1
+    
+    If MaxDistance > 0 And CurrentDistance = MaxDistance
+      Break
+    EndIf
+    
     
   Wend
   
