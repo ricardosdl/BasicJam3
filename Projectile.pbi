@@ -14,6 +14,7 @@ Enumeration EProjectileTypes
 EndEnumeration
 
 #EXPLOSION_ANIMATION_FPS = 12
+#EXPLOSION_EXPANSION_TIMER = 250.0 / 1000.0
 
 Structure TExplosionAnimation Extends TSpriteAnimation
   Position.TVector2D
@@ -251,6 +252,8 @@ Procedure UpdateExplosionExpansion(*Explosion.TProjectile, TimeSlice.f)
       ProcedureReturn
     EndIf
     
+    *Explosion\ExplosionExpansion\ExplosionExpansionTimer = #EXPLOSION_EXPANSION_TIMER
+    
     ;time to expand the explosion in the cardinal directions
     Protected DirectionIdx.a
     For DirectionIdx = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
@@ -363,7 +366,7 @@ Procedure InitProjectileExplosion(*Projectile.TProjectile, *MapCoords.TVector2D,
   
   ClearList(*Projectile\ExplosionAnimations())
   
-  InitExplosionExpansion(@*Projectile\ExplosionExpansion, 50 / 1000)
+  InitExplosionExpansion(@*Projectile\ExplosionExpansion, #EXPLOSION_EXPANSION_TIMER)
   
   ClipSprite(#Bomb1, 0, 0, 16, 16)
   
