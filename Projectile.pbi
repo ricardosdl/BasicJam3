@@ -211,6 +211,11 @@ Procedure InitProjectileBomb1(*Projectile.TProjectile, *MapCoords.TVector2D, *Ga
 EndProcedure
 
 Procedure DrawExplosion(*Explosion.TProjectile)
+  Protected *ExplosionAnimation.TExplosionAnimation
+  ForEach *Explosion\ExplosionAnimations()
+    *ExplosionAnimation = *Explosion\ExplosionAnimations()
+    *ExplosionAnimation\Draw(*ExplosionAnimation, *ExplosionAnimation\Position\x, *ExplosionAnimation\Position\y)
+  Next
   
 EndProcedure
 
