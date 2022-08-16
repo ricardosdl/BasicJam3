@@ -60,6 +60,8 @@ Structure TPlayState Extends TGameState
   ShowAStar.a
   List AStarPath.TVector2D()
   
+  Level.a
+  
   
 EndStructure
 
@@ -148,7 +150,7 @@ Procedure InitMapPlayState(*PlayState.TPlayState)
 EndProcedure
 
 Procedure InitEnemiesPlayState(*PlayState.TPlayState)
-  Protected NumEnemiesToAdd.a = 1
+  Protected NumEnemiesToAdd.a = *PlayState\Level * 1.6
   
   While NumEnemiesToAdd
     Protected *Enemy.TEnemy = GetInactiveEnemyPlayState(*PlayState)
@@ -157,8 +159,14 @@ Procedure InitEnemiesPlayState(*PlayState.TPlayState)
       Continue
     EndIf
     
-    InitEnemyRedArmoredDemon(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, *PlayState\DrawList, @*PlayState\GameMap,
-                             @RandomCoords)
+    If RandomFloat() <= 0.6
+      InitEnemyRedArmoredDemon(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, *PlayState\DrawList, @*PlayState\GameMap,
+                               @RandomCoords)
+    Else
+      InitEnemyRedDemon(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, @*PlayState\DrawList, @*PlayState\GameMap,
+                        @RandomCoords)
+    EndIf
+    
     
     AddDrawItemDrawList(@*PlayState\DrawList, *Enemy)
     
@@ -173,6 +181,8 @@ Procedure InitEnemiesPlayState(*PlayState.TPlayState)
 EndProcedure
 
 Procedure StartPlayState(*PlayState.TPlayState)
+  *PlayState\Level = 1
+  
   InitMapPlayState(*PlayState)
   
   InitPlayerPlayState(*PlayState)
@@ -191,6 +201,23 @@ EndProcedure
 Procedure EndPlayState(*PlayState.TPlayState)
 EndProcedure
 
+Procedure.a BeatLevelPlayState(*PlayState.TPlayState)
+  Protected EnemyIdx.l, EndEnemyIdx.l = ArraySize(*PlayState\Enemies())
+  Protected NoActiveEnemy.a = #True
+  For EnemyIdx = 0 To EndEnemyIdx
+    If *PlayState\Enemies(EnemyIdx)\Active
+      NoActiveEnemy = #False
+      Break
+    EndIf
+  Next
+  ProcedureReturn NoActiveEnemy
+  
+EndProcedure
+
+Procedure.a IsGameOverPlayState(*PlayState.TPlayState)
+EndProcedure
+
+
 Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   *PlayState\Player\Update(@*PlayState\Player, TimeSlice)
   
@@ -208,6 +235,16 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
     EndIf
     
   Next
+  
+  If BeatLevelPlayState(*PlayState)
+    Debug "beat the current level"
+  EndIf
+  
+  If IsGameOverPlayState(*PlayState)
+  EndIf
+  
+  
+  
   
   Protected MousePosition.TVector2D
   
