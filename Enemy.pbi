@@ -286,6 +286,10 @@ Procedure HurtEnemy(*Enemy.TEnemy, Power.f)
   
 EndProcedure
 
+Procedure ExplodeEnemy(*Enemy.TEnemy)
+  KillEnemy(*Enemy)
+EndProcedure
+
 Procedure DrawEnemy(*Enemy.TEnemy)
   DrawGameObject(*Enemy)
   If *Enemy\CurrentState = #EnemyStateGoingToObjectiveTile
