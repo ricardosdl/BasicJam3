@@ -397,5 +397,28 @@ Procedure InitProjectileExplosion(*Projectile.TProjectile, *MapCoords.TVector2D,
   
 EndProcedure
 
+Procedure.a CheckCollisonProjectileExplosionMiddlePosition(*Explosion.TProjectile, *GameObject.TGameObject)
+  
+  Protected GameObjectCoords.TVector2D
+  GetTileCoordsByPosition(@*GameObject\MiddlePosition, @GameObjectCoords)
+  
+  Protected *ExplosionAnimation.TExplosionAnimation
+  ForEach *Explosion\ExplosionAnimations()
+    *ExplosionAnimation = *Explosion\ExplosionAnimations()
+    Protected ExplosionCoords.TVector2D
+    GetTileCoordsByPosition(@*ExplosionAnimation\Position, @ExplosionCoords)
+    If ExplosionCoords\x = GameObjectCoords\x And ExplosionCoords\y = GameObjectCoords\y
+      ProcedureReturn #True
+    EndIf
+  Next
+  
+  ProcedureReturn #False
+  
+  
+  
+  
+  
+EndProcedure
+
 
 DisableExplicit

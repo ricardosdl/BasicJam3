@@ -233,6 +233,94 @@ Procedure GoToNextLevelPlayState(*PlayState.TPlayState)
   
 EndProcedure
 
+Procedure CheckExplosionsAgainstEnemies(*PlayState.TPlayState, List *ActiveExplosions.TProjectile())
+  Protected EnemyIdx.l, EndEnemyIdx.l = ArraySize(*PlayState\Enemies())
+  Protected *Enemy.TEnemy
+  For EnemyIdx = 0 To EndEnemyIdx
+    *Enemy = @*PlayState\Enemies(EnemyIdx)
+    If Not *Enemy\Active
+      Continue
+    EndIf
+    
+    ForEach *ActiveExplosions()
+      Protected *Explosion.TProjectile = *ActiveExplosions()
+      If CheckCollisonProjectileExplosionMiddlePosition(*Explosion, *Enemy)
+        ExplodeEnemy(*Enemy)
+        Break
+      EndIf
+      
+    Next
+    
+    
+    
+  Next
+  
+EndProcedure
+
+Procedure CheckExplosionsAgainstBombs(*PlayState.TPlayState, List *ActiveExplosions.TProjectile())
+  Protected *Bomb.TProjectile
+  ForEach *PlayState\ProjectileList\Projectiles()
+    *Bomb = @*PlayState\ProjectileList\Projectiles()
+    If Not *Bomb\Active
+      Continue
+    EndIf
+    
+    If *Bomb\ProjectileType <> #ProjectileBomb1
+      Continue
+    EndIf
+    
+    ForEach *ActiveExplosions()
+      Protected *Explosion.TProjectile = *ActiveExplosions()
+      If CheckCollisonProjectileExplosionMiddlePosition(*Explosion, *Bomb)
+        *Bomb\AliveTimer = 0.0;forces explosion on the next game update
+        Break
+      EndIf
+      
+    Next
+    
+    
+    
+  Next
+  
+EndProcedure
+
+Procedure CheckExplosionsAgainstPlayer(*PlayState.TPlayState, List *ActiveExplosions.TProjectile())
+  ForEach *ActiveExplosions()
+    If CheckCollisonProjectileExplosionMiddlePosition(*ActiveExplosions(), @*PlayState\Player)
+      Debug "explode player:" + ElapsedMilliseconds()
+    EndIf
+  Next
+  
+EndProcedure
+
+Procedure CheckExplosionsCollisionsPlayState(*PlayState.TPlayState)
+  
+  NewList *ActiveExplosions.TProjectile()
+  
+  Protected *Projectile.TProjectile
+  ForEach *PlayState\ProjectileList\Projectiles()
+    *Projectile = @*PlayState\ProjectileList\Projectiles()
+    If Not *Projectile\Active
+      Continue
+    EndIf
+    
+    If *Projectile\ProjectileType <> #ProjectileExplosion
+      Continue
+    EndIf
+    
+    AddElement(*ActiveExplosions())
+    *ActiveExplosions() = *Projectile
+  Next
+  
+  CheckExplosionsAgainstEnemies(*PlayState, *ActiveExplosions())
+  
+  CheckExplosionsAgainstBombs(*PlayState, *ActiveExplosions())
+  
+  CheckExplosionsAgainstPlayer(*PlayState, *ActiveExplosions())
+  
+    
+EndProcedure
+
 Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   *PlayState\Player\Update(@*PlayState\Player, TimeSlice)
   
@@ -251,6 +339,8 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
     
   Next
   
+  CheckExplosionsCollisionsPlayState(*PlayState)
+  
   If BeatLevelPlayState(*PlayState)
     GoToNextLevelPlayState(*PlayState)
     ProcedureReturn
@@ -258,9 +348,6 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   
   If IsGameOverPlayState(*PlayState)
   EndIf
-  
-  
-  
   
   Protected MousePosition.TVector2D
   
