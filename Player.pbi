@@ -186,16 +186,22 @@ Procedure DrawPlayer(*Player.TPlayer)
   StopDrawing()
 EndProcedure
 
+Procedure SetPlayerMapPosition(*Player.TPlayer, *GameMap.TMap, *MapCoords.TVector2D, *ReturnPlayerPosition.TVector2D)
+  *Player\PositionMapCoords\x = *MapCoords\x
+  *Player\PositionMapCoords\y = *MapCoords\y
+  
+  *ReturnPlayerPosition\x = *GameMap\Position\x + (*Player\PositionMapCoords\x * #MAP_GRID_TILE_WIDTH)
+  *ReturnPlayerPosition\y = *GameMap\Position\y + (*Player\PositionMapCoords\y * #MAP_GRID_TILE_HEIGHT)
+EndProcedure
+
 Procedure InitPlayer(*Player.TPlayer, *MapCoords.TVector2D, ZoomFactor.f, *DrawList.TDrawList, *GameMap.TMap,
                      *ProjectileList.TProjectileList)
   ;the player has a reference to the game map
   *Player\GameMap = *GameMap
-  *Player\PositionMapCoords\x = *MapCoords\x
-  *Player\PositionMapCoords\y = *MapCoords\y
   
-  Protected Position.TVector2D\x = *GameMap\Position\x + (*Player\PositionMapCoords\x * #MAP_GRID_TILE_WIDTH)
-  Position\y = *GameMap\Position\y + (*Player\PositionMapCoords\y * #MAP_GRID_TILE_HEIGHT)
+  Protected Position.TVector2D
   
+  SetPlayerMapPosition(*Player, *GameMap, *MapCoords, @Position)
   
   InitGameObject(*Player, @Position, #Player1, @UpdatePlayer(), @DrawPlayer(), #True, 16, 16, ZoomFactor,
                  #PlayerDrawOrder)

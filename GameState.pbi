@@ -217,6 +217,21 @@ EndProcedure
 Procedure.a IsGameOverPlayState(*PlayState.TPlayState)
 EndProcedure
 
+Procedure GoToNextLevelPlayState(*PlayState.TPlayState)
+  *PlayState\Level + 1
+  
+  InitMapPlayState(*PlayState)
+  
+  Protected PlayerMapCoords.TVector2D\x = 1
+  PlayerMapCoords\y = 1
+  Protected PlayerPosition.TVector2D
+  
+  SetPlayerMapPosition(@*PlayState\Player, @*PlayState\GameMap, @PlayerMapCoords, @PlayerPosition)
+  *PlayState\Player\Position = PlayerPosition
+  
+  InitEnemiesPlayState(*PlayState)
+  
+EndProcedure
 
 Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   *PlayState\Player\Update(@*PlayState\Player, TimeSlice)
@@ -237,7 +252,8 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   Next
   
   If BeatLevelPlayState(*PlayState)
-    Debug "beat the current level"
+    GoToNextLevelPlayState(*PlayState)
+    ProcedureReturn
   EndIf
   
   If IsGameOverPlayState(*PlayState)
