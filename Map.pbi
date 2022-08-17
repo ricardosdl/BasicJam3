@@ -603,19 +603,6 @@ Procedure.a GetListWalkableTilesAroundOriginTile(*GameMap.TMap, *OriginTileCoord
   ;the tile coords of candidate safety tile
   Protected CandidateSafetyTile.TVector2D
   
-  ;cardinal directions
-;   For DirectionIdx = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
-;     Direction = Map_All_Directions(DirectionIdx)
-;     CandidateSafetyTile\x = *OriginTileCoords\x + (Direction\x * (BombPower + 1))
-;     CandidateSafetyTile\y = *OriginTileCoords\y + (Direction\y * (BombPower + 1))
-;     
-;     If IsTileWalkable(*GameMap, CandidateSafetyTile\x, CandidateSafetyTile\y)
-;       AddElement(SafetyTiles())
-;       SafetyTiles() = CandidateSafetyTile
-;     EndIf
-;     
-;   Next
-  
   ;in-between cardinal directions
   For DirectionIdx = #MAP_DIRECTION_UP_RIGHT To #MAP_DIRECTION_UP_LEFT
     Direction = Map_All_Directions(DirectionIdx)
