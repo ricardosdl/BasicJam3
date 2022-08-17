@@ -220,7 +220,7 @@ EndProcedure
 Procedure GoToNextLevelPlayState(*PlayState.TPlayState)
   *PlayState\Level + 1
   
-  InitMapPlayState(*PlayState)
+  RestartMapGrid(@*PlayState\GameMap)
   
   Protected PlayerMapCoords.TVector2D\x = 1
   PlayerMapCoords\y = 1

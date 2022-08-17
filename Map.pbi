@@ -414,6 +414,8 @@ Procedure.i InitMapGrid(*MapGrid.TMapGrid, MapGridFile.s)
     
   Wend
   
+  CloseFile(FileNum)
+  
   ProcedureReturn #True
   
 EndProcedure
@@ -632,6 +634,26 @@ EndProcedure
 
 Procedure InitMap(*GameMap.TMap, *Position.TVector2D)
   InitGameObject(*GameMap, *Position, -1, @UpdateGameObject(), @DrawMap(), #True, 1.0, #MapDrawOrder)
+  InitMapGrid(@*GameMap\MapGrid, ".\data\maps\main-map-grid.csv")
+  SetRandomBreakableWallsMap(*GameMap)
+  SetTopLeftCornerPlayableByPlayer(*GameMap)
+EndProcedure
+
+Procedure ClearMapGrid(*GameMap.TMap)
+  Protected.a StartX, StartY
+  
+  For StartX = 0 To #MAP_GRID_WIDTH - 1
+    For StartY = 0 To #MAP_GRID_HEIGHT - 1
+      *GameMap\MapGrid\TilesGrid(StartX, StartY)\Breakable = #False
+      *GameMap\MapGrid\TilesGrid(StartX, StartY)\Walkable = #False
+      *GameMap\MapGrid\TilesGrid(StartX, StartY)\Health = 0
+      *GameMap\MapGrid\TilesGrid(StartX, StartY)\SpriteNum = 0
+    Next
+  Next
+EndProcedure
+
+Procedure RestartMapGrid(*GameMap.TMap)
+  ClearMapGrid(*GameMap)
   InitMapGrid(@*GameMap\MapGrid, ".\data\maps\main-map-grid.csv")
   SetRandomBreakableWallsMap(*GameMap)
   SetTopLeftCornerPlayableByPlayer(*GameMap)
