@@ -139,9 +139,6 @@ EndProcedure
 
 
 Procedure InitMapPlayState(*PlayState.TPlayState)
-  
-  InitDrawList(@*PlayState\DrawList)
-  
   Protected MapPosition.TVector2D\x = 0
   MapPosition\y = 0
   InitMap(@*PlayState\GameMap, @MapPosition)
@@ -181,6 +178,9 @@ Procedure InitEnemiesPlayState(*PlayState.TPlayState)
 EndProcedure
 
 Procedure StartPlayState(*PlayState.TPlayState)
+  
+  InitDrawList(@*PlayState\DrawList)
+  
   *PlayState\Level = 1
   
   InitMapPlayState(*PlayState)
