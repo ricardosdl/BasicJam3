@@ -9,6 +9,7 @@ XIncludeFile "DrawList.pbi"
 XIncludeFile "Ground.pbi"
 XIncludeFile "DrawText.pbi"
 XIncludeFile "Map.pbi"
+XIncludeFile "Item.pbi"
 
 EnableExplicit
 
@@ -62,6 +63,7 @@ Structure TPlayState Extends TGameState
   
   Level.a
   
+  ItemList.TItemList
   
 EndStructure
 
@@ -174,6 +176,10 @@ Procedure InitEnemiesPlayState(*PlayState.TPlayState)
   
   
   
+  
+EndProcedure
+
+Procedure InitItemsPlayState(*PlayState)
   
 EndProcedure
 

@@ -13,6 +13,7 @@ Enumeration ESprites
   #EnemyRedArmoredDemonSprite
   #CursorSprite
   #ExplosionSprite
+  #ItemBombPowerSprite
 EndEnumeration
 
 DisableExplicit
