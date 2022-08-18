@@ -86,5 +86,10 @@ Procedure InitItemBombPower(*Item.TItem, *GameMap.TMap, *MapCoords.TVector2D, It
   
 EndProcedure
 
+Procedure EnableItem(*Item.TItem)
+  *item\Enabled = #True
+EndProcedure
+
+
 
 DisableExplicit

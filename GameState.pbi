@@ -371,6 +371,36 @@ Procedure CheckExplosionsCollisionsPlayState(*PlayState.TPlayState)
     
 EndProcedure
 
+Procedure CheckExplodedTilesPlayState(*PlayState.TPlayState)
+  If Not *PlayState\GameMap\ExplodedTileAdded
+    ProcedureReturn
+  EndIf
+  
+  NewList ExplodedTiles.TVector2D()
+  GetExplodedTiles(@*PlayState\GameMap, ExplodedTiles())
+  
+  ForEach ExplodedTiles()
+    ;check items
+    ForEach *PlayState\ItemList\Items()
+      Protected *Item.TItem = @*PlayState\ItemList\Items()
+      If Not *Item\Active
+        Continue
+      EndIf
+      
+      If *Item\PositionMapCoords\x = ExplodedTiles()\x And *Item\PositionMapCoords\y = ExplodedTiles()\y
+        EnableItem(*Item)
+        Debug "enable item"
+      EndIf
+      
+      
+    Next
+    
+  Next
+  
+  
+  
+EndProcedure
+
 Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   *PlayState\Player\Update(@*PlayState\Player, TimeSlice)
   
@@ -388,6 +418,8 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
     EndIf
     
   Next
+  
+  CheckExplodedTilesPlayState(*PlayState)
   
   CheckExplosionsCollisionsPlayState(*PlayState)
   

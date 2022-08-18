@@ -304,6 +304,7 @@ Procedure UpdateExplosionExpansion(*Explosion.TProjectile, TimeSlice.f)
         AddExplosionAnimation(*Explosion, @PositionCoord)
         *Explosion\ExplosionExpansion\OpenDirections(DirectionIdx) = #False
         MakeTileWalkable(*Explosion\GameMap, PositionCoord\x, PositionCoord\y)
+        AddExplodedTileMap(*Explosion\GameMap, @PositionCoord)
         Continue
       Else
         ;the tile is unbreakable, don't add explosion animation, but end the expansion on this direction

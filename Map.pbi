@@ -62,6 +62,9 @@ Structure TMap Extends TGameObject
   
   MapGrid.TMapGrid
   
+  List ExplodedTiles.TVector2D()
+  ExplodedTileAdded.a
+  
 EndStructure
 
 Structure TMapDirection Extends TVector2D
@@ -653,11 +656,17 @@ Procedure.a GetListWalkableTilesAroundOriginTile(*GameMap.TMap, *OriginTileCoord
   ProcedureReturn Bool(ListSize(SafetyTiles()) > 0)
 EndProcedure
 
+Procedure ClearExplodedTilesMap(*GameMap.TMap)
+  ClearList(*GameMap\ExplodedTiles())
+  *GameMap\ExplodedTileAdded = #False
+EndProcedure
+
 Procedure InitMap(*GameMap.TMap, *Position.TVector2D)
   InitGameObject(*GameMap, *Position, -1, @UpdateGameObject(), @DrawMap(), #True, 1.0, #MapDrawOrder)
   InitMapGrid(@*GameMap\MapGrid, ".\data\maps\main-map-grid.csv")
   SetRandomBreakableWallsMap(*GameMap)
   SetTopLeftCornerPlayableByPlayer(*GameMap)
+  ClearExplodedTilesMap(*GameMap)
 EndProcedure
 
 Procedure ClearMapGrid(*GameMap.TMap)
@@ -678,8 +687,29 @@ Procedure RestartMapGrid(*GameMap.TMap)
   InitMapGrid(@*GameMap\MapGrid, ".\data\maps\main-map-grid.csv")
   SetRandomBreakableWallsMap(*GameMap)
   SetTopLeftCornerPlayableByPlayer(*GameMap)
+  ClearExplodedTilesMap(*GameMap)
 EndProcedure
 
+Procedure.a GetExplodedTiles(*GameMap.TMap, List ExplodedTiles.TVector2D(), ClearExplodedTiles.a = #True)
+  If Not *GameMap\ExplodedTileAdded
+    ProcedureReturn #False
+  EndIf
+  
+  CopyList(*GameMap\ExplodedTiles(), ExplodedTiles())
+  
+  If ClearExplodedTiles
+    ClearExplodedTilesMap(*GameMap)
+  EndIf
+  
+  ProcedureReturn #True
+EndProcedure
+
+Procedure AddExplodedTileMap(*GameMap.TMap, *ExplodedTileCoords.TVector2D)
+  AddElement(*GameMap\ExplodedTiles())
+  *GameMap\ExplodedTiles()\x = *ExplodedTileCoords\x
+  *GameMap\ExplodedTiles()\y = *ExplodedTileCoords\y
+  *GameMap\ExplodedTileAdded = #True
+EndProcedure
 
 
 DisableExplicit
