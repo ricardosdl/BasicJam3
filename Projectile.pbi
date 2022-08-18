@@ -190,8 +190,9 @@ Procedure SetProjectileAliveTimer(*Projectile.TProjectile, ProjectileType.a)
   EndSelect
 EndProcedure
 
-Procedure GetCollisionCoordsProjectile(*Projectile.TProjectile, *CollisionCoords.TRect)
+Procedure.a GetCollisionCoordsProjectile(*Projectile.TProjectile, *CollisionCoords.TRect)
   GetTileCoordsByPosition(@*Projectile\MiddlePosition, @*CollisionCoords\Position)
+  ProcedureReturn #True
 EndProcedure
 
 Procedure InitProjectile(*Projectile.TProjectile, *MapCoords.TVector2D, ProjectileType.a, *GameMap.TMap,
@@ -407,7 +408,11 @@ EndProcedure
 Procedure.a CheckCollisonProjectileExplosionMiddlePosition(*Explosion.TProjectile, *GameObject.TGameObject)
   
   Protected GameObjectCoords.TRect
-  *GameObject\GetCollisionRect(*GameObject, @GameObjectCoords)
+  If *GameObject\GetCollisionRect(*GameObject, @GameObjectCoords) = #False
+    ;the game object don't want to be collied with
+    ProcedureReturn #False
+  EndIf
+  
   
   Protected *ExplosionAnimation.TExplosionAnimation
   ForEach *Explosion\ExplosionAnimations()

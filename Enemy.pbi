@@ -45,6 +45,7 @@ EndStructure
 
 Procedure GetCollisionCoordsEnemy(*Enemy.TEnemy, *CollisionCoords.TRect)
   GetTileCoordsByPosition(@*Enemy\MiddlePosition, @*CollisionCoords\Position)
+  ProcedureReturn #True
 EndProcedure
 
 Procedure InitEnemy(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TProjectileList,

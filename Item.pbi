@@ -12,12 +12,15 @@ Enumeration EItemType
 EndEnumeration
 
 #ITEM_TIMER = 30.0;in seconds
+;for the the DONT_EXPLODE_TIMER, the item can't be exploded
+#ITEM_DONT_EXPLODE_TIMER = 5.0;in seconds
 
 Structure TItem Extends TGameObject
   PositionMapCoords.TVector2D
   ItemType.a
   AliveTimer.f
   Enabled.a;when enabled the item is visible and can be interacted with
+  
 EndStructure
 
 Structure TItemList
@@ -63,6 +66,16 @@ Procedure DrawItem(*Item.TItem)
   EndIf
 EndProcedure
 
+Procedure.a GetCollisionCoordsItem(*Item.TItem, *CollisionCoords.TRect)
+  If *Item\AliveTimer + #ITEM_DONT_EXPLODE_TIMER >= #ITEM_TIMER
+    ProcedureReturn #False
+  EndIf
+  
+  GetTileCoordsByPosition(@*Item\MiddlePosition, @*CollisionCoords\Position)
+  ProcedureReturn #True
+  
+EndProcedure
+
 Procedure InitItemBombPower(*Item.TItem, *GameMap.TMap, *MapCoords.TVector2D, ItemType.a, Enabled.a)
   
   *Item\PositionMapCoords\x = *MapCoords\x
@@ -81,6 +94,8 @@ Procedure InitItemBombPower(*Item.TItem, *GameMap.TMap, *MapCoords.TVector2D, It
   *item\ItemType = ItemType
   
   *Item\Enabled = Enabled
+  
+  *Item\GetCollisionRect = @GetCollisionCoordsItem()
   
   ClipSprite(#ItemBombPowerSprite, 0, 0, 16, 16)
   

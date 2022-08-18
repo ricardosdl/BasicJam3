@@ -343,6 +343,26 @@ Procedure CheckExplosionsAgainstPlayer(*PlayState.TPlayState, List *ActiveExplos
   
 EndProcedure
 
+Procedure CheckExplosionAgainstItems(*PlayState.TPlayState, List *ActiveExplosions.TProjectile())
+  ForEach *PlayState\ItemList\Items()
+    If Not *PlayState\ItemList\Items()\Active
+      Continue
+    EndIf
+    
+    ForEach *ActiveExplosions()
+      If CheckCollisonProjectileExplosionMiddlePosition(*ActiveExplosions(), *PlayState\ItemList\Items())
+        *PlayState\ItemList\Items()\Active = #False
+      EndIf
+      
+    Next
+    
+    
+  Next
+  
+  
+  
+EndProcedure
+
 Procedure CheckExplosionsCollisionsPlayState(*PlayState.TPlayState)
   
   NewList *ActiveExplosions.TProjectile()
@@ -367,6 +387,8 @@ Procedure CheckExplosionsCollisionsPlayState(*PlayState.TPlayState)
   CheckExplosionsAgainstBombs(*PlayState, *ActiveExplosions())
   
   CheckExplosionsAgainstPlayer(*PlayState, *ActiveExplosions())
+  
+  CheckExplosionAgainstItems(*PlayState, *ActiveExplosions())
   
     
 EndProcedure
