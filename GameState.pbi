@@ -423,6 +423,24 @@ Procedure CheckExplodedTilesPlayState(*PlayState.TPlayState)
   
 EndProcedure
 
+Procedure CheckItemsAgainstPlayer(*PlayState.TPlayState)
+  
+  ForEach *PlayState\ItemList\Items()
+    If Not *PlayState\ItemList\Items()\Active
+      Continue
+    EndIf
+    
+    Protected *Item.TItem = *PlayState\ItemList\Items()
+    Protected PlayerCoords.TVector2D
+    GetTileCoordsByPosition(@*PlayState\Player\MiddlePosition, @PlayerCoords)
+    If *Item\PositionMapCoords\x = PlayerCoords\x And *Item\PositionMapCoords\y = PlayerCoords\y
+      ApplyItemOnPlayer(@*PlayState\Player, *Item)
+      Continue
+    EndIf
+  Next
+  
+EndProcedure
+
 Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   *PlayState\Player\Update(@*PlayState\Player, TimeSlice)
   
@@ -451,6 +469,8 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   CheckExplodedTilesPlayState(*PlayState)
   
   CheckExplosionsCollisionsPlayState(*PlayState)
+  
+  CheckItemsAgainstPlayer(*PlayState)
   
   If BeatLevelPlayState(*PlayState)
     GoToNextLevelPlayState(*PlayState)

@@ -3,12 +3,14 @@ XIncludeFile "Math.pbi"
 XIncludeFile "Util.pbi"
 XIncludeFile "DrawOrders.pbi"
 XIncludeFile "Map.pbi"
+XIncludeFile "Player.pbi"
 
 
 EnableExplicit
 
 Enumeration EItemType
   #ItemTypeBombPower
+  #ItemTypeIncreaseBombs
 EndEnumeration
 
 #ITEM_TIMER = 30.0;in seconds
@@ -48,9 +50,13 @@ Procedure GetInactiveItem(*ItemList.TItemList, AddIfNotFound.a = #True)
   
 EndProcedure
 
+Procedure KillItem(*Item.TItem)
+  *Item\Active = #False
+EndProcedure
+
 Procedure UpdateItem(*Item.TItem, TimeSlice.f)
   If *Item\AliveTimer <= 0.0
-    *Item\Active = #False
+    KillItem(*Item)
     ProcedureReturn
   EndIf
   
@@ -64,6 +70,7 @@ Procedure DrawItem(*Item.TItem)
   If *Item\Enabled
     DrawGameObject(*Item)
   EndIf
+  DrawGameObject(*Item)
 EndProcedure
 
 Procedure.a GetCollisionCoordsItem(*Item.TItem, *CollisionCoords.TRect)
@@ -103,6 +110,17 @@ EndProcedure
 
 Procedure EnableItem(*Item.TItem)
   *item\Enabled = #True
+EndProcedure
+
+Procedure ApplyItemOnPlayer(*Player.TPlayer, *Item.TItem)
+  Select *Item\ItemType
+    Case #ItemTypeBombPower
+      *Player\BombPower + 1
+      KillItem(*Item)
+      Debug "increased player's bomb power"
+  EndSelect
+  
+  
 EndProcedure
 
 
