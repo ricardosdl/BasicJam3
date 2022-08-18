@@ -190,6 +190,10 @@ Procedure SetProjectileAliveTimer(*Projectile.TProjectile, ProjectileType.a)
   EndSelect
 EndProcedure
 
+Procedure GetCollisionCoordsProjectile(*Projectile.TProjectile, *CollisionCoords.TRect)
+  GetTileCoordsByPosition(@*Projectile\MiddlePosition, @*CollisionCoords\Position)
+EndProcedure
+
 Procedure InitProjectile(*Projectile.TProjectile, *MapCoords.TVector2D, ProjectileType.a, *GameMap.TMap,
                          *DrawList.TDrawList, *ProjectileList.TProjectileList, Power.a = 1, *Owner.TGameObject = #Null)
   
@@ -207,6 +211,8 @@ Procedure InitProjectile(*Projectile.TProjectile, *MapCoords.TVector2D, Projecti
   *Projectile\Owner = *Owner
   
   *Projectile\ProjectileList = *ProjectileList
+  
+  *Projectile\GetCollisionRect = @GetCollisionCoordsProjectile()
   
 EndProcedure
 
@@ -400,15 +406,15 @@ EndProcedure
 
 Procedure.a CheckCollisonProjectileExplosionMiddlePosition(*Explosion.TProjectile, *GameObject.TGameObject)
   
-  Protected GameObjectCoords.TVector2D
-  GetTileCoordsByPosition(@*GameObject\MiddlePosition, @GameObjectCoords)
+  Protected GameObjectCoords.TRect
+  *GameObject\GetCollisionRect(*GameObject, @GameObjectCoords)
   
   Protected *ExplosionAnimation.TExplosionAnimation
   ForEach *Explosion\ExplosionAnimations()
     *ExplosionAnimation = *Explosion\ExplosionAnimations()
     Protected ExplosionCoords.TVector2D
     GetTileCoordsByPosition(@*ExplosionAnimation\Position, @ExplosionCoords)
-    If ExplosionCoords\x = GameObjectCoords\x And ExplosionCoords\y = GameObjectCoords\y
+    If ExplosionCoords\x = GameObjectCoords\Position\x And ExplosionCoords\y = GameObjectCoords\Position\y
       ProcedureReturn #True
     EndIf
   Next

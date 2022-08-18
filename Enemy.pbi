@@ -43,6 +43,10 @@ Structure TEnemy Extends TGameObject
   LookingDirection.TMapDirection
 EndStructure
 
+Procedure GetCollisionCoordsEnemy(*Enemy.TEnemy, *CollisionCoords.TRect)
+  GetTileCoordsByPosition(@*Enemy\MiddlePosition, @*CollisionCoords\Position)
+EndProcedure
+
 Procedure InitEnemy(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TProjectileList,
                     *DrawList.TDrawList, EnemyType.a, *GameMap.TMap)
   *Enemy\Player = *Player
@@ -51,6 +55,7 @@ Procedure InitEnemy(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TProject
   *Enemy\DrawList = *DrawList
   *Enemy\EnemyType = EnemyType
   *Enemy\GameMap = *GameMap
+  *Enemy\GetCollisionRect = @GetCollisionCoordsEnemy()
 EndProcedure
 
 Procedure SwitchStateEnemy(*Enemy.TEnemy, NewState.a)

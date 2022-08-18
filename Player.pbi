@@ -166,12 +166,7 @@ Procedure UpdatePlayer(*Player.TPlayer, TimeSlice.f)
 EndProcedure
 
 Procedure.a GetCollisionRectPlayer(*Player.TPlayer, *CollisionRect.TRect)
-  *CollisionRect\Width = *Player\Width * 0.5
-  *CollisionRect\Height = *Player\Height * 0.5
-  
-  *CollisionRect\Position\x = (*Player\Position\x + *Player\Width / 2) - *CollisionRect\Width / 2
-  *CollisionRect\Position\y = (*Player\Position\y + *Player\Height / 2) - *CollisionRect\Height / 2
-  
+  GetTileCoordsByPosition(@*Player\MiddlePosition, @*CollisionRect\Position)
   ProcedureReturn #True
   
 EndProcedure
