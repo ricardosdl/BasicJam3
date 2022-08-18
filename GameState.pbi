@@ -419,6 +419,13 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
     
   Next
   
+  ForEach *PlayState\ItemList\Items()
+    If Not *PlayState\ItemList\Items()\Active
+      Continue
+    EndIf
+    *PlayState\ItemList\Items()\Update(@*PlayState\ItemList\Items(), TimeSlice)
+  Next
+  
   CheckExplodedTilesPlayState(*PlayState)
   
   CheckExplosionsCollisionsPlayState(*PlayState)
