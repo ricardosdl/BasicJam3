@@ -504,6 +504,26 @@ Procedure.a GetRandomWalkableTile(*GameMap.TMap, *TileCoords.TVector2D, NumTries
   
 EndProcedure
 
+Procedure.a GetRandomBreakableTile(*GameMap.TMap, *TileCoords.TVector2D, NumTries.u = #MAP_GRID_WIDTH * #MAP_GRID_HEIGHT * 1.2)
+  While NumTries
+    
+    Protected TileX.w, TileY.w
+    TileX = Random(#MAP_PLAY_AREA_END_X, #MAP_PLAY_AREA_START_X)
+    TileY = Random(#MAP_PLAY_AREA_END_Y, #MAP_PLAY_AREA_START_Y)
+    If *GameMap\MapGrid\TilesGrid(TileX, TileY)\Breakable
+      *TileCoords\x = TileX
+      *TileCoords\y = TileY
+      ProcedureReturn #True
+    EndIf
+    
+    
+    NumTries - 1
+  Wend
+  
+  ProcedureReturn #False
+  
+EndProcedure
+
 Procedure.a GetRandomWalkableDirectionFromOriginTile(*GameMap.TMap, OriginTileX.w, OriginTileY.w)
   Protected i.a
   NewList FreeDirections.a()

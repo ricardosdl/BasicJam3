@@ -24,16 +24,43 @@ Structure TItemList
   List Items.TItem()
 EndStructure
 
+Procedure GetInactiveItem(*ItemList.TItemList, AddIfNotFound.a = #True)
+  ForEach *ItemList\Items()
+    If Not *ItemList\Items()\Active
+      ProcedureReturn @*ItemList\Items()
+    EndIf
+  Next
+  
+  If AddIfNotFound
+    If AddElement(*ItemList\Items()) <> 0
+      ;sucessfully added a new element, now return it
+      ProcedureReturn @*ItemList\Items()
+    Else
+      ;error allocating the element in the list
+      ProcedureReturn #Null
+    EndIf
+  EndIf
+  
+  ProcedureReturn #Null
+  
+EndProcedure
+
 Procedure UpdateItem(*Item.TItem, TimeSlice.f)
   If *Item\AliveTimer <= 0.0
     *Item\Active = #False
     ProcedureReturn
   EndIf
   
-  *Item\AliveTimer - TimeSlice
+  *Item\AliveTimer - (TimeSlice * Bool(*Item\Enabled))
   
   UpdateGameObject(*Item, TimeSlice)
   
+EndProcedure
+
+Procedure DrawItem(*Item.TItem)
+  If *Item\Enabled
+    DrawGameObject(*Item)
+  EndIf
 EndProcedure
 
 Procedure InitItemBombPower(*Item.TItem, *GameMap.TMap, *MapCoords.TVector2D, ItemType.a, Enabled.a)
@@ -44,7 +71,7 @@ Procedure InitItemBombPower(*Item.TItem, *GameMap.TMap, *MapCoords.TVector2D, It
   Protected Position.TVector2D\x = *GameMap\Position\x + (*MapCoords\x * #MAP_GRID_TILE_WIDTH)
   Position\y = *GameMap\Position\y + (*MapCoords\y * #MAP_GRID_TILE_HEIGHT)
   
-  InitGameObject(*Item, @Position, #ItemBombPowerSprite, @UpdateItem(), @DrawGameObject(),
+  InitGameObject(*Item, @Position, #ItemBombPowerSprite, @UpdateItem(), @DrawItem(),
                  #True, 16, 16, #SPRITES_ZOOM, #ItemDrawOrder)
   
   *Item\Health = 1.0

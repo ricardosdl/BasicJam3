@@ -179,7 +179,47 @@ Procedure InitEnemiesPlayState(*PlayState.TPlayState)
   
 EndProcedure
 
-Procedure InitItemsPlayState(*PlayState)
+Procedure ClearItemsPlayState(*PlayState.TPlayState)
+  ForEach *PlayState\ItemList\Items()
+    *PlayState\ItemList\Items()\Active = #False
+  Next
+EndProcedure
+
+Procedure InitItemsPlayState(*PlayState.TPlayState)
+  
+  ClearItemsPlayState(*PlayState)
+  
+  Dim NumItemTypes.a(#ItemTypeBombPower)
+  
+  NumItemTypes(#ItemTypeBombPower) = 2
+  
+  Protected Idx.a
+  For Idx = 0 To #ItemTypeBombPower
+    While NumItemTypes(Idx)
+      NumItemTypes(Idx) - 1
+      
+      Protected TileCoords.TVector2D
+      
+      If Not GetRandomBreakableTile(@*PlayState\GameMap, @TileCoords)
+        ;could'nt find a random breakable tile :(
+        Continue
+      EndIf
+      
+      Protected *Item.TItem = GetInactiveItem(@*PlayState\ItemList)
+      If *Item = #Null
+        ;couldn't allocate item :(
+        Continue
+      EndIf
+      
+      Select Idx
+        Case #ItemTypeBombPower
+          InitItemBombPower(*Item, @*PlayState\GameMap, @TileCoords, #ItemTypeBombPower, #False)
+      EndSelect
+      
+      AddDrawItemDrawList(@*PlayState\DrawList, *Item)
+      
+    Wend
+  Next
   
 EndProcedure
 
@@ -194,6 +234,8 @@ Procedure StartPlayState(*PlayState.TPlayState)
   InitPlayerPlayState(*PlayState)
   
   InitEnemiesPlayState(*PlayState)
+  
+  InitItemsPlayState(*PlayState)
   
   *PlayState\SelectedStartTile\x = -1
   *PlayState\SelectedStartTile\y = -1
@@ -236,6 +278,8 @@ Procedure GoToNextLevelPlayState(*PlayState.TPlayState)
   *PlayState\Player\Position = PlayerPosition
   
   InitEnemiesPlayState(*PlayState)
+  
+  
   
 EndProcedure
 
