@@ -83,7 +83,7 @@ Procedure.a GetCollisionCoordsItem(*Item.TItem, *CollisionCoords.TRect)
   
 EndProcedure
 
-Procedure InitItemBombPower(*Item.TItem, *GameMap.TMap, *MapCoords.TVector2D, ItemType.a, Enabled.a)
+Procedure InitItemBombPower(*Item.TItem, *GameMap.TMap, *MapCoords.TVector2D, Enabled.a)
   
   *Item\PositionMapCoords\x = *MapCoords\x
   *Item\PositionMapCoords\y = *MapCoords\y
@@ -98,7 +98,7 @@ Procedure InitItemBombPower(*Item.TItem, *GameMap.TMap, *MapCoords.TVector2D, It
   
   *Item\AliveTimer = #ITEM_TIMER;in seconds
   
-  *item\ItemType = ItemType
+  *item\ItemType = #ItemTypeBombPower
   
   *Item\Enabled = Enabled
   
@@ -108,9 +108,36 @@ Procedure InitItemBombPower(*Item.TItem, *GameMap.TMap, *MapCoords.TVector2D, It
   
 EndProcedure
 
+Procedure InitItemIncreaseBombs(*Item.TItem, *GameMap.TMap, *MapCoords.TVector2D, Enabled.a)
+  
+  *Item\PositionMapCoords\x = *MapCoords\x
+  *Item\PositionMapCoords\y = *MapCoords\y
+  
+  Protected Position.TVector2D\x = *GameMap\Position\x + (*MapCoords\x * #MAP_GRID_TILE_WIDTH)
+  Position\y = *GameMap\Position\y + (*MapCoords\y * #MAP_GRID_TILE_HEIGHT)
+  
+  InitGameObject(*Item, @Position, #ItemIncreaseBombsSprite, @UpdateItem(), @DrawItem(),
+                 #True, 16, 16, #SPRITES_ZOOM, #ItemDrawOrder)
+  
+  *Item\Health = 1.0
+  
+  *Item\AliveTimer = #ITEM_TIMER;in seconds
+  
+  *item\ItemType = #ItemTypeIncreaseBombs
+  
+  *Item\Enabled = Enabled
+  
+  *Item\GetCollisionRect = @GetCollisionCoordsItem()
+  
+  ClipSprite(#ItemIncreaseBombsSprite, 0, 0, 16, 16)
+  
+EndProcedure
+
 Procedure EnableItem(*Item.TItem)
   *item\Enabled = #True
 EndProcedure
+
+
 
 Procedure ApplyItemOnPlayer(*Player.TPlayer, *Item.TItem)
   Select *Item\ItemType
@@ -118,6 +145,9 @@ Procedure ApplyItemOnPlayer(*Player.TPlayer, *Item.TItem)
       *Player\BombPower + 1
       KillItem(*Item)
       Debug "increased player's bomb power"
+    Case #ItemTypeIncreaseBombs
+      *Player\CurrentBombsLimit + 1
+      KillItem(*Item)
   EndSelect
   
   

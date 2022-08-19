@@ -14,6 +14,7 @@ Enumeration ESprites
   #CursorSprite
   #ExplosionSprite
   #ItemBombPowerSprite
+  #ItemIncreaseBombsSprite
 EndEnumeration
 
 DisableExplicit

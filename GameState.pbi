@@ -189,12 +189,13 @@ Procedure InitItemsPlayState(*PlayState.TPlayState)
   
   ClearItemsPlayState(*PlayState)
   
-  Dim NumItemTypes.a(#ItemTypeBombPower)
+  Dim NumItemTypes.a(#ItemTypeIncreaseBombs)
   
   NumItemTypes(#ItemTypeBombPower) = 2
+  NumItemTypes(#ItemTypeIncreaseBombs) = 3
   
   Protected Idx.a
-  For Idx = 0 To #ItemTypeBombPower
+  For Idx = 0 To #ItemTypeIncreaseBombs
     While NumItemTypes(Idx)
       NumItemTypes(Idx) - 1
       
@@ -213,7 +214,9 @@ Procedure InitItemsPlayState(*PlayState.TPlayState)
       
       Select Idx
         Case #ItemTypeBombPower
-          InitItemBombPower(*Item, @*PlayState\GameMap, @TileCoords, #ItemTypeBombPower, #False)
+          InitItemBombPower(*Item, @*PlayState\GameMap, @TileCoords, #False)
+        Case #ItemTypeIncreaseBombs
+          InitItemIncreaseBombs(*Item, @*PlayState\GameMap, @TileCoords, #False)
       EndSelect
       
       AddDrawItemDrawList(@*PlayState\DrawList, *Item)
