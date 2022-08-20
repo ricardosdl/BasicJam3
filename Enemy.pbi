@@ -373,24 +373,77 @@ Procedure.a DropBombEnemy(*Enemy.TEnemy)
   ProcedureReturn #True
 EndProcedure
 
+Procedure IsThereBombsOnDirection(*Enemy.TEnemy, Direction.a, LookForAllProjectiles.a,
+                                  MaxTileDistance.a = 5)
+  Protected EnemyCoords.TVector2D
+  GetTileCoordsByPosition(@*Enemy\MiddlePosition, @EnemyCoords)
+  
+  Protected MapDirection.TMapDirection = Map_All_Directions(Direction)
+  Protected TileDistance.a = 1
+  While TileDistance <= MaxTileDistance
+    Protected CurrentTileCoords.TVector2D
+    CurrentTileCoords\x = EnemyCoords\x + TileDistance * MapDirection\x
+    CurrentTileCoords\y = EnemyCoords\y + TileDistance * MapDirection\y
+    
+    If Not IsTileWalkable(*Enemy\GameMap, CurrentTileCoords\x, CurrentTileCoords\y)
+      ;it's not walakble so no bombs here, and we do not continue looking
+      ProcedureReturn #False
+    EndIf
+    
+    Protected FoundSomething.a = #False
+    If LookForAllProjectiles
+      FoundSomething = IsThereActiveProjectileOnTile(*Enemy\Projectiles, @CurrentTileCoords)
+    Else
+      FoundSomething = IsThereActiveBombOnTile(*Enemy\Projectiles, @CurrentTileCoords)
+    EndIf
+    
+    If FoundSomething
+      ProcedureReturn #True
+    EndIf
+    
+    TileDistance + 1
+  Wend
+  
+  ProcedureReturn #False
+  
+EndProcedure
+
 Procedure UpdateEnemyRedDemon(*RedDemon.TEnemy, TimeSlice.f)
   If *RedDemon\CurrentState = #EnemyStateNoState
     Protected TileCoords.TVector2D
     GetTileCoordsByPosition(*RedDemon\MiddlePosition, @TileCoords)
-    Protected WalkableRandomDirection.a = GetRandomWalkableDirectionFromOriginTile(*RedDemon\GameMap, TileCoords\x, TileCoords\y)
-    If WalkableRandomDirection = #MAP_DIRECTION_NONE
+    
+    NewList WalkableDirections.a()
+    
+    Protected FoundWalkableDirections.a = GetWalkableDirectionsFromOriginTile(*RedDemon\GameMap, TileCoords\x, TileCoords\y, WalkableDirections())
+    If Not FoundWalkableDirections
       ;no free random direction for the enemy
       ;let's just wait
       SwitchToWaitingEnemy(*RedDemon, 3.0)
       ProcedureReturn
     EndIf
     
-    Protected ObjectiveRandomTileCoords.TVector2D
-    GetRandomWalkableTileFromOriginTile(*RedDemon\GameMap, TileCoords\x, TileCoords\y, WalkableRandomDirection,
-                                    @ObjectiveRandomTileCoords)
+    RandomizeList(WalkableDirections())
+    Protected FoundBombFreeWalkableDirection.a = #False
+    Protected BombFreeWalkableDirection.a
+    ForEach WalkableDirections()
+      If Not IsThereBombsOnDirection(*RedDemon, WalkableDirections(), #False, 4)
+        FoundBombFreeWalkableDirection = #True
+        BombFreeWalkableDirection = WalkableDirections()
+        Break
+      EndIf
+    Next
     
-    SwitchToGoingToObjectiveTile(*RedDemon, @ObjectiveRandomTileCoords)
+    If FoundBombFreeWalkableDirection
+      Protected ObjectiveTileCoords.TVector2D
+      GetRandomWalkableTileFromOriginTile(*RedDemon\GameMap, TileCoords\x, TileCoords\y, BombFreeWalkableDirection,
+                                          @ObjectiveTileCoords, 4)
+      SwitchToGoingToObjectiveTile(*RedDemon, @ObjectiveTileCoords)
+      ProcedureReturn
+    EndIf
     
+    ;there is bombs on all directions, just wait then
+    SwitchToWaitingEnemy(*RedDemon, 3.0)
     ProcedureReturn
   EndIf
   
@@ -431,7 +484,8 @@ Procedure UpdateEnemyRedDemon(*RedDemon.TEnemy, TimeSlice.f)
     If GoToObjectiveTileEnemy(*RedDemon)
       ;reached the safety tile
       ;Debug "safety"
-      SwitchToWaitingEnemy(*RedDemon, 3.0)
+      Protected WaitingTimer.f = #BOMB1_TIMER + *RedDemon\BombPower * #EXPLOSION_EXPANSION_TIMER + 0.1
+      SwitchToWaitingEnemy(*RedDemon, WaitingTimer)
     EndIf
     
   EndIf
@@ -605,33 +659,6 @@ Procedure GetTileToDropBombPlayer(*Enemy.TEnemy, *ReturnDropBombTileCoords.TVect
   ProcedureReturn #False
 EndProcedure
 
-Procedure IsThereBombsOnDirection(*Enemy.TEnemy, Direction.a, MaxTileDistance.a = 5)
-  Protected EnemyCoords.TVector2D
-  GetTileCoordsByPosition(@*Enemy\MiddlePosition, @EnemyCoords)
-  
-  Protected MapDirection.TMapDirection = Map_All_Directions(Direction)
-  Protected TileDistance.a = 1
-  While TileDistance <= MaxTileDistance
-    Protected CurrentTileCoords.TVector2D
-    CurrentTileCoords\x = EnemyCoords\x + TileDistance * MapDirection\x
-    CurrentTileCoords\y = EnemyCoords\y + TileDistance * MapDirection\y
-    
-    If Not IsTileWalkable(*Enemy\GameMap, CurrentTileCoords\x, CurrentTileCoords\y)
-      ;it's not walakble so no bombs here, and we do not continue looking
-      ProcedureReturn #False
-    EndIf
-    
-    If IsThereActiveBombOnTile(*Enemy\Projectiles, @CurrentTileCoords)
-      ProcedureReturn #True
-    EndIf
-    
-    TileDistance + 1
-  Wend
-  
-  ProcedureReturn #False
-  
-EndProcedure
-
 Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
   If *RedArmoredDemon\CurrentState = #EnemyStateNoState
     Protected TileCoords.TVector2D
@@ -652,7 +679,7 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
     Protected FoundBombFreeWalkableDirection.a = #False
     Protected BombFreeWalkableDirection.a
     ForEach WalkableDirections()
-      If Not IsThereBombsOnDirection(*RedArmoredDemon, WalkableDirections())
+      If Not IsThereBombsOnDirection(*RedArmoredDemon, WalkableDirections(), #True)
         FoundBombFreeWalkableDirection = #True
         BombFreeWalkableDirection = WalkableDirections()
         Break

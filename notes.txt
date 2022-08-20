@@ -3,6 +3,10 @@ https://merchant-shade.itch.io/16x16-mini-world-sprites
 
 https://rafagars.itch.io/explosion-effect
 
+==bugs
+items sometimes appear on unbreakable tiles, probably needs to restart the items list
+after the end of the level.
+
 
 ==history
 You, a demon, is on demon prison!

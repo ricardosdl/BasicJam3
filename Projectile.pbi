@@ -141,6 +141,24 @@ Procedure IsThereActiveBombOnTile(*ProjectileList.TProjectileList, *TileCoords.T
   
 EndProcedure
 
+Procedure IsThereActiveProjectileOnTile(*ProjectileList.TProjectileList, *TileCoords.TVector2D, *Owner.TGameObject = #Null)
+  Protected *Projectile.TProjectile
+  ForEach *ProjectileList\Projectiles()
+    *Projectile = @*ProjectileList\Projectiles()
+    If Not *Projectile\Active
+      Continue
+    EndIf
+    
+    If *Projectile\PositionMapCoords\x = *TileCoords\x And *Projectile\PositionMapCoords\y = *TileCoords\y
+      ;is active and is a bomb, and is on the especified *tilecoords
+      ProcedureReturn #True
+    EndIf
+  Next
+  
+  ProcedureReturn #False
+  
+EndProcedure
+
 Procedure DrawProjectile(*Projectile.TProjectile)
   DrawGameObject(*Projectile)
 EndProcedure
