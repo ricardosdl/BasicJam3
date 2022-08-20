@@ -268,6 +268,12 @@ EndProcedure
 Procedure.a IsGameOverPlayState(*PlayState.TPlayState)
 EndProcedure
 
+Procedure InitProjectilesPlayState(*PlayState.TPlayState)
+  ForEach *PlayState\ProjectileList\Projectiles()
+    KillProjectile(@*PlayState\ProjectileList\Projectiles())
+  Next
+EndProcedure
+
 Procedure GoToNextLevelPlayState(*PlayState.TPlayState)
   *PlayState\Level + 1
   
@@ -281,6 +287,8 @@ Procedure GoToNextLevelPlayState(*PlayState.TPlayState)
   *PlayState\Player\Position = PlayerPosition
   
   InitEnemiesPlayState(*PlayState)
+  
+  InitProjectilesPlayState(*PlayState)
   
   
   

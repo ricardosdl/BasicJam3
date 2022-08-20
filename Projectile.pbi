@@ -168,11 +168,23 @@ Procedure ExplodeProjectile(*Projectile.TProjectile, TimeSlice.f)
   
 EndProcedure
 
-Procedure UpdateProjectile(*Projectile.TProjectile, TimeSlice.f)
+Procedure KillProjectile(*Projectile.TProjectile)
+  ForEach *Projectile\ExplosionAnimations()
+    Protected *ExplosionAnimation.TExplosionAnimation = *Projectile\ExplosionAnimations()
+    *ExplosionAnimation\Active = #False
+    DeleteElement(*Projectile\ExplosionAnimations())
+  Next
+  
+  *Projectile\Active = #False
+  
+EndProcedure
+
+Procedure UpdateBomb1(*Projectile.TProjectile, TimeSlice.f)
   If *Projectile\HasAliveTimer And *Projectile\AliveTimer <= 0.0
     ;explode
     ExplodeProjectile(*Projectile, TimeSlice)
-    *Projectile\Active = #False
+    KillProjectile(*Projectile)
+    ProcedureReturn
   EndIf
   
   If *Projectile\HasAliveTimer
@@ -223,7 +235,7 @@ Procedure InitProjectileBomb1(*Projectile.TProjectile, *MapCoords.TVector2D, *Ga
   Protected Position.TVector2D\x = *GameMap\Position\x + (*MapCoords\x * #MAP_GRID_TILE_WIDTH)
   Position\y = *GameMap\Position\y + (*MapCoords\y * #MAP_GRID_TILE_HEIGHT)
   
-  InitGameObject(*Projectile, @Position, #Bomb1, @UpdateProjectile(), @DrawProjectile(),
+  InitGameObject(*Projectile, @Position, #Bomb1, @UpdateBomb1(), @DrawProjectile(),
                  #True, 16, 16, #SPRITES_ZOOM, #ProjectileDrawOrder)
   
   InitProjectile(*Projectile, *MapCoords, #ProjectileBomb1, *GameMap, *DrawList, *ProjectileList, Power, *Owner)
@@ -357,7 +369,7 @@ Procedure UpdateExplosion(*Explosion.TProjectile, TimeSlice.f)
   
   If ListSize(*Explosion\ExplosionAnimations()) < 1
     ;the explosion ended
-    *Explosion\Active = #False
+    KillProjectile(*Explosion)
     ProcedureReturn
   EndIf
   
