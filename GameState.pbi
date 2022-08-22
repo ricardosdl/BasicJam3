@@ -288,6 +288,8 @@ Procedure GoToNextLevelPlayState(*PlayState.TPlayState)
   
   InitEnemiesPlayState(*PlayState)
   
+  InitItemsPlayState(*PlayState)
+  
   InitProjectilesPlayState(*PlayState)
   
   
