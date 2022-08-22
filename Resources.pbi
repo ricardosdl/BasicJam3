@@ -15,6 +15,7 @@ Enumeration ESprites
   #ExplosionSprite
   #ItemBombPowerSprite
   #ItemIncreaseBombsSprite
+  #PlayerHeartSprite
 EndEnumeration
 
 DisableExplicit
