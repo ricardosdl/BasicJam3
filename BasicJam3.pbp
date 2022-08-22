@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 5.72 (Windows - x64)">
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 5.73 LTS (Windows - x64)">
   <section name="config">
     <options closefiles="1" openmode="0" name="Basic Jam 3"/>
   </section>
   <section name="data">
     <explorer view="" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2022-08-20 16:43" user="ricardo" host="DESKTOP-IU53FK0"/>
+    <lastopen date="2022-08-22 15:41" user="ricardo.lima" host="686-D-02700820"/>
   </section>
   <section name="files">
     <file name="BananaEnemy.pbi">
@@ -54,6 +54,9 @@
     </file>
     <file name="Util.pbi">
       <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+    </file>
+    <file name="PlayerHUD.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
     </file>
   </section>
   <section name="targets">

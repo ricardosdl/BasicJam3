@@ -10,6 +10,7 @@ XIncludeFile "Ground.pbi"
 XIncludeFile "DrawText.pbi"
 XIncludeFile "Map.pbi"
 XIncludeFile "Item.pbi"
+XIncludeFile "PlayerHUD.pbi"
 
 EnableExplicit
 
@@ -64,6 +65,8 @@ Structure TPlayState Extends TGameState
   Level.a
   
   ItemList.TItemList
+  
+  PlayerHUD.TPlayerHUD
   
 EndStructure
 
@@ -226,6 +229,14 @@ Procedure InitItemsPlayState(*PlayState.TPlayState)
   
 EndProcedure
 
+Procedure InitPlayerHUDPlayState(*PlayState.TPlayState)
+  Protected PlayerHUDPos.TVector2D
+  PlayerHUDPos\x = #MAP_GRID_WIDTH * #MAP_GRID_TILE_WIDTH + 10
+  PlayerHUDPos\y = 10
+  InitPlayerHUD(*PlayState\PlayerHUD, *PlayState\Player, @PlayerHUDPos)
+  AddDrawItemDrawList(*PlayState\DrawList, @*PlayState\PlayerHUD)
+EndProcedure
+
 Procedure StartPlayState(*PlayState.TPlayState)
   
   InitDrawList(@*PlayState\DrawList)
@@ -239,6 +250,8 @@ Procedure StartPlayState(*PlayState.TPlayState)
   InitEnemiesPlayState(*PlayState)
   
   InitItemsPlayState(*PlayState)
+  
+  InitPlayerHUDPlayState(*PlayState)
   
   *PlayState\SelectedStartTile\x = -1
   *PlayState\SelectedStartTile\y = -1
