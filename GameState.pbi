@@ -321,7 +321,7 @@ Procedure GoToNextLevelPlayState(*PlayState.TPlayState)
   SetPlayerMapPosition(@*PlayState\Player, @*PlayState\GameMap, @PlayerMapCoords, @PlayerPosition)
   *PlayState\Player\Position = PlayerPosition
   
-  RestartPlayer(@*PlayState\Player, 2, 1, 1)
+  RestartPlayer(@*PlayState\Player, *PlayState\Player\Health, *PlayState\Player\BombPower, *PlayState\Player\CurrentBombsLimit)
   
   InitEnemiesPlayState(*PlayState)
   
