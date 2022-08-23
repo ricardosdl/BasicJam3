@@ -266,8 +266,30 @@ Procedure StartPlayState(*PlayState.TPlayState)
   
 EndProcedure
 
-Procedure EndPlayState(*PlayState.TPlayState)
+Procedure ClearEnemiesPlayState(*PlayState.TPlayState)
+  Protected EnemyIdx.a
+  For EnemyIdx = 0 To #MAX_ENEMIES - 1
+    If *PlayState\Enemies(EnemyIdx)\Active
+      KillEnemy(@*PlayState\Enemies(EnemyIdx))
+    EndIf
+    
+  Next
   
+  
+EndProcedure
+
+Procedure InitProjectilesPlayState(*PlayState.TPlayState)
+  ForEach *PlayState\ProjectileList\Projectiles()
+    KillProjectile(@*PlayState\ProjectileList\Projectiles())
+  Next
+EndProcedure
+
+Procedure EndPlayState(*PlayState.TPlayState)
+  ClearEnemiesPlayState(*PlayState)
+  
+  ClearItemsPlayState(*PlayState)
+  
+  InitProjectilesPlayState(*PlayState)
 EndProcedure
 
 Procedure.a BeatLevelPlayState(*PlayState.TPlayState)
@@ -287,12 +309,6 @@ Procedure.a IsGameOverPlayState(*PlayState.TPlayState)
   ProcedureReturn Bool(*PlayState\Player\Active = #False)
 EndProcedure
 
-Procedure InitProjectilesPlayState(*PlayState.TPlayState)
-  ForEach *PlayState\ProjectileList\Projectiles()
-    KillProjectile(@*PlayState\ProjectileList\Projectiles())
-  Next
-EndProcedure
-
 Procedure GoToNextLevelPlayState(*PlayState.TPlayState)
   *PlayState\Level + 1
   
@@ -304,6 +320,8 @@ Procedure GoToNextLevelPlayState(*PlayState.TPlayState)
   
   SetPlayerMapPosition(@*PlayState\Player, @*PlayState\GameMap, @PlayerMapCoords, @PlayerPosition)
   *PlayState\Player\Position = PlayerPosition
+  
+  RestartPlayer(@*PlayState\Player, 2, 1, 1)
   
   InitEnemiesPlayState(*PlayState)
   
@@ -514,6 +532,12 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   If Not *PlayState\IsGameOver And IsGameOverPlayState(*PlayState)
     *PlayState\IsGameOver = #True
   EndIf
+  
+  If *PlayState\IsGameOver And KeyboardReleased(#PB_Key_Return)
+    SwitchGameState(@GameStateManager, #PlayState)
+    ProcedureReturn
+  EndIf
+  
   
   Protected MousePosition.TVector2D
   

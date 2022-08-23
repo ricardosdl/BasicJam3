@@ -280,6 +280,7 @@ Procedure SwitchToFollowingPlayer(*Enemy.TEnemy, *PlayerCoords.TVector2D, *Veloc
 EndProcedure
 
 Procedure KillEnemy(*Enemy.TEnemy)
+  ClearList(*Enemy\ObjectiveTileCoords())
   *Enemy\Active = #False
 EndProcedure
 

@@ -222,6 +222,22 @@ Procedure InitPlayer(*Player.TPlayer, *MapCoords.TVector2D, ZoomFactor.f, *DrawL
   
   *Player\CurrentBombType = #ProjectileBomb1
   
+  *Player\HurtTimer = 0.0
+  
+EndProcedure
+
+Procedure RestartPlayer(*Player.TPlayer, Health.f, BombPower.f, CurrentBombsLimit.a, CurrentBombType.a = #ProjectileBomb1,
+                        HurtTimer.f = 0.0)
+  *Player\Health = Health
+  
+  *Player\BombPower = BombPower
+  
+  *Player\CurrentBombsLimit = CurrentBombsLimit
+  
+  *Player\CurrentBombType = CurrentBombType
+  
+  *Player\HurtTimer = HurtTimer
+  
 EndProcedure
 
 Procedure.a HurtPlayer(*Player.TPlayer, Power.f)
