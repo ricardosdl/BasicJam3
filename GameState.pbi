@@ -363,7 +363,7 @@ EndProcedure
 Procedure CheckExplosionsAgainstPlayer(*PlayState.TPlayState, List *ActiveExplosions.TProjectile())
   ForEach *ActiveExplosions()
     If CheckCollisonProjectileExplosionMiddlePosition(*ActiveExplosions(), @*PlayState\Player)
-      Debug "explode player:" + ElapsedMilliseconds()
+      HurtPlayer(@*PlayState\Player, 1.0)
     EndIf
   Next
   
@@ -468,7 +468,9 @@ Procedure CheckItemsAgainstPlayer(*PlayState.TPlayState)
 EndProcedure
 
 Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
-  *PlayState\Player\Update(@*PlayState\Player, TimeSlice)
+  If *PlayState\Player\Active
+    *PlayState\Player\Update(@*PlayState\Player, TimeSlice)
+  EndIf
   
   ForEach *PlayState\ProjectileList\Projectiles()
     If *PlayState\ProjectileList\Projectiles()\Active

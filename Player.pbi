@@ -16,6 +16,7 @@ Structure TPlayer Extends TGameObject
   CurrentBombType.a
   *DrawList.TDrawList
   CollisionRect.a
+  HurtTimer.f
 EndStructure
 
 Procedure PutBombPlayer(*Player.TPlayer)
@@ -160,6 +161,7 @@ Procedure UpdatePlayer(*Player.TPlayer, TimeSlice.f)
   
   UpdateGameObjectPlayer(*Player, TimeSlice)
   
+  *Player\HurtTimer - (TimeSlice * Bool(*Player\HurtTimer > 0))
   
   
   
@@ -172,13 +174,13 @@ Procedure.a GetCollisionRectPlayer(*Player.TPlayer, *CollisionRect.TRect)
 EndProcedure
 
 Procedure DrawPlayer(*Player.TPlayer)
-  DrawGameObject(*Player)
-  Protected CollisionRect.TRect
-  GetMapCollisionRectPlayer(*Player, @CollisionRect)
-  StartDrawing(ScreenOutput())
-  DrawingMode(#PB_2DDrawing_Outlined)
-  Box(CollisionRect\Position\x, CollisionRect\Position\y, CollisionRect\Width, CollisionRect\Height, RGB(255, 0, 0))
-  StopDrawing()
+  Protected Intensity.a = 255
+  If *Player\HurtTimer > 0
+    Protected HurtTimer.w = *Player\HurtTimer * 1000
+    Intensity = Bool((HurtTimer / 125) % 2) * Intensity
+  EndIf
+  
+  DrawGameObject(*Player, Intensity)
 EndProcedure
 
 Procedure SetPlayerMapPosition(*Player.TPlayer, *GameMap.TMap, *MapCoords.TVector2D, *ReturnPlayerPosition.TVector2D)
@@ -210,7 +212,7 @@ Procedure InitPlayer(*Player.TPlayer, *MapCoords.TVector2D, ZoomFactor.f, *DrawL
   
   *Player\GetCollisionRect = @GetCollisionRectPlayer()
   
-  *Player\Health = 5.0
+  *Player\Health = 2
   
   *Player\BombPower = 1.0
   
@@ -222,13 +224,22 @@ Procedure InitPlayer(*Player.TPlayer, *MapCoords.TVector2D, ZoomFactor.f, *DrawL
   
 EndProcedure
 
-Procedure HurtPlayer(*Player.TPlayer, Power.f)
+Procedure.a HurtPlayer(*Player.TPlayer, Power.f)
+  If *Player\HurtTimer > 0
+    ProcedureReturn #False
+  EndIf
+  
   *Player\Health - Power
+  *Player\HurtTimer = 2.5
   
   If *Player\Health <= 0
-    ;TODO: kill the player
-    Debug "player died"
+    *Player\Active = #False
+    ProcedureReturn #True
   EndIf
+  
+  
+  
+  ProcedureReturn #False
   
 EndProcedure
 
