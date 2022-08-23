@@ -27,6 +27,7 @@ Procedure.a LoadSprites()
   LoadedAll = LoadedAll & Bool(LoadSprite(#ItemBombPowerSprite, "data\img\bombpower.png", #PB_Sprite_AlphaBlending))
   LoadedAll = LoadedAll & Bool(LoadSprite(#ItemIncreaseBombsSprite, "data\img\increasebombs.png", #PB_Sprite_AlphaBlending))
   LoadedAll = LoadedAll & Bool(LoadSprite(#PlayerHeartSprite, "data\img\playerheart.png", #PB_Sprite_AlphaBlending))
+  LoadedAll = LoadedAll & Bool(LoadSprite(#GameOverOverlaySprite, "data\img\gameoveroverlay.png", #PB_Sprite_AlphaBlending))
   ProcedureReturn LoadedAll
 EndProcedure
 

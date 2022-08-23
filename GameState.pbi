@@ -68,6 +68,8 @@ Structure TPlayState Extends TGameState
   
   PlayerHUD.TPlayerHUD
   
+  IsGameOver.a
+  
 EndStructure
 
 Structure TMainMenuState Extends TGameState
@@ -253,6 +255,8 @@ Procedure StartPlayState(*PlayState.TPlayState)
   
   InitPlayerHUDPlayState(*PlayState)
   
+  *PlayState\IsGameOver = #False
+  
   *PlayState\SelectedStartTile\x = -1
   *PlayState\SelectedStartTile\y = -1
   
@@ -279,6 +283,7 @@ Procedure.a BeatLevelPlayState(*PlayState.TPlayState)
 EndProcedure
 
 Procedure.a IsGameOverPlayState(*PlayState.TPlayState)
+  ProcedureReturn Bool(*PlayState\Player\Active = #False)
 EndProcedure
 
 Procedure InitProjectilesPlayState(*PlayState.TPlayState)
@@ -505,7 +510,8 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
     ProcedureReturn
   EndIf
   
-  If IsGameOverPlayState(*PlayState)
+  If Not *PlayState\IsGameOver And IsGameOverPlayState(*PlayState)
+    *PlayState\IsGameOver = #True
   EndIf
   
   Protected MousePosition.TVector2D
@@ -579,6 +585,58 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   
 EndProcedure
 
+Procedure DrawGameOverTextPlayState(*PlayState.TPlayState)
+  Protected GameOverText.s = "GAME OVER"
+  Protected GameOverTextLen = Len(GameOverText)
+  Protected.f GameOverTextPosX, GameOverTextPosY
+  Protected GameOverFontWidth.f, GameOverFontHeight.f
+  GameOverFontWidth = #STANDARD_FONT_WIDTH * 5 * #SPRITES_ZOOM
+  GameOverFontHeight = #STANDARD_FONT_HEIGHT * 5 * #SPRITES_ZOOM
+  GameOverTextPosX = (ScreenWidth() / 3) - ((GameOverTextLen * GameOverFontWidth) / 2)
+  GameOverTextPosY = (ScreenHeight() / 3) - GameOverFontHeight / 2
+  DrawTextWithStandardFont(GameOverTextPosX, GameOverTextPosY, GameOverText, GameOverFontWidth, GameOverFontHeight)
+  
+  Protected LevelReachedText.s = "Level Reached:" + Str(*PlayState\Level)
+  Protected LevelReachedTextLen = Len(LevelReachedText)
+  Protected.f LevelReachedTextPosX, LevelReachedTextPosY
+  Protected LevelReachedFontWidth.f, LevelReachedFontHeight.f
+  
+  LevelReachedFontWidth = #STANDARD_FONT_WIDTH * 2.5 * #SPRITES_ZOOM
+  LevelReachedFontHeight = #STANDARD_FONT_HEIGHT * 2.5 * #SPRITES_ZOOM
+  LevelReachedTextPosX = (ScreenWidth() / 3) - ((LevelReachedTextLen * LevelReachedFontWidth) / 2)
+  LevelReachedTextPosY = GameOverTextPosY + LevelReachedFontHeight + 20
+  DrawTextWithStandardFont(LevelReachedTextPosX, LevelReachedTextPosY, LevelReachedText, LevelReachedFontWidth, LevelReachedFontHeight)
+  
+  Protected BestLevelText.s = "Best:" + Str(*PlayState\Level)
+  Protected BestLevelTextLen = Len(BestLevelText)
+  Protected.f BestLevelTextPosX, BestLevelTextPosY
+  Protected.f BestLevelFontWidth, BestLevelFontHeight
+  
+  BestLevelFontWidth = #STANDARD_FONT_WIDTH * 2.5 * #SPRITES_ZOOM
+  BestLevelFontHeight = #STANDARD_FONT_HEIGHT * 2.5 * #SPRITES_ZOOM
+  BestLevelTextPosX = (ScreenWidth() / 3) - ((BestLevelTextLen * BestLevelFontWidth) / 2)
+  BestLevelTextPosY = LevelReachedTextPosY + 20
+  DrawTextWithStandardFont(BestLevelTextPosX, BestLevelTextPosY, BestLevelText, BestLevelFontWidth, BestLevelFontHeight)
+  
+  Protected RestartText.s = "Press enter to restart"
+  Protected RestartTextLen = Len(RestartText)
+  Protected.f RestartTextPosX, RestartTextPosY
+  Protected.f RestartFontWidth, RestartFontHeight
+  
+  RestartFontWidth = #STANDARD_FONT_WIDTH * 1.875 * #SPRITES_ZOOM
+  RestartFontHeight = #STANDARD_FONT_HEIGHT * 1.875 * #SPRITES_ZOOM
+  RestartTextPosX = (ScreenWidth() / 3) - ((RestartTextLen * RestartFontWidth) / 2)
+  RestartTextPosY = BestLevelTextPosY + 20
+  DrawTextWithStandardFont(RestartTextPosX, RestartTextPosY, RestartText, RestartFontWidth, RestartFontHeight)
+  
+  
+EndProcedure
+
+Procedure DrawGameOverScreenPlayState(*PlayState.TPlayState)
+  DisplayTransparentSprite(#GameOverOverlaySprite, 0, 0)
+  DrawGameOverTextPlayState(*PlayState)
+EndProcedure
+
 Procedure DrawPlayState(*PlayState.TPlayState)
   DrawDrawList(*PlayState\DrawList)
   
@@ -591,18 +649,25 @@ Procedure DrawPlayState(*PlayState.TPlayState)
     DisplayTransparentSprite(#CursorSprite, MouseX, MouseY)
   EndIf
   
-  StartDrawing(ScreenOutput())
-  DrawingMode(#PB_2DDrawing_Outlined)
   If *PlayState\ShowAStar
+    StartDrawing(ScreenOutput())
+    DrawingMode(#PB_2DDrawing_Outlined)
+    
     ForEach *PlayState\AStarPath()
       Protected XPath.u = *PlayState\GameMap\Position\x + *PlayState\AStarPath()\x * #MAP_GRID_TILE_WIDTH
       Protected YPath.u = *PlayState\GameMap\Position\y + *PlayState\AStarPath()\y * #MAP_GRID_TILE_HEIGHT
       Box(XPath, YPath, #MAP_GRID_TILE_WIDTH, #MAP_GRID_TILE_HEIGHT, RGB(0, 214, 0))
     Next
     
+    StopDrawing()
   EndIf
   
-  StopDrawing()
+  If *PlayState\IsGameOver
+    DrawGameOverScreenPlayState(*PlayState)
+  EndIf
+  
+  
+  
   
 EndProcedure
 
