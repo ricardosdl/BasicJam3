@@ -70,7 +70,7 @@ Procedure DrawItem(*Item.TItem)
   If *Item\Enabled
     DrawGameObject(*Item)
   EndIf
-  DrawGameObject(*Item)
+  ;DrawGameObject(*Item)
 EndProcedure
 
 Procedure.a GetCollisionCoordsItem(*Item.TItem, *CollisionCoords.TRect)
