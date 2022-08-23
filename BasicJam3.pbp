@@ -7,7 +7,7 @@
   <section name="data">
     <explorer view="" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2022-08-23 15:34" user="ricardo.lima" host="686-D-02700820"/>
+    <lastopen date="2022-08-23 16:27" user="ricardo.lima" host="686-D-02700820"/>
   </section>
   <section name="files">
     <file name="BananaEnemy.pbi">
@@ -59,6 +59,9 @@
       <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
     </file>
     <file name="Item.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+    </file>
+    <file name="SpriteAnimation.pbi">
       <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
     </file>
   </section>

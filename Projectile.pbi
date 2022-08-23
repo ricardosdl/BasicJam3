@@ -16,6 +16,7 @@ EndEnumeration
 #BOMB1_TIMER = 3.0
 #EXPLOSION_ANIMATION_FPS = 12
 #EXPLOSION_EXPANSION_TIMER = 250.0 / 1000.0
+#EXPLOSION_ANIMATION_NUM_FRAMES = 10
 
 Structure TExplosionAnimation Extends TSpriteAnimation
   Position.TVector2D
@@ -288,11 +289,12 @@ Procedure AddExplosionAnimation(*Explosion.TProjectile, *PositionCoords.TVector2
     ProcedureReturn
   EndIf
   
-  InitSpriteAnimation(*ExplosionAnimation, #ExplosionSprite, 16, 16, 10, 0, #EXPLOSION_ANIMATION_FPS, #True, #SPRITES_ZOOM)
+  InitSpriteAnimation(*ExplosionAnimation, #ExplosionSprite, 16, 16, #EXPLOSION_ANIMATION_NUM_FRAMES, 0,
+                      #EXPLOSION_ANIMATION_FPS, #True, #SPRITES_ZOOM)
   
   ;the explosionanimation timer allows for the full animation to be played
   ;meaning all 10 frames will be displayed
-  *ExplosionAnimation\Timer = 1 / #EXPLOSION_ANIMATION_FPS * 10
+  *ExplosionAnimation\Timer = 1 / #EXPLOSION_ANIMATION_FPS * #EXPLOSION_ANIMATION_NUM_FRAMES
   *ExplosionAnimation\Active = #True
   
   *ExplosionAnimation\Position\x = (*PositionCoords\x * #MAP_GRID_TILE_WIDTH) +
@@ -337,7 +339,6 @@ Procedure UpdateExplosionExpansion(*Explosion.TProjectile, TimeSlice.f)
       Protected IsBreakable.a = IsTileBreakable(*Explosion\GameMap, PositionCoord\x, PositionCoord\y)
       If IsBreakable
         ;this tile is breakable, we add an explosion animation, but the explosion ends here in this current direction
-        ;this tile is walkable just add an explosion animation on it
         AddExplosionAnimation(*Explosion, @PositionCoord)
         *Explosion\ExplosionExpansion\OpenDirections(DirectionIdx) = #False
         MakeTileWalkable(*Explosion\GameMap, PositionCoord\x, PositionCoord\y)
@@ -450,6 +451,11 @@ Procedure.a CheckCollisonProjectileExplosionMiddlePosition(*Explosion.TProjectil
     Protected ExplosionCoords.TVector2D
     GetTileCoordsByPosition(@*ExplosionAnimation\Position, @ExplosionCoords)
     If ExplosionCoords\x = GameObjectCoords\Position\x And ExplosionCoords\y = GameObjectCoords\Position\y
+      If *ExplosionAnimation\CurrentFrame >= (#EXPLOSION_ANIMATION_NUM_FRAMES - 3)
+        ;Debug "dont explode" + ElapsedMilliseconds()
+        ;if the explosion animation is at the last 2 frames we won't check collision anymore
+        Continue
+      EndIf
       ProcedureReturn #True
     EndIf
   Next
