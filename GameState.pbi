@@ -267,6 +267,7 @@ Procedure StartPlayState(*PlayState.TPlayState)
 EndProcedure
 
 Procedure EndPlayState(*PlayState.TPlayState)
+  
 EndProcedure
 
 Procedure.a BeatLevelPlayState(*PlayState.TPlayState)
