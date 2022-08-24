@@ -451,7 +451,7 @@ Procedure.a CheckCollisonProjectileExplosionMiddlePosition(*Explosion.TProjectil
     Protected ExplosionCoords.TVector2D
     GetTileCoordsByPosition(@*ExplosionAnimation\Position, @ExplosionCoords)
     If ExplosionCoords\x = GameObjectCoords\Position\x And ExplosionCoords\y = GameObjectCoords\Position\y
-      If *ExplosionAnimation\CurrentFrame >= (#EXPLOSION_ANIMATION_NUM_FRAMES - 3)
+      If *ExplosionAnimation\CurrentFrame >= (#EXPLOSION_ANIMATION_NUM_FRAMES - 4)
         ;Debug "dont explode" + ElapsedMilliseconds()
         ;if the explosion animation is at the last 2 frames we won't check collision anymore
         Continue
