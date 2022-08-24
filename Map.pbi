@@ -28,6 +28,11 @@ Enumeration EMapDirections
   
 EndEnumeration
 
+Enumeration ETileChanges
+  #TILE_CHANGE_MAKE_WALKABLE
+  #TILE_CHANGE_MAKE_BREAKABLE
+EndEnumeration
+
 #MAP_NUM_DIRECTIONS = 9
 #MAP_NUM_LOOKING_DIRECTIONS = 4
 
@@ -57,6 +62,13 @@ Structure TMapGrid
   Array TilesGrid.TTile(#MAP_GRID_WIDTH - 1, #MAP_GRID_HEIGHT - 1)
 EndStructure
 
+Structure TTileChange
+  x.w
+  y.w
+  Timer.f
+  TileChange.a
+EndStructure
+
 
 Structure TMap Extends TGameObject
   
@@ -64,7 +76,7 @@ Structure TMap Extends TGameObject
   
   List ExplodedTiles.TVector2D()
   ExplodedTileAdded.a
-  
+  List TileChanges.TTileChange()
 EndStructure
 
 Structure TMapDirection Extends TVector2D
@@ -351,6 +363,24 @@ Procedure MakeTileWalkable(*GameMap.TMap, TileX.w, TileY.w)
   *GameMap\MapGrid\TilesGrid(TileX, TileY)\Walkable = #True
   *GameMap\MapGrid\TilesGrid(TileX, TileY)\Health = 1.0
   *GameMap\MapGrid\TilesGrid(TileX, TileY)\SpriteNum = #Ground
+  
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.a MakeTileWalkableWithTimer(*GameMap.TMap, TileX.w, TileY.w, Timer.f)
+  If TileX < #MAP_PLAY_AREA_START_X Or TileX > #MAP_PLAY_AREA_END_X
+    ProcedureReturn #False
+  EndIf
+  
+  If TileY < #MAP_PLAY_AREA_START_Y Or TileY > #MAP_PLAY_AREA_END_Y
+    ProcedureReturn #False
+  EndIf
+  
+  AddElement(*GameMap\TileChanges())
+  *GameMap\TileChanges()\x = TileX
+  *GameMap\TileChanges()\y = TileY
+  *GameMap\TileChanges()\Timer = Timer
+  *GameMap\TileChanges()\TileChange = #TILE_CHANGE_MAKE_WALKABLE
   
   ProcedureReturn #True
 EndProcedure
@@ -661,12 +691,38 @@ Procedure ClearExplodedTilesMap(*GameMap.TMap)
   *GameMap\ExplodedTileAdded = #False
 EndProcedure
 
+Procedure ClearTileChanges(*GameMap.TMap)
+  ClearList(*GameMap\TileChanges())
+EndProcedure
+
+Procedure.a MakeTileChange(*GameMap.TMap, TileX.w, TileY.w, TileChange.a)
+  Select TileChange
+    Case #TILE_CHANGE_MAKE_WALKABLE
+      ProcedureReturn MakeTileWalkable(*GameMap, TileX, TileY)
+  EndSelect
+  ProcedureReturn #False
+EndProcedure
+
+Procedure UpdateMap(*GameMap.TMap, TimeSlice.f)
+  ForEach *GameMap\TileChanges()
+    If *GameMap\TileChanges()\Timer <= 0.0
+      MakeTileChange(*GameMap, *GameMap\TileChanges()\x, *GameMap\TileChanges()\y, *GameMap\TileChanges()\TileChange)
+      DeleteElement(*GameMap\TileChanges())
+      Continue
+    EndIf
+    *GameMap\TileChanges()\Timer - TimeSlice
+  Next
+  
+  UpdateGameObject(*GameMap, TimeSlice)
+EndProcedure
+
 Procedure InitMap(*GameMap.TMap, *Position.TVector2D)
-  InitGameObject(*GameMap, *Position, -1, @UpdateGameObject(), @DrawMap(), #True, 1.0, #MapDrawOrder)
+  InitGameObject(*GameMap, *Position, -1, @UpdateMap(), @DrawMap(), #True, 1.0, #MapDrawOrder)
   InitMapGrid(@*GameMap\MapGrid, ".\data\maps\main-map-grid.csv")
   SetRandomBreakableWallsMap(*GameMap)
   SetTopLeftCornerPlayableByPlayer(*GameMap)
   ClearExplodedTilesMap(*GameMap)
+  ClearTileChanges(*GameMap)
 EndProcedure
 
 Procedure ClearMapGrid(*GameMap.TMap)
@@ -688,6 +744,7 @@ Procedure RestartMapGrid(*GameMap.TMap)
   SetRandomBreakableWallsMap(*GameMap)
   SetTopLeftCornerPlayableByPlayer(*GameMap)
   ClearExplodedTilesMap(*GameMap)
+  ClearTileChanges(*GameMap)
 EndProcedure
 
 Procedure.a GetExplodedTiles(*GameMap.TMap, List ExplodedTiles.TVector2D(), ClearExplodedTiles.a = #True)

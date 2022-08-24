@@ -17,6 +17,7 @@ EndEnumeration
 #EXPLOSION_ANIMATION_FPS = 12
 #EXPLOSION_EXPANSION_TIMER = 250.0 / 1000.0
 #EXPLOSION_ANIMATION_NUM_FRAMES = 10
+#EXPLOSION_NON_COLLSION_FRAMES = 4
 
 Structure TExplosionAnimation Extends TSpriteAnimation
   Position.TVector2D
@@ -341,7 +342,7 @@ Procedure UpdateExplosionExpansion(*Explosion.TProjectile, TimeSlice.f)
         ;this tile is breakable, we add an explosion animation, but the explosion ends here in this current direction
         AddExplosionAnimation(*Explosion, @PositionCoord)
         *Explosion\ExplosionExpansion\OpenDirections(DirectionIdx) = #False
-        MakeTileWalkable(*Explosion\GameMap, PositionCoord\x, PositionCoord\y)
+        MakeTileWalkableWithTimer(*Explosion\GameMap, PositionCoord\x, PositionCoord\y, 1.0 / #EXPLOSION_ANIMATION_FPS * (#EXPLOSION_NON_COLLSION_FRAMES + 3))
         AddExplodedTileMap(*Explosion\GameMap, @PositionCoord)
         Continue
       Else
@@ -451,7 +452,7 @@ Procedure.a CheckCollisonProjectileExplosionMiddlePosition(*Explosion.TProjectil
     Protected ExplosionCoords.TVector2D
     GetTileCoordsByPosition(@*ExplosionAnimation\Position, @ExplosionCoords)
     If ExplosionCoords\x = GameObjectCoords\Position\x And ExplosionCoords\y = GameObjectCoords\Position\y
-      If *ExplosionAnimation\CurrentFrame >= (#EXPLOSION_ANIMATION_NUM_FRAMES - 4)
+      If *ExplosionAnimation\CurrentFrame > (#EXPLOSION_ANIMATION_NUM_FRAMES - #EXPLOSION_NON_COLLSION_FRAMES)
         ;Debug "dont explode" + ElapsedMilliseconds()
         ;if the explosion animation is at the last 2 frames we won't check collision anymore
         Continue
