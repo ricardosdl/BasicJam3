@@ -537,6 +537,39 @@ Procedure.a GetRandomWalkableTile(*GameMap.TMap, *TileCoords.TVector2D, NumTries
   
 EndProcedure
 
+Procedure.a GetRandomWalkableTileInRange(*GameMap.TMap, *RangeStart.TVector2D, *RangeEnd.TVector2D, *ReturnTileCoords.TVector2D, NumTries.u = #MAP_GRID_WIDTH * #MAP_GRID_HEIGHT * 1.2)
+  If *RangeStart\x < #MAP_PLAY_AREA_START_X Or *RangeStart\x > #MAP_PLAY_AREA_END_X
+    ProcedureReturn #False
+  EndIf
+  
+  If *RangeStart\y < #MAP_PLAY_AREA_START_Y Or *RangeStart\y > #MAP_PLAY_AREA_END_Y
+    ProcedureReturn #False
+  EndIf
+  
+  If *RangeEnd\x < #MAP_PLAY_AREA_START_X Or *RangeEnd\x > #MAP_PLAY_AREA_END_X
+    ProcedureReturn #False
+  EndIf
+  
+  If *RangeEnd\y < #MAP_PLAY_AREA_START_Y Or *RangeEnd\y > #MAP_PLAY_AREA_END_Y
+    ProcedureReturn #False
+  EndIf
+  
+  While NumTries
+    Protected TileX.w, TileY.w
+    TileX = Random(*RangeEnd\x, *RangeStart\x)
+    TileY = Random(*RangeEnd\y, *RangeStart\y)
+    If *GameMap\MapGrid\TilesGrid(TileX, TileY)\Walkable
+      *ReturnTileCoords\x = TileX
+      *ReturnTileCoords\y = TileY
+      ProcedureReturn #True
+    EndIf
+    
+    NumTries - 1
+  Wend
+  
+  ProcedureReturn #False
+EndProcedure
+
 Procedure.a GetRandomBreakableTile(*GameMap.TMap, *TileCoords.TVector2D, NumTries.u = #MAP_GRID_WIDTH * #MAP_GRID_HEIGHT * 1.2)
   While NumTries
     

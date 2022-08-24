@@ -156,10 +156,19 @@ EndProcedure
 Procedure InitEnemiesPlayState(*PlayState.TPlayState)
   Protected NumEnemiesToAdd.a = *PlayState\Level * 1.6
   
+  Protected RandomCoords.TVector2D
+  Protected.TVector2D RangeStart, RangeEnd
+  RangeStart\x = #MAP_PLAY_AREA_START_X + 2
+  RangeStart\y = #MAP_PLAY_AREA_START_Y + 2
+  
+  RangeEnd\x = #MAP_PLAY_AREA_END_X
+  RangeEnd\y = #MAP_PLAY_AREA_END_Y
+  
   While NumEnemiesToAdd
     Protected *Enemy.TEnemy = GetInactiveEnemyPlayState(*PlayState)
-    Protected RandomCoords.TVector2D
-    If Not GetRandomWalkableTile(@*PlayState\GameMap, @RandomCoords)
+    
+    
+    If Not GetRandomWalkableTileInRange(@*PlayState\GameMap, @RangeStart, @RangeEnd, @RandomCoords)
       Continue
     EndIf
     
