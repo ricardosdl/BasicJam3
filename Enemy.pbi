@@ -21,6 +21,7 @@ EndEnumeration
 Enumeration EEnemyType
   #EnemyRedDemon
   #EnemyRedArmoredDemon
+  #EnemyMagnetoBomb
 EndEnumeration
 
 Prototype SetPatrollingEnemyProc(*Enemy)
@@ -810,6 +811,78 @@ Procedure InitEnemyRedArmoredDemon(*Enemy.TEnemy, *Player.TGameObject, *Projecti
   SwitchStateEnemy(*Enemy, #EnemyStateNoState)
   
   ClipSprite(#EnemyRedArmoredDemonSprite, 0, 0, 16, 16)
+  
+EndProcedure
+
+Procedure UpdateEnemyMagnetoBomb(*MagnetoBomb.TEnemy, TimeSlice.f)
+  If *MagnetoBomb\CurrentState = #EnemyStateNoState
+    ;just wait
+    SwitchToWaitingEnemy(*MagnetoBomb, 1.0)
+    ProcedureReturn
+  EndIf
+  
+  Protected CurrentMapCoords.TVector2D
+  GetTileCoordsByPosition(@*MagnetoBomb\MiddlePosition, @CurrentMapCoords)
+  
+  Protected PlayerMapCoords.TVector2D
+  GetTileCoordsByPosition(@*MagnetoBomb\Player\MiddlePosition, @PlayerMapCoords)
+  
+  Protected FollingVelocity.TVector2D
+  FollingVelocity\x = 120
+  FollingVelocity\y = 120
+  
+  If *MagnetoBomb\CurrentState = #EnemyStateWaiting
+    If *MagnetoBomb\StateTimer <= 0
+      If IsTileInRange(*MagnetoBomb\GameMap, @CurrentMapCoords, @PlayerMapCoords, 5)
+        SwitchToGoingToObjectiveTile(*MagnetoBomb, @PlayerMapCoords)
+        ProcedureReturn
+      EndIf
+      
+      SwitchStateEnemy(*MagnetoBomb, #EnemyStateNoState)
+      ProcedureReturn
+    EndIf
+    
+    *MagnetoBomb\StateTimer - TimeSlice
+    
+  ElseIf *MagnetoBomb\CurrentState = #EnemyStateGoingToObjectiveTile
+    ;going to tile
+    If GoToObjectiveTileEnemy(*MagnetoBomb)
+      
+    EndIf
+    
+  EndIf
+  
+  
+  UpdateGameObject(*MagnetoBomb, TimeSlice)
+    
+  
+EndProcedure
+
+Procedure InitMagnetoBomb(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TProjectileList,
+                            *DrawList.TDrawList, *GameMap.TMap, *PosMapCoords.TVector2D)
+  
+  ;store the middle x and y of the grid at *PosMapCoords
+  Protected GridTileMiddlePosition.TVector2D\x = *PosMapCoords\x * #MAP_GRID_TILE_WIDTH + #MAP_GRID_TILE_WIDTH / 2
+  GridTileMiddlePosition\y = *PosMapCoords\y * #MAP_GRID_TILE_HEIGHT + #MAP_GRID_TILE_HEIGHT / 2
+  
+  Protected EnemyWidth.u, EnemyHeight.u
+  EnemyWidth = 16 * #SPRITES_ZOOM
+  EnemyHeight = 16 * #SPRITES_ZOOM
+  
+  Protected Position.TVector2D\x = GridTileMiddlePosition\x - EnemyWidth / 2
+  Position\y = GridTileMiddlePosition\y - EnemyHeight / 2
+  
+  InitGameObject(*Enemy, @Position, #EnemyMagnetoBombSprite, @UpdateEnemyMagnetoBomb(), @DrawEnemy(), #True, 16, 16,
+                 #SPRITES_ZOOM, #EnemyDrawOrder)
+  
+  InitEnemy(*Enemy, *Player, *ProjectileList, *DrawList, #EnemyMagnetoBomb, *GameMap)
+  
+  *Enemy\BombPower = 3.0
+  
+  *Enemy\MaxVelocity\x = 500
+  *Enemy\MaxVelocity\y = 500
+  
+  SwitchStateEnemy(*Enemy, #EnemyStateNoState)
   
 EndProcedure
 

@@ -801,5 +801,35 @@ Procedure AddExplodedTileMap(*GameMap.TMap, *ExplodedTileCoords.TVector2D)
   *GameMap\ExplodedTileAdded = #True
 EndProcedure
 
+Procedure IsTileInRange(*GameMap.TMap, *OriginTile.TVector2D, *GoalTile.TVector2D, MaxRange.a, StopAtUnwalkable.a = #True)
+  Protected Direction.a, Distance.u
+  For Direction = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
+    Distance = MaxRange
+    Protected CurrentDirection.TMapDirection = Map_All_Directions(Direction)
+    Protected CurrentLookingTile.TVector2D
+    CurrentLookingTile\x = *OriginTile\x
+    CurrentLookingTile\y = *OriginTile\y
+    While Distance
+      CurrentLookingTile\x + CurrentDirection\x
+      CurrentLookingTile\y + CurrentDirection\y
+      If IsTileWalkable(*GameMap, CurrentLookingTile\x, CurrentLookingTile\y)
+        If *GoalTile\x = CurrentLookingTile\x And *GoalTile\y = CurrentLookingTile\y
+          ProcedureReturn #True
+        EndIf
+        
+      Else
+        If StopAtUnwalkable
+          Break
+        EndIf
+      EndIf
+      
+      Distance - 1
+    Wend
+    
+  Next
+  
+  ProcedureReturn #False
+EndProcedure
+
 
 DisableExplicit
