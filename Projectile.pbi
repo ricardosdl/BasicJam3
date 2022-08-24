@@ -44,6 +44,7 @@ Structure TProjectile Extends TGameObject
   ExplosionStarted.a
   List *ExplosionAnimations.TExplosionAnimation()
   ExplosionExpansion.TExplosionExpansion
+  DrawingAlpha.a
 EndStructure
 
 Structure TProjectileList
@@ -162,7 +163,7 @@ Procedure IsThereActiveProjectileOnTile(*ProjectileList.TProjectileList, *TileCo
 EndProcedure
 
 Procedure DrawProjectile(*Projectile.TProjectile)
-  DrawGameObject(*Projectile)
+  DrawGameObject(*Projectile, *Projectile\DrawingAlpha)
 EndProcedure
 
 Procedure ExplodeProjectile(*Projectile.TProjectile, TimeSlice.f)
@@ -250,7 +251,7 @@ Procedure InitProjectile(*Projectile.TProjectile, *MapCoords.TVector2D, Projecti
 EndProcedure
 
 Procedure InitProjectileBomb1(*Projectile.TProjectile, *MapCoords.TVector2D, *GameMap.TMap, *DrawList.TDrawList, Power.f,
-                              *Owner.TGameObject, *ProjectileList.TProjectileList)
+                              *Owner.TGameObject, *ProjectileList.TProjectileList, DrawingAlpha.a = 255)
   
   Protected Position.TVector2D\x = *GameMap\Position\x + (*MapCoords\x * #MAP_GRID_TILE_WIDTH)
   Position\y = *GameMap\Position\y + (*MapCoords\y * #MAP_GRID_TILE_HEIGHT)
@@ -264,6 +265,8 @@ Procedure InitProjectileBomb1(*Projectile.TProjectile, *MapCoords.TVector2D, *Ga
   
   *Projectile\HasAliveTimer = #True
   *Projectile\AliveTimer = #BOMB1_TIMER;in seconds
+  
+  *Projectile\DrawingAlpha = DrawingAlpha
   
   
   

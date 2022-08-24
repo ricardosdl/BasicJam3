@@ -354,7 +354,7 @@ Procedure CheckExplosionsAgainstEnemies(*PlayState.TPlayState, List *ActiveExplo
     ForEach *ActiveExplosions()
       Protected *Explosion.TProjectile = *ActiveExplosions()
       If CheckCollisonProjectileExplosionMiddlePosition(*Explosion, *Enemy)
-        ExplodeEnemy(*Enemy)
+        HurtEnemy(*Enemy, 1.0)
         Break
       EndIf
       
@@ -475,6 +475,14 @@ Procedure CheckExplodedTilesPlayState(*PlayState.TPlayState)
       
       
     Next
+    
+    If RandomFloat() < 0.5
+      Protected *Enemy.TEnemy = GetInactiveEnemyPlayState(*PlayState)
+      InitMagnetoBomb(*Enemy, @*PlayState\Player, @PlayState\ProjectileList, @*PlayState\DrawList, @*PlayState\GameMap,
+                      @ExplodedTiles())
+      AddDrawItemDrawList(@*PlayState\DrawList, *Enemy)
+    EndIf
+    
     
   Next
   

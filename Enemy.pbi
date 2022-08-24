@@ -42,6 +42,9 @@ Structure TEnemy Extends TGameObject
   ObjectiveSafetyTileCoords.TVector2D
   BombPower.f
   LookingDirection.TMapDirection
+  HurtTimer.f
+  AliveTimer.f
+  HasAliveTimer.a
 EndStructure
 
 Procedure GetCollisionCoordsEnemy(*Enemy.TEnemy, *CollisionCoords.TRect)
@@ -50,7 +53,7 @@ Procedure GetCollisionCoordsEnemy(*Enemy.TEnemy, *CollisionCoords.TRect)
 EndProcedure
 
 Procedure InitEnemy(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TProjectileList,
-                    *DrawList.TDrawList, EnemyType.a, *GameMap.TMap)
+                    *DrawList.TDrawList, EnemyType.a, *GameMap.TMap, HurtTimer.f = 0.0)
   *Enemy\Player = *Player
   *Enemy\Projectiles = *ProjectileList
   
@@ -58,6 +61,7 @@ Procedure InitEnemy(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TProject
   *Enemy\EnemyType = EnemyType
   *Enemy\GameMap = *GameMap
   *Enemy\GetCollisionRect = @GetCollisionCoordsEnemy()
+  *Enemy\HurtTimer = HurtTimer
 EndProcedure
 
 Procedure SwitchStateEnemy(*Enemy.TEnemy, NewState.a)
@@ -286,7 +290,11 @@ Procedure KillEnemy(*Enemy.TEnemy)
 EndProcedure
 
 
-Procedure HurtEnemy(*Enemy.TEnemy, Power.f)
+Procedure.a HurtEnemy(*Enemy.TEnemy, Power.f)
+  If *Enemy\HurtTimer > 0
+    ProcedureReturn #False
+  EndIf
+  
   *Enemy\Health - Power
   If *Enemy\Health <= 0.0
     KillEnemy(*Enemy)
@@ -358,7 +366,7 @@ Procedure GoToObjectiveTileEnemy(*Enemy.TEnemy, *ReturnReachedCurrentObjectiveTi
   ProcedureReturn #False
 EndProcedure
 
-Procedure.a DropBombEnemy(*Enemy.TEnemy)
+Procedure.a DropBombEnemy(*Enemy.TEnemy, BombAlpha.a = 255, *ReturnProjectile.TProjectile = #Null)
   Protected *Projectile.TProjectile = GetInactiveProjectile(*Enemy\Projectiles)
   If *Projectile = #Null
     ;couldn't allocate the memory for a bomb :(
@@ -516,6 +524,8 @@ Procedure InitEnemyRedDemon(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.
   InitEnemy(*Enemy, *Player, *ProjectileList, *DrawList, #EnemyRedDemon, *GameMap)
   
   *Enemy\BombPower = 1.0
+  
+  *Enemy\HurtTimer = 0.0
   
   *Enemy\MaxVelocity\x = 500
   *Enemy\MaxVelocity\y = 500
@@ -805,6 +815,8 @@ Procedure InitEnemyRedArmoredDemon(*Enemy.TEnemy, *Player.TGameObject, *Projecti
   
   *Enemy\BombPower = 2.0
   
+  *Enemy\HurtTimer = 0.0
+  
   *Enemy\MaxVelocity\x = 500
   *Enemy\MaxVelocity\y = 500
   
@@ -834,7 +846,11 @@ Procedure UpdateEnemyMagnetoBomb(*MagnetoBomb.TEnemy, TimeSlice.f)
   If *MagnetoBomb\CurrentState = #EnemyStateWaiting
     If *MagnetoBomb\StateTimer <= 0
       If IsTileInRange(*MagnetoBomb\GameMap, @CurrentMapCoords, @PlayerMapCoords, 5)
+        ;found the player so we set the objective to the current player position,
+        ;also we start the alive timer, the enemy will explode!
         SwitchToGoingToObjectiveTile(*MagnetoBomb, @PlayerMapCoords)
+        *MagnetoBomb\HasAliveTimer = #True
+        *MagnetoBomb\AliveTimer = 5.0
         ProcedureReturn
       EndIf
       
@@ -847,10 +863,19 @@ Procedure UpdateEnemyMagnetoBomb(*MagnetoBomb.TEnemy, TimeSlice.f)
   ElseIf *MagnetoBomb\CurrentState = #EnemyStateGoingToObjectiveTile
     ;going to tile
     If GoToObjectiveTileEnemy(*MagnetoBomb)
-      
+      SwitchStateEnemy(*MagnetoBomb, #EnemyStateNoState)
+      ProcedureReturn
     EndIf
     
   EndIf
+  
+  If *MagnetoBomb\HasAliveTimer
+    If *MagnetoBomb\AliveTimer <= 0.0
+      KillEnemy(*MagnetoBomb)
+    EndIf
+    
+  EndIf
+  
   
   
   UpdateGameObject(*MagnetoBomb, TimeSlice)
@@ -875,9 +900,11 @@ Procedure InitMagnetoBomb(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TP
   InitGameObject(*Enemy, @Position, #EnemyMagnetoBombSprite, @UpdateEnemyMagnetoBomb(), @DrawEnemy(), #True, 16, 16,
                  #SPRITES_ZOOM, #EnemyDrawOrder)
   
-  InitEnemy(*Enemy, *Player, *ProjectileList, *DrawList, #EnemyMagnetoBomb, *GameMap)
+  InitEnemy(*Enemy, *Player, *ProjectileList, *DrawList, #EnemyMagnetoBomb, *GameMap, 1.0)
   
   *Enemy\BombPower = 3.0
+  
+  *Enemy\HasAliveTimer = #False
   
   *Enemy\MaxVelocity\x = 500
   *Enemy\MaxVelocity\y = 500
