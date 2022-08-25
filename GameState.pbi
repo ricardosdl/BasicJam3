@@ -172,11 +172,16 @@ Procedure InitEnemiesPlayState(*PlayState.TPlayState)
       Continue
     EndIf
     
-    If RandomFloat() <= 0.6
+    Protected RandomChance.f = RandomFloat()
+    
+    If RandomChance < 0
       InitEnemyRedArmoredDemon(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, *PlayState\DrawList, @*PlayState\GameMap,
                                @RandomCoords)
-    Else
+    ElseIf RandomChance < 0
       InitEnemyRedDemon(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, @*PlayState\DrawList, @*PlayState\GameMap,
+                        @RandomCoords)
+    Else
+      InitEnemySummoner(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, @*PlayState\DrawList, @*PlayState\GameMap,
                         @RandomCoords)
     EndIf
     
@@ -184,7 +189,7 @@ Procedure InitEnemiesPlayState(*PlayState.TPlayState)
     AddDrawItemDrawList(@*PlayState\DrawList, *Enemy)
     
     NumEnemiesToAdd - 1
-    
+    break
   Wend
   
   

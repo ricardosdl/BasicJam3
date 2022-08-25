@@ -680,6 +680,38 @@ Procedure.a GetRandomWalkableTileFromOriginTile(*GameMap.TMap, OriginTileX.w, Or
   
 EndProcedure
 
+Procedure.a GetClosestBreakableTileFromOriginTile(*GameMap.Tmap, *OriginTileCoords.TVector2D, Direction.a, *ReturnTileCoords.TVector2D)
+  If Direction = #MAP_DIRECTION_NONE
+    ProcedureReturn #False
+  EndIf
+  
+  Protected MapDirection.TMapDirection = Map_All_Directions(Direction)
+  
+  Protected CurrentTile.TVector2D
+  CurrentTile\x = *OriginTileCoords\x + MapDirection\x
+  CurrentTile\y = *OriginTileCoords\y + MapDirection\y
+  Protected Found.a = #False
+  Repeat
+    If IsTileWalkable(*GameMap, CurrentTile\x, CurrentTile\y)
+      ;walkable, continue searching
+      CurrentTile\x + MapDirection\x
+      CurrentTile\y + MapDirection\y
+    ElseIf IsTileBreakable(*GameMap, CurrentTile\x, CurrentTile\y)
+      ;found it, let's get out of the loop
+      Break
+    Else
+      ;not walkable, and not breakable, it's unbreakable, didn't find it
+      ProcedureReturn #False
+    EndIf
+  ForEver
+  
+  *ReturnTileCoords\x = CurrentTile\x
+  *ReturnTileCoords\y = CurrentTile\y
+  
+  ProcedureReturn #True
+  
+EndProcedure
+
 Procedure.a GetListWalkableTilesAroundOriginTile(*GameMap.TMap, *OriginTileCoords.TVector2D, BombPower.f, List SafetyTiles.TVector2D())
   ClearList(SafetyTiles())
   Protected DirectionIdx.a

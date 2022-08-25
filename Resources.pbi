@@ -18,6 +18,7 @@ Enumeration ESprites
   #PlayerHeartSprite
   #GameOverOverlaySprite
   #EnemyMagnetoBombSprite
+  #EnemySummonerSprite
 EndEnumeration
 
 DisableExplicit

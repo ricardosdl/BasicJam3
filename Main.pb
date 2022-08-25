@@ -29,6 +29,7 @@ Procedure.a LoadSprites()
   LoadedAll = LoadedAll & Bool(LoadSprite(#PlayerHeartSprite, "data\img\playerheart.png", #PB_Sprite_AlphaBlending))
   LoadedAll = LoadedAll & Bool(LoadSprite(#GameOverOverlaySprite, "data\img\gameoveroverlay.png", #PB_Sprite_AlphaBlending))
   LoadedAll = LoadedAll & Bool(LoadSprite(#EnemyMagnetoBombSprite, "data\img\magnetobomb.png", #PB_Sprite_AlphaBlending))
+  LoadedAll = LoadedAll & Bool(LoadSprite(#EnemySummonerSprite, "data\img\Grum.png", #PB_Sprite_AlphaBlending))
   ProcedureReturn LoadedAll
 EndProcedure
 

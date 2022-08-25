@@ -16,12 +16,14 @@ Enumeration EEnemyStates
   #EnemyStateGoingToSafety
   #EnemyStateLookingForPlayer
   #EnemyStateFollowingPlayer
+  #EnemyStateSummoning
 EndEnumeration
 
 Enumeration EEnemyType
   #EnemyRedDemon
   #EnemyRedArmoredDemon
   #EnemyMagnetoBomb
+  #EnemySummoner
 EndEnumeration
 
 Prototype SetPatrollingEnemyProc(*Enemy)
@@ -45,6 +47,7 @@ Structure TEnemy Extends TGameObject
   HurtTimer.f
   AliveTimer.f
   HasAliveTimer.a
+  SummonTile.TVector2D
 EndStructure
 
 Procedure GetCollisionCoordsEnemy(*Enemy.TEnemy, *CollisionCoords.TRect)
@@ -977,6 +980,193 @@ Procedure InitMagnetoBomb(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TP
   *Enemy\MaxVelocity\y = 500
   
   SwitchStateEnemy(*Enemy, #EnemyStateNoState)
+  
+EndProcedure
+
+Procedure.a SwitchToSummoning(*Enemy.TEnemy)
+  Protected CurrentTileCoords.TVector2D
+  GetTileCoordsByPosition(@*Enemy\MiddlePosition, @CurrentTileCoords)
+  
+  Protected NewList WalkableDirections.a()
+  
+  Protected ThereIsWalkableDirections.a = GetWalkableDirectionsFromOriginTile(*Enemy\GameMap, CurrentTileCoords\x,
+                                                                              CurrentTileCoords\y, WalkableDirections())
+  
+  If Not ThereIsWalkableDirections
+    ;no free direction for the summoning
+    ProcedureReturn #False
+  EndIf
+  
+  RandomizeList(WalkableDirections())
+  Protected FoundBombFreeWalkableDirection.a = #False
+  Protected BombFreeWalkableDirection.a
+  ForEach WalkableDirections()
+    If Not IsThereBombsOnDirection(*Enemy, WalkableDirections(), #True, 5)
+      ;found a direction with no projectile on it
+      FoundBombFreeWalkableDirection = #True
+      BombFreeWalkableDirection = WalkableDirections()
+      Break
+    EndIf
+  Next
+  
+  If FoundBombFreeWalkableDirection
+    ;this will be the breakable tile that we'll use to "summon" a new enemy
+    Protected SummonTile.TVector2D
+    Protected FoundIt.a = GetClosestBreakableTileFromOriginTile(*Enemy\GameMap, @CurrentTileCoords,
+                                                                BombFreeWalkableDirection, @SummonTile)
+    
+    If FoundIt
+      ;we set the enemy to go to the walkable tile before the summoning tile, because it is a walkable tile
+      Protected ReverseDirection.TMapDirection = Map_All_Directions(BombFreeWalkableDirection)
+      ;multiplying by -1 make the reverse direction
+      ReverseDirection\x = ReverseDirection\x * -1
+      ReverseDirection\y = ReverseDirection\y * -1
+      Protected GoalTile.TVector2D\x = SummonTile\x + ReverseDirection\x
+      GoalTile\y = SummonTile\y + ReverseDirection\y
+      If Not SetPathObjectiveTile(*Enemy, @GoalTile)
+        ;could not set path to the adjacent tile in reverse direction of the summin tile
+        ProcedureReturn #False
+      EndIf
+      
+      *Enemy\SummonTile = SummonTile
+      
+      SwitchStateEnemy(*Enemy, #EnemyStateSummoning)
+      ProcedureReturn #True
+      
+      
+    Else
+      ;could not get a breakable tile to summon an enemy
+      ProcedureReturn #False
+      
+    EndIf
+    
+    
+  EndIf
+  
+  ;bombs on all sides
+  ProcedureReturn #False
+  
+EndProcedure
+
+Procedure UpdateEnemySummoner(*Summoner.TEnemy, TimeSlice.f)
+  
+  Protected TileCoords.TVector2D
+  GetTileCoordsByPosition(*Summoner\MiddlePosition, @TileCoords)
+  
+  If *Summoner\CurrentState = #EnemyStateNoState
+    NewList WalkableDirections.a()
+    Protected ThereIsWalkableDirections.a = GetWalkableDirectionsFromOriginTile(*Summoner\GameMap, TileCoords\x,
+                                                                                TileCoords\y, WalkableDirections())
+    
+    If Not ThereIsWalkableDirections
+      ;no free random direction for the enemy
+      ;let's just wait
+      SwitchToWaitingEnemy(*Summoner, 3.0)
+      ProcedureReturn
+    EndIf
+    
+    RandomizeList(WalkableDirections())
+    Protected FoundBombFreeWalkableDirection.a = #False
+    Protected BombFreeWalkableDirection.a
+    ForEach WalkableDirections()
+      If Not IsThereBombsOnDirection(*Summoner, WalkableDirections(), #True, 5)
+        FoundBombFreeWalkableDirection = #True
+        BombFreeWalkableDirection = WalkableDirections()
+        Break
+      EndIf
+    Next
+    
+    If FoundBombFreeWalkableDirection
+      Protected ObjectiveTileCoords.TVector2D
+      GetRandomWalkableTileFromOriginTile(*Summoner\GameMap, TileCoords\x, TileCoords\y, BombFreeWalkableDirection,
+                                          @ObjectiveTileCoords, 5)
+      If SwitchToGoingToObjectiveTile(*Summoner, @ObjectiveTileCoords)
+        ;could find a path, we are fine
+        ProcedureReturn
+      EndIf
+    EndIf
+    
+    ;there is bombs on all directions, just wait then
+    SwitchToWaitingEnemy(*Summoner, 3.0)
+    ProcedureReturn
+    
+  EndIf
+  
+  If *Summoner\CurrentState = #EnemyStateWaiting
+    If *Summoner\StateTimer <= 0.0
+      If RandomFloat() <= 0.3
+        ;try to summon new wenemy
+        If SwitchToSummoning(*Summoner)
+          ;great we'll go the summonning state
+          ProcedureReturn
+        EndIf
+        
+        ;couldn't meet the conditions to summon an enemy (very much like nen users in the hunter x hunter anime)
+        SwitchStateEnemy(*Summoner, #EnemyStateNoState)
+      Else
+        SwitchStateEnemy(*Summoner, #EnemyStateNoState)
+      EndIf
+      ProcedureReturn
+    EndIf
+    
+    *Summoner\StateTimer - TimeSlice
+    
+  ElseIf *Summoner\CurrentState = #EnemyStateGoingToObjectiveTile
+    If GoToObjectiveTileEnemy(*Summoner)
+      SwitchToWaitingEnemy(*Summoner, 3.0)
+      ProcedureReturn
+    EndIf
+    
+  ElseIf *Summoner\CurrentState = #EnemyStateSummoning
+    If GoToObjectiveTileEnemy(*Summoner)
+      ;summon new enemy
+      Debug "summon enemy"
+      SwitchStateEnemy(*Summoner, #EnemyStateNoState)
+      ProcedureReturn
+    EndIf
+    
+  EndIf
+  
+  
+  
+  UpdateGameObject(*Summoner, TimeSlice)
+  
+  
+  
+  
+  
+  
+EndProcedure
+
+Procedure InitEnemySummoner(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TProjectileList,
+                       *DrawList.TDrawList, *GameMap.TMap, *PosMapCoords.TVector2D)
+  
+  ;store the middle x and y of the grid at *PosMapCoords
+  Protected GridTileMiddlePosition.TVector2D\x = *PosMapCoords\x * #MAP_GRID_TILE_WIDTH + #MAP_GRID_TILE_WIDTH / 2
+  GridTileMiddlePosition\y = *PosMapCoords\y * #MAP_GRID_TILE_HEIGHT + #MAP_GRID_TILE_HEIGHT / 2
+  
+  Protected EnemyWidth.u, EnemyHeight.u
+  EnemyWidth = 16 * #SPRITES_ZOOM
+  EnemyHeight = 16 * #SPRITES_ZOOM
+  
+  Protected Position.TVector2D\x = GridTileMiddlePosition\x - EnemyWidth / 2
+  Position\y = GridTileMiddlePosition\y - EnemyHeight / 2
+  
+  InitGameObject(*Enemy, @Position, #EnemySummonerSprite, @UpdateEnemySummoner(), @DrawEnemy(), #True, 16, 16,
+                 #SPRITES_ZOOM, #EnemyDrawOrder)
+  
+  InitEnemy(*Enemy, *Player, *ProjectileList, *DrawList, #EnemySummoner, *GameMap)
+  
+  *Enemy\BombPower = 3.0
+  
+  *Enemy\HasAliveTimer = #False
+  
+  *Enemy\MaxVelocity\x = 500
+  *Enemy\MaxVelocity\y = 500
+  
+  SwitchStateEnemy(*Enemy, #EnemyStateNoState)
+  
+  ClipSprite(#EnemySummonerSprite, 0, 0, 16, 16)
   
 EndProcedure
 
