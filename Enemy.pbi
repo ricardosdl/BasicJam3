@@ -76,7 +76,7 @@ Procedure SwitchToWaitingEnemy(*Enemy.TEnemy, WaitTimer.f = 1.5)
   SwitchStateEnemy(*Enemy, #EnemyStateWaiting)
 EndProcedure
 
-Procedure SetPathObjectiveTile(*Enemy.TEnemy, *GoalTileCoords.TVector2D, *FirstObjectiveTile.TVector2D = #Null)
+Procedure.a SetPathObjectiveTile(*Enemy.TEnemy, *GoalTileCoords.TVector2D, *FirstObjectiveTile.TVector2D = #Null)
   ;clear the list of objectivetilecoords
   ClearList(*Enemy\ObjectiveTileCoords())
   
@@ -94,6 +94,7 @@ Procedure SetPathObjectiveTile(*Enemy.TEnemy, *GoalTileCoords.TVector2D, *FirstO
   Protected IsPossibleToReachGoal.a = AStar2(*Enemy\GameMap, EnemyTileCoords\x, EnemyTileCoords\y, *GoalTileCoords\x, *GoalTileCoords\y, *Enemy\ObjectiveTileCoords())
   If Not IsPossibleToReachGoal
     Debug "this shouldn't be possible"
+    ProcedureReturn #False
   EndIf
   
   ;delete the first element because is is the current tile coords for the enemy
@@ -102,6 +103,7 @@ Procedure SetPathObjectiveTile(*Enemy.TEnemy, *GoalTileCoords.TVector2D, *FirstO
   
   ;set the first element
   FirstElement(*Enemy\ObjectiveTileCoords())
+  ProcedureReturn #True
 EndProcedure
 
 Procedure SwitchToGoingToObjectiveTile(*Enemy.TEnemy, *ObjectiveTileCoords.TVector2D)
@@ -109,7 +111,9 @@ Procedure SwitchToGoingToObjectiveTile(*Enemy.TEnemy, *ObjectiveTileCoords.TVect
   *Enemy\Velocity\x = 0
   *Enemy\Velocity\y = 0
   
-  SetPathObjectiveTile(*Enemy, *ObjectiveTileCoords)
+  If Not SetPathObjectiveTile(*Enemy, *ObjectiveTileCoords)
+    ProcedureReturn #False
+  EndIf
   
   Protected EnemyTileCoords.TVector2D
   GetTileCoordsByPosition(@*Enemy\MiddlePosition, @EnemyTileCoords)
@@ -125,6 +129,7 @@ Procedure SwitchToGoingToObjectiveTile(*Enemy.TEnemy, *ObjectiveTileCoords.TVect
   *Enemy\Velocity\y = Sin(ATan2(DeltaSignX, DeltaSignY)) * 50
   
   SwitchStateEnemy(*Enemy, #EnemyStateGoingToObjectiveTile)
+  ProcedureReturn #True
   
 EndProcedure
 
@@ -188,7 +193,10 @@ Procedure.a SwitchToDropingBomb(*Enemy.TEnemy, *GetTileToDropBomb.ChooseTileToDr
   *Enemy\Velocity\y = 0
   
   ;set the coords for the objective tile
-  SetPathObjectiveTile(*Enemy, @TileToDropBombCoords)
+  If Not SetPathObjectiveTile(*Enemy, @TileToDropBombCoords)
+    ProcedureReturn #False
+  EndIf
+  
   
   ;get the current enemy middle position coords 
   Protected EnemyTileCoords.TVector2D
@@ -233,13 +241,15 @@ Procedure SetDirectionAndVelEnemy(*Enemy.TEnemy, *Velocity.TVector2D)
   *Enemy\Velocity\y = Sin(ATan2(DeltaSignX, DeltaSignY)) * *Velocity\y
 EndProcedure
 
-Procedure SwitchToGoingToSafety(*Enemy.TEnemy)
+Procedure.a SwitchToGoingToSafety(*Enemy.TEnemy)
   ;stop movement for now
   *Enemy\Velocity\x = 0
   *Enemy\Velocity\y = 0
   
   ;set the coords for the objective tile
-  SetPathObjectiveTile(*Enemy, @*Enemy\ObjectiveSafetyTileCoords)
+  If Not SetPathObjectiveTile(*Enemy, @*Enemy\ObjectiveSafetyTileCoords)
+    ProcedureReturn #False
+  EndIf
   
   ;get the current enemy middle position coords 
   Protected EnemyTileCoords.TVector2D
@@ -256,13 +266,17 @@ Procedure SwitchToGoingToSafety(*Enemy.TEnemy)
   *Enemy\Velocity\y = Sin(ATan2(DeltaSignX, DeltaSignY)) * 50
   
   SwitchStateEnemy(*Enemy, #EnemyStateGoingToSafety)
+  ProcedureReturn #True
 EndProcedure
 
 Procedure SwitchToFollowingPlayer(*Enemy.TEnemy, *PlayerCoords.TVector2D, *Velocity.TVector2D, *FirstObjectiveTile.TVector2D = #Null)
   *Enemy\Velocity\x = 0
   *Enemy\Velocity\y = 0
   
-  SetPathObjectiveTile(*Enemy, *PlayerCoords, *FirstObjectiveTile)
+  If Not SetPathObjectiveTile(*Enemy, *PlayerCoords, *FirstObjectiveTile)
+    ProcedureReturn #False
+  EndIf
+  
   
   ;get the current enemy middle position coords 
   Protected EnemyTileCoords.TVector2D
@@ -280,7 +294,7 @@ Procedure SwitchToFollowingPlayer(*Enemy.TEnemy, *PlayerCoords.TVector2D, *Veloc
   
   SwitchStateEnemy(*Enemy, #EnemyStateFollowingPlayer)
   
-  
+  ProcedureReturn #True
   
 EndProcedure
 
@@ -466,7 +480,12 @@ Procedure UpdateEnemyRedDemon(*RedDemon.TEnemy, TimeSlice.f)
       Protected ObjectiveTileCoords.TVector2D
       GetRandomWalkableTileFromOriginTile(*RedDemon\GameMap, TileCoords\x, TileCoords\y, BombFreeWalkableDirection,
                                           @ObjectiveTileCoords, 4)
-      SwitchToGoingToObjectiveTile(*RedDemon, @ObjectiveTileCoords)
+      If SwitchToGoingToObjectiveTile(*RedDemon, @ObjectiveTileCoords)
+        ;were able to find a path to the objective tile
+        ProcedureReturn
+      EndIf
+      ;couldn't find a path, let's just wait
+      SwitchToWaitingEnemy(*RedDemon, 3.0)
       ProcedureReturn
     EndIf
     
@@ -505,7 +524,12 @@ Procedure UpdateEnemyRedDemon(*RedDemon.TEnemy, TimeSlice.f)
     If GoToObjectiveTileEnemy(*RedDemon)
       ;reached the objective tile, time to drop the bomb
       DropBombEnemy(*RedDemon)
-      SwitchToGoingToSafety(*RedDemon)
+      If SwitchToGoingToSafety(*RedDemon)
+        ProcedureReturn
+      EndIf
+      
+      SwitchStateEnemy(*RedDemon, #EnemyStateNoState)
+      
     EndIf
     
   ElseIf *RedDemon\CurrentState = #EnemyStateGoingToSafety
@@ -720,7 +744,14 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
       Protected ObjectiveTileCoords.TVector2D
       GetRandomWalkableTileFromOriginTile(*RedArmoredDemon\GameMap, TileCoords\x, TileCoords\y, BombFreeWalkableDirection,
                                           @ObjectiveTileCoords, 5)
-      SwitchToGoingToObjectiveTile(*RedArmoredDemon, @ObjectiveTileCoords)
+      If SwitchToGoingToObjectiveTile(*RedArmoredDemon, @ObjectiveTileCoords)
+        ;could find a path, we are fine
+        ProcedureReturn
+      EndIf
+      
+      ;couldn't find a path, let's wait
+      ;there is bombs on all directions, just wait then
+      SwitchToWaitingEnemy(*RedArmoredDemon, 3.0)
       ProcedureReturn
     EndIf
     
@@ -769,8 +800,10 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
     If LookForPlayerInDirection(*RedArmoredDemon, CurrentLookingDirection, @PlayerCoords)
       ;Debug "found player"
       ;found the player in this direction
-      
-      SwitchToFollowingPlayer(*RedArmoredDemon, @PlayerCoords, @FollowingVelocity)
+      If SwitchToFollowingPlayer(*RedArmoredDemon, @PlayerCoords, @FollowingVelocity)
+        ProcedureReturn
+      EndIf
+      SwitchStateEnemy(*RedArmoredDemon, #EnemyStateNoState)
       ProcedureReturn
     EndIf
     
@@ -794,7 +827,13 @@ Procedure UpdateEnemyRedArmoredDemon(*RedArmoredDemon.TEnemy, TimeSlice.f)
     If GoToObjectiveTileEnemy(*RedArmoredDemon)
       ;reached the objective tile, time to drop the bomb
       DropBombEnemy(*RedArmoredDemon)
-      SwitchToGoingToSafety(*RedArmoredDemon)
+      If SwitchToGoingToSafety(*RedArmoredDemon)
+        ProcedureReturn
+      EndIf
+      
+      SwitchStateEnemy(*RedArmoredDemon, #EnemyStateNoState)
+      ProcedureReturn
+      
     EndIf
     
   ElseIf *RedArmoredDemon\CurrentState = #EnemyStateGoingToSafety
@@ -866,10 +905,12 @@ Procedure UpdateEnemyMagnetoBomb(*MagnetoBomb.TEnemy, TimeSlice.f)
       If IsTileInRange(*MagnetoBomb\GameMap, @CurrentMapCoords, @PlayerMapCoords, 5)
         ;found the player so we set the objective to the current player position,
         ;also we start the alive timer, the enemy will explode!
-        SwitchToGoingToObjectiveTile(*MagnetoBomb, @PlayerMapCoords)
-        ProcedureReturn
+        If SwitchToGoingToObjectiveTile(*MagnetoBomb, @PlayerMapCoords)
+          ;path found, let's go!
+          ProcedureReturn
+        EndIf
       EndIf
-      
+      ;let's go back to the initial state
       SwitchStateEnemy(*MagnetoBomb, #EnemyStateNoState)
       ProcedureReturn
     EndIf
