@@ -303,14 +303,21 @@ EndProcedure
 
 Procedure.a BeatLevelPlayState(*PlayState.TPlayState)
   Protected EnemyIdx.l, EndEnemyIdx.l = ArraySize(*PlayState\Enemies())
-  Protected NoActiveEnemy.a = #True
+  
   For EnemyIdx = 0 To EndEnemyIdx
     If *PlayState\Enemies(EnemyIdx)\Active
-      NoActiveEnemy = #False
-      Break
+      ;there still active enemies, not beat the level yet
+      ProcedureReturn #False
     EndIf
   Next
-  ProcedureReturn NoActiveEnemy
+  
+  ;beat all enemies, let's check if there is explosions
+  If IsThereActiveProjectileByType(@*PlayState\ProjectileList, #ProjectileExplosion)
+    ProcedureReturn #False
+  EndIf
+  
+  ProcedureReturn #True
+  
   
 EndProcedure
 
@@ -470,13 +477,12 @@ Procedure CheckExplodedTilesPlayState(*PlayState.TPlayState)
       
       If *Item\PositionMapCoords\x = ExplodedTiles()\x And *Item\PositionMapCoords\y = ExplodedTiles()\y
         EnableItem(*Item)
-        Debug "enable item"
       EndIf
       
       
     Next
     
-    If RandomFloat() < 0.5
+    If RandomFloat() < 0.1
       Protected *Enemy.TEnemy = GetInactiveEnemyPlayState(*PlayState)
       InitMagnetoBomb(*Enemy, @*PlayState\Player, @PlayState\ProjectileList, @*PlayState\DrawList, @*PlayState\GameMap,
                       @ExplodedTiles())

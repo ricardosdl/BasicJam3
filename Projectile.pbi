@@ -122,6 +122,16 @@ Procedure GetNumActiveOwnedProjectiles(*ProjectileList.TProjectileList, *Owner.T
   
 EndProcedure
 
+Procedure IsThereActiveProjectileByType(*ProjectileList.TProjectileList, ProjectileType.a)
+  ForEach *ProjectileList\Projectiles()
+    If *ProjectileList\Projectiles()\Active And *ProjectileList\Projectiles()\ProjectileType = ProjectileType
+      ProcedureReturn #True
+    EndIf
+  Next
+  
+  ProcedureReturn #False
+EndProcedure
+
 Procedure IsThereActiveBombOnTile(*ProjectileList.TProjectileList, *TileCoords.TVector2D, *Owner.TGameObject = #Null)
   Protected *Bomb.TProjectile
   ForEach *ProjectileList\Projectiles()
