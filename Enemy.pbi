@@ -284,9 +284,38 @@ Procedure SwitchToFollowingPlayer(*Enemy.TEnemy, *PlayerCoords.TVector2D, *Veloc
   
 EndProcedure
 
+Procedure.a DropBombEnemy(*Enemy.TEnemy, BombAlpha.a = 255, *ReturnProjectile.TPointer = #Null)
+  Protected *Projectile.TProjectile = GetInactiveProjectile(*Enemy\Projectiles)
+  If *Projectile = #Null
+    ;couldn't allocate the memory for a bomb :(
+    ProcedureReturn #False
+  EndIf
+  
+  Protected BombTileCoords.TVector2D
+  GetTileCoordsByPosition(*Enemy\MiddlePosition, @BombTileCoords)
+  
+  InitProjectileBomb1(*Projectile, @BombTileCoords, *Enemy\GameMap, *Enemy\DrawList, *Enemy\BombPower, *Enemy, *Enemy\Projectiles)
+  
+  AddDrawItemDrawList(*Enemy\DrawList, *Projectile)
+  If *ReturnProjectile <> #Null
+    *ReturnProjectile\Address = *Projectile
+  EndIf
+  
+  
+  ProcedureReturn #True
+EndProcedure
+
 Procedure KillEnemy(*Enemy.TEnemy)
+  If *Enemy\EnemyType = #EnemyMagnetoBomb
+    Protected ProjectilePointer.TPointer
+    DropBombEnemy(*Enemy, 0, @ProjectilePointer)
+    Protected *Projectile.TProjectile = ProjectilePointer\Address
+    *Projectile\AliveTimer = 0.0;explode imediately
+  EndIf
   ClearList(*Enemy\ObjectiveTileCoords())
   *Enemy\Active = #False
+  
+  
 EndProcedure
 
 
@@ -307,15 +336,21 @@ Procedure ExplodeEnemy(*Enemy.TEnemy)
 EndProcedure
 
 Procedure DrawEnemy(*Enemy.TEnemy)
-  DrawGameObject(*Enemy)
-  If *Enemy\CurrentState = #EnemyStateGoingToObjectiveTile
-    StartDrawing(ScreenOutput())
-    DrawingMode(#PB_2DDrawing_Outlined)
-    Protected x.f = *Enemy\ObjectiveTileCoords()\x * #MAP_GRID_TILE_WIDTH
-    Protected y.f = *Enemy\ObjectiveTileCoords()\y * #MAP_GRID_TILE_HEIGHT
-    Box(x, y, 16, 16, RGB(255, 0, 0))
-    StopDrawing()
+  Protected Intensity.a = 255
+  If *Enemy\HurtTimer > 0
+    Protected HurtTimer.w = *Enemy\HurtTimer * 1000
+    Intensity = Bool((HurtTimer / 125) % 2) * Intensity
   EndIf
+  DrawGameObject(*Enemy, Intensity)
+  
+;   If *Enemy\CurrentState = #EnemyStateGoingToObjectiveTile
+;     StartDrawing(ScreenOutput())
+;     DrawingMode(#PB_2DDrawing_Outlined)
+;     Protected x.f = *Enemy\ObjectiveTileCoords()\x * #MAP_GRID_TILE_WIDTH
+;     Protected y.f = *Enemy\ObjectiveTileCoords()\y * #MAP_GRID_TILE_HEIGHT
+;     Box(x, y, 16, 16, RGB(255, 0, 0))
+;     StopDrawing()
+;   EndIf
   
 EndProcedure
 
@@ -364,23 +399,6 @@ Procedure GoToObjectiveTileEnemy(*Enemy.TEnemy, *ReturnReachedCurrentObjectiveTi
   
   ;returning false means that we didn't arrive yet
   ProcedureReturn #False
-EndProcedure
-
-Procedure.a DropBombEnemy(*Enemy.TEnemy, BombAlpha.a = 255, *ReturnProjectile.TProjectile = #Null)
-  Protected *Projectile.TProjectile = GetInactiveProjectile(*Enemy\Projectiles)
-  If *Projectile = #Null
-    ;couldn't allocate the memory for a bomb :(
-    ProcedureReturn #False
-  EndIf
-  
-  Protected BombTileCoords.TVector2D
-  GetTileCoordsByPosition(*Enemy\MiddlePosition, @BombTileCoords)
-  
-  InitProjectileBomb1(*Projectile, @BombTileCoords, *Enemy\GameMap, *Enemy\DrawList, *Enemy\BombPower, *Enemy, *Enemy\Projectiles)
-  
-  AddDrawItemDrawList(*Enemy\DrawList, *Projectile)
-  
-  ProcedureReturn #True
 EndProcedure
 
 Procedure IsThereBombsOnDirection(*Enemy.TEnemy, Direction.a, LookForAllProjectiles.a,
@@ -829,7 +847,7 @@ EndProcedure
 Procedure UpdateEnemyMagnetoBomb(*MagnetoBomb.TEnemy, TimeSlice.f)
   If *MagnetoBomb\CurrentState = #EnemyStateNoState
     ;just wait
-    SwitchToWaitingEnemy(*MagnetoBomb, 1.0)
+    SwitchToWaitingEnemy(*MagnetoBomb, 0.1)
     ProcedureReturn
   EndIf
   
@@ -873,10 +891,11 @@ Procedure UpdateEnemyMagnetoBomb(*MagnetoBomb.TEnemy, TimeSlice.f)
     If *MagnetoBomb\AliveTimer <= 0.0
       KillEnemy(*MagnetoBomb)
     EndIf
+    *MagnetoBomb\AliveTimer - TimeSlice
     
   EndIf
   
-  
+  *MagnetoBomb\HurtTimer - TimeSlice * (Bool(*MagnetoBomb\HurtTimer > 0.0))
   
   UpdateGameObject(*MagnetoBomb, TimeSlice)
     
@@ -900,7 +919,7 @@ Procedure InitMagnetoBomb(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TP
   InitGameObject(*Enemy, @Position, #EnemyMagnetoBombSprite, @UpdateEnemyMagnetoBomb(), @DrawEnemy(), #True, 16, 16,
                  #SPRITES_ZOOM, #EnemyDrawOrder)
   
-  InitEnemy(*Enemy, *Player, *ProjectileList, *DrawList, #EnemyMagnetoBomb, *GameMap, 1.0)
+  InitEnemy(*Enemy, *Player, *ProjectileList, *DrawList, #EnemyMagnetoBomb, *GameMap, 1.5)
   
   *Enemy\BombPower = 3.0
   
