@@ -847,7 +847,7 @@ EndProcedure
 Procedure UpdateEnemyMagnetoBomb(*MagnetoBomb.TEnemy, TimeSlice.f)
   If *MagnetoBomb\CurrentState = #EnemyStateNoState
     ;just wait
-    SwitchToWaitingEnemy(*MagnetoBomb, 0.1)
+    SwitchToWaitingEnemy(*MagnetoBomb, 1.0)
     ProcedureReturn
   EndIf
   
@@ -867,8 +867,6 @@ Procedure UpdateEnemyMagnetoBomb(*MagnetoBomb.TEnemy, TimeSlice.f)
         ;found the player so we set the objective to the current player position,
         ;also we start the alive timer, the enemy will explode!
         SwitchToGoingToObjectiveTile(*MagnetoBomb, @PlayerMapCoords)
-        *MagnetoBomb\HasAliveTimer = #True
-        *MagnetoBomb\AliveTimer = 5.0
         ProcedureReturn
       EndIf
       
@@ -881,6 +879,15 @@ Procedure UpdateEnemyMagnetoBomb(*MagnetoBomb.TEnemy, TimeSlice.f)
   ElseIf *MagnetoBomb\CurrentState = #EnemyStateGoingToObjectiveTile
     ;going to tile
     If GoToObjectiveTileEnemy(*MagnetoBomb)
+      If PlayerMapCoords\x = CurrentMapCoords\x And PlayerMapCoords\y = CurrentMapCoords\y
+        ;arrived at the objectivetile and the player is there, let's explode
+        *MagnetoBomb\HasAliveTimer = #True
+        *MagnetoBomb\AliveTimer = 3.0
+        ;we just wait until the alivetimer runs out, wait a little more just to be sure 
+        SwitchToWaitingEnemy(*MagnetoBomb, 3.1)
+        ProcedureReturn
+      EndIf
+      ;no player there, so we restart the cycle for looking for the player
       SwitchStateEnemy(*MagnetoBomb, #EnemyStateNoState)
       ProcedureReturn
     EndIf
