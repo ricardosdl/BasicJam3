@@ -48,6 +48,7 @@ Structure TEnemy Extends TGameObject
   AliveTimer.f
   HasAliveTimer.a
   SummonTile.TVector2D
+  *SpawnEnemy.SpawnEnemyProc
 EndStructure
 
 Procedure GetCollisionCoordsEnemy(*Enemy.TEnemy, *CollisionCoords.TRect)
@@ -1094,7 +1095,7 @@ Procedure UpdateEnemySummoner(*Summoner.TEnemy, TimeSlice.f)
   
   If *Summoner\CurrentState = #EnemyStateWaiting
     If *Summoner\StateTimer <= 0.0
-      If RandomFloat() <= 0.3
+      If RandomFloat() <= 0.1
         ;try to summon new wenemy
         If SwitchToSummoning(*Summoner)
           ;great we'll go the summonning state
@@ -1120,7 +1121,8 @@ Procedure UpdateEnemySummoner(*Summoner.TEnemy, TimeSlice.f)
   ElseIf *Summoner\CurrentState = #EnemyStateSummoning
     If GoToObjectiveTileEnemy(*Summoner)
       ;summon new enemy
-      Debug "summon enemy"
+      MakeTileWalkable(*Summoner\GameMap, *Summoner\SummonTile\x, *Summoner\SummonTile\y)
+      *Summoner\SpawnEnemy(@*Summoner\SummonTile)
       SwitchStateEnemy(*Summoner, #EnemyStateNoState)
       ProcedureReturn
     EndIf
@@ -1139,7 +1141,7 @@ Procedure UpdateEnemySummoner(*Summoner.TEnemy, TimeSlice.f)
 EndProcedure
 
 Procedure InitEnemySummoner(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.TProjectileList,
-                       *DrawList.TDrawList, *GameMap.TMap, *PosMapCoords.TVector2D)
+                       *DrawList.TDrawList, *GameMap.TMap, *PosMapCoords.TVector2D, *SpawnEnemy.SpawnEnemyProc)
   
   ;store the middle x and y of the grid at *PosMapCoords
   Protected GridTileMiddlePosition.TVector2D\x = *PosMapCoords\x * #MAP_GRID_TILE_WIDTH + #MAP_GRID_TILE_WIDTH / 2
@@ -1163,6 +1165,8 @@ Procedure InitEnemySummoner(*Enemy.TEnemy, *Player.TGameObject, *ProjectileList.
   
   *Enemy\MaxVelocity\x = 500
   *Enemy\MaxVelocity\y = 500
+  
+  *Enemy\SpawnEnemy = *SpawnEnemy
   
   SwitchStateEnemy(*Enemy, #EnemyStateNoState)
   

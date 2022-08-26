@@ -153,6 +153,57 @@ Procedure InitMapPlayState(*PlayState.TPlayState)
   AddDrawItemDrawList(@*PlayState\DrawList, @*PlayState\GameMap)
 EndProcedure
 
+Procedure.a SpawnEnemySummoner(*MapCoords.TVector2D)
+  Protected *Enemy.TEnemy = GetInactiveEnemyPlayState(PlayState)
+  If *Enemy = #Null
+    ProcedureReturn #False
+  EndIf
+  
+  If RandomFloat() < 0.5
+    InitEnemyRedArmoredDemon(*Enemy, @PlayState\Player, @PlayState\ProjectileList, @PlayState\DrawList, @PlayState\GameMap,
+                             *MapCoords)
+  Else
+    InitEnemyRedDemon(*Enemy, @PlayState\Player, @PlayState\ProjectileList, @PlayState\DrawList, @PlayState\GameMap,
+                      *MapCoords)
+  EndIf
+  
+  
+  
+  
+  AddDrawItemDrawList(@PlayState\DrawList, *Enemy)
+  
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.a SpawnEnemy(*MapCoords.TVector2D)
+  Protected *Enemy.TEnemy = GetInactiveEnemyPlayState(PlayState)
+  If *Enemy = #Null
+    ProcedureReturn #False
+  EndIf
+  
+  Protected RandomChance.f = RandomFloat()
+  
+  If RandomChance < 0.7
+    If RandomFloat() < 0.5
+      InitEnemyRedArmoredDemon(*Enemy, @PlayState\Player, @PlayState\ProjectileList, @PlayState\DrawList, @PlayState\GameMap,
+                               *MapCoords)
+    Else
+      InitEnemyRedDemon(*Enemy, @PlayState\Player, @PlayState\ProjectileList, @PlayState\DrawList, @PlayState\GameMap,
+                        *MapCoords)
+    EndIf
+    
+  Else
+    InitEnemySummoner(*Enemy, @PlayState\Player, @PlayState\ProjectileList, @PlayState\DrawList, @PlayState\GameMap,
+                      *MapCoords, @SpawnEnemySummoner())
+  EndIf
+  
+  
+  AddDrawItemDrawList(@PlayState\DrawList, *Enemy)
+  
+  ProcedureReturn #True
+  
+EndProcedure
+
 Procedure InitEnemiesPlayState(*PlayState.TPlayState)
   Protected NumEnemiesToAdd.a = *PlayState\Level * 1.6
   
@@ -172,24 +223,9 @@ Procedure InitEnemiesPlayState(*PlayState.TPlayState)
       Continue
     EndIf
     
-    Protected RandomChance.f = RandomFloat()
-    
-    If RandomChance < 0
-      InitEnemyRedArmoredDemon(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, *PlayState\DrawList, @*PlayState\GameMap,
-                               @RandomCoords)
-    ElseIf RandomChance < 0
-      InitEnemyRedDemon(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, @*PlayState\DrawList, @*PlayState\GameMap,
-                        @RandomCoords)
-    Else
-      InitEnemySummoner(*Enemy, @*PlayState\Player, @*PlayState\ProjectileList, @*PlayState\DrawList, @*PlayState\GameMap,
-                        @RandomCoords)
-    EndIf
-    
-    
-    AddDrawItemDrawList(@*PlayState\DrawList, *Enemy)
+    SpawnEnemy(@RandomCoords)
     
     NumEnemiesToAdd - 1
-    break
   Wend
   
   
