@@ -690,7 +690,7 @@ Procedure.a GetClosestBreakableTileFromOriginTile(*GameMap.Tmap, *OriginTileCoor
   Protected CurrentTile.TVector2D
   CurrentTile\x = *OriginTileCoords\x + MapDirection\x
   CurrentTile\y = *OriginTileCoords\y + MapDirection\y
-  Protected Found.a = #False
+  
   Repeat
     If IsTileWalkable(*GameMap, CurrentTile\x, CurrentTile\y)
       ;walkable, continue searching

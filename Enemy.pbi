@@ -1031,9 +1031,18 @@ Procedure.a SwitchToSummoning(*Enemy.TEnemy)
       
       *Enemy\SummonTile = SummonTile
       
+      Protected DeltaSignX.f, DeltaSignY.f
+      DeltaSignX = Sign(*Enemy\ObjectiveTileCoords()\x - CurrentTileCoords\x)
+      DeltaSignY = Sign(*Enemy\ObjectiveTileCoords()\y - CurrentTileCoords\y)
+      
+      ;set the direction for the objective tile
+      *Enemy\ObjectiveTileDirection = GetMapDirectionByDeltaSign(DeltaSignX, DeltaSignY)
+      
+      *Enemy\Velocity\x = Cos(ATan2(DeltaSignX, DeltaSignY)) * 50
+      *Enemy\Velocity\y = Sin(ATan2(DeltaSignX, DeltaSignY)) * 50
+      
       SwitchStateEnemy(*Enemy, #EnemyStateSummoning)
       ProcedureReturn #True
-      
       
     Else
       ;could not get a breakable tile to summon an enemy
