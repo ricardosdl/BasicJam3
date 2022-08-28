@@ -5,6 +5,7 @@ https://rafagars.itch.io/explosion-effect
 
 ==musics that can be used
 https://opengameart.org/content/project-masscinematic
+https://opengameart.org/art-search-advanced?keys=explosion&title=&field_art_tags_tid_op=or&field_art_tags_tid=&name=&field_art_type_tid%5B%5D=12&sort_by=count&sort_order=DESC&items_per_page=24&Collection=
 
 ==history
 You, a demon, is on demon prison!
