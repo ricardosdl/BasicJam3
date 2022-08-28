@@ -523,7 +523,7 @@ Procedure CheckExplodedTilesPlayState(*PlayState.TPlayState)
       
     Next
     
-    If RandomFloat() < 0.1
+    If RandomFloat() < 0.05
       Protected *Enemy.TEnemy = GetInactiveEnemyPlayState(*PlayState)
       InitMagnetoBomb(*Enemy, @*PlayState\Player, @PlayState\ProjectileList, @*PlayState\DrawList, @*PlayState\GameMap,
                       @ExplodedTiles())
