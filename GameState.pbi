@@ -70,6 +70,8 @@ Structure TPlayState Extends TGameState
   
   IsGameOver.a
   
+  BestLevel.a
+  
 EndStructure
 
 Structure TMainMenuState Extends TGameState
@@ -340,6 +342,7 @@ Procedure EndPlayState(*PlayState.TPlayState)
   ClearItemsPlayState(*PlayState)
   
   InitProjectilesPlayState(*PlayState)
+  
 EndProcedure
 
 Procedure.a BeatLevelPlayState(*PlayState.TPlayState)
@@ -597,6 +600,10 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   
   If Not *PlayState\IsGameOver And IsGameOverPlayState(*PlayState)
     *PlayState\IsGameOver = #True
+    If *PlayState\Level > *PlayState\BestLevel
+      *PlayState\BestLevel = *PlayState\Level
+    EndIf
+    
   EndIf
   
   If *PlayState\IsGameOver And KeyboardReleased(#PB_Key_Return)
@@ -698,7 +705,7 @@ Procedure DrawGameOverTextPlayState(*PlayState.TPlayState)
   LevelReachedTextPosY = GameOverTextPosY + LevelReachedFontHeight + 20
   DrawTextWithStandardFont(LevelReachedTextPosX, LevelReachedTextPosY, LevelReachedText, LevelReachedFontWidth, LevelReachedFontHeight)
   
-  Protected BestLevelText.s = "Best:" + Str(*PlayState\Level)
+  Protected BestLevelText.s = "Best:" + Str(*PlayState\BestLevel)
   Protected BestLevelTextLen = Len(BestLevelText)
   Protected.f BestLevelTextPosX, BestLevelTextPosY
   Protected.f BestLevelFontWidth, BestLevelFontHeight
