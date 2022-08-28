@@ -86,6 +86,12 @@ Structure TMainMenuState Extends TGameState
   GameStartY.f
   GameStartFontWidth.f
   GameStartFontHeight.f
+  
+  GameControls.s
+  GameControlsX.f
+  GameControlsY.f
+  GameControlsFontWidth.f
+  GameControlsFontHeight.f
 EndStructure
 
 Global GameStateManager.TGameStateManager, PlayState.TPlayState, MainMenuState.TMainMenuState
@@ -792,6 +798,15 @@ Procedure StartMainMenuState(*MainMenuState.TMainMenuState)
   *MainMenuState\GameStartX = (ScreenWidth() / 2) - GameStartWidth / 2
   *MainMenuState\GameStartY = MainMenuHeightOffset + *MainMenuState\GameTitleFontHeight + 40
   
+  ;controls text
+  *MainMenuState\GameControls = "Controls: Arrow keys, Z to drop bombs"
+  *MainMenuState\GameControlsFontWidth = (#STANDARD_FONT_WIDTH * 2) * #SPRITES_ZOOM
+  *MainMenuState\GameControlsFontHeight = (#STANDARD_FONT_HEIGHT * 2) * #SPRITES_ZOOM
+  Protected GameControlsWidth.f = Len(*MainMenuState\GameControls) * *MainMenuState\GameControlsFontWidth
+  
+  *MainMenuState\GameControlsX = (ScreenWidth() - GameControlsWidth) / 2
+  *MainMenuState\GameControlsY = MainMenuHeightOffset + *MainMenuState\GameStartY
+  
 EndProcedure
 
 Procedure EndMainMenuState(*MainMenuState.TMainMenuState)
@@ -814,6 +829,9 @@ Procedure DrawMainMenuState(*MainMenuState.TMainMenuState, TimeSlice.f)
   
   DrawTextWithStandardFont(*MainMenuState\GameStartX, *MainMenuState\GameStartY, *MainMenuState\GameStart,
                            *MainMenuState\GameStartFontWidth, *MainMenuState\GameStartFontHeight)
+  
+  DrawTextWithStandardFont(*MainMenuState\GameControlsX, *MainMenuState\GameControlsY, *MainMenuState\GameControls,
+                           *MainMenuState\GameControlsFontWidth, *MainMenuState\GameControlsFontHeight)
 EndProcedure
 
 Procedure InitGameSates()
