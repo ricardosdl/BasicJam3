@@ -611,6 +611,8 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
     ProcedureReturn
   EndIf
   
+  *PlayState\PlayerHUD\Level = *PlayState\Level
+  
   
   Protected MousePosition.TVector2D
   
@@ -773,7 +775,7 @@ Procedure StartMainMenuState(*MainMenuState.TMainMenuState)
   Protected MainMenuHeightOffset.f = ScreenHeight() / 5
   
   ;game title text
-  *MainMenuState\GameTitle = "FRUIT WARS v0.9999..."
+  *MainMenuState\GameTitle = "BOMBER SCAPE v0.9999..."
   *MainMenuState\GameTitleFontWidth = #STANDARD_FONT_WIDTH * (#SPRITES_ZOOM + 2.5)
   *MainMenuState\GameTitleFontHeight = #STANDARD_FONT_HEIGHT * (#SPRITES_ZOOM + 2.5)
   Protected GameTitleWidth.f = Len(*MainMenuState\GameTitle) * *MainMenuState\GameTitleFontWidth

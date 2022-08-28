@@ -6,6 +6,7 @@ EnableExplicit
 
 Structure TPlayerHUD Extends TGameObject
   *Player.TPlayer
+  Level.a;is updated by gamestate
 EndStructure
 
 #PLAYER_HUD_Y_OFFSET = 15.0
@@ -14,6 +15,7 @@ Global Player_HUD_Name_Y_Offset.f = 0
 Global Player_HUD_Bomb_Power_Y_Offset.f
 Global Player_HUD_Bombs_Y_Offset.f
 Global Player_HUD_Hearts_Y_Offset.f
+Global Player_HUD_Level_Y_Offset.f
 
 
 Procedure DrawPlayerName(*PlayerHUD.TPlayerHUD)
@@ -65,13 +67,25 @@ Procedure DrawPlayerHearts(*PlayerHUD.TPlayerHUD)
     DisplayTransparentSprite(#PlayerHeartSprite, PosX, PosY)
   Next
   
+  Player_HUD_Level_Y_Offset = PosY + #PLAYER_HUD_Y_OFFSET
+  
 EndProcedure
+
+Procedure DrawPlayerLevel(*PlayerHUD.TPlayerHUD)
+  Protected PosX.f, PosY.f
+  PosX = *PlayerHUD\Position\x
+  PosY = *PlayerHUD\Position\y + Player_HUD_Level_Y_Offset
+  DrawTextWithStandardFont(PosX, PosY, "Level:" + *PlayerHUD\Level,
+                           (#STANDARD_FONT_WIDTH * 1.5) * #SPRITES_ZOOM, (#STANDARD_FONT_HEIGHT * 1.5) * #SPRITES_ZOOM)
+EndProcedure
+
 
 Procedure DrawPlayerHUD(*PlayerHUD.TPlayerHUD)
   DrawPlayerName(*PlayerHUD)
   DrawPlayerBombPower(*PlayerHUD)
   DrawPlayerBombs(*PlayerHUD)
   DrawPlayerHearts(*PlayerHUD)
+  DrawPlayerLevel(*PlayerHUD)
 EndProcedure
 
 Procedure InitPlayerHUD(*PlayerHUD.TPlayerHUD, *Player.TPlayer, *Position.TVector2D)
