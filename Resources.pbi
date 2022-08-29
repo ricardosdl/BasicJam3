@@ -24,6 +24,7 @@ Enumeration ESprites
   #ItemRevealedSound
   #PowerUpSound
   #PlayerHitSound
+  #ItemRevealItemsSprite
 EndEnumeration
 
 DisableExplicit
