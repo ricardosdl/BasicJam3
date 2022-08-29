@@ -11,6 +11,7 @@ XIncludeFile "DrawText.pbi"
 XIncludeFile "Map.pbi"
 XIncludeFile "Item.pbi"
 XIncludeFile "PlayerHUD.pbi"
+XIncludeFile "Sound.pbi"
 
 EnableExplicit
 
@@ -297,6 +298,11 @@ Procedure InitPlayerHUDPlayState(*PlayState.TPlayState)
   AddDrawItemDrawList(*PlayState\DrawList, @*PlayState\PlayerHUD)
 EndProcedure
 
+Procedure StartSoundsPlayState(*PlayState.TPlayState)
+  StopSoundEffect(#MainMusicSound)
+  PlaySoundEffect(#MainMusicSound, #False, #True)
+EndProcedure
+
 Procedure StartPlayState(*PlayState.TPlayState)
   
   InitDrawList(@*PlayState\DrawList)
@@ -312,6 +318,8 @@ Procedure StartPlayState(*PlayState.TPlayState)
   InitItemsPlayState(*PlayState)
   
   InitPlayerHUDPlayState(*PlayState)
+  
+  StartSoundsPlayState(*PlayState)
   
   *PlayState\IsGameOver = #False
   

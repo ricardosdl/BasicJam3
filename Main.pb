@@ -1,13 +1,7 @@
 ﻿XIncludeFile "GameState.pbi"
+XIncludeFile "Sound.pbi"
 
 EnableExplicit
-
-InitSprite()
-InitKeyboard()
-InitMouse()
-
-OpenWindow(1, 0,0,640,480,"Foo Game", #PB_Window_ScreenCentered | #PB_Window_SystemMenu)
-OpenWindowedScreen(WindowID(1),0,0,640,480,0,0,0)
 
 Global SimulationTime.q = 0, RealTime.q, GameTick = 5
 Global LastTimeInMs.q
@@ -33,11 +27,34 @@ Procedure.a LoadSprites()
   ProcedureReturn LoadedAll
 EndProcedure
 
+Procedure.a LoadSounds()
+  If SoundStarted = 0
+    ProcedureReturn #False
+  EndIf
+  
+  Protected LoadedAll.a = #True
+  LoadedAll = LoadedAll & Bool(LoadSound(#MainMusicSound, "data\sounds\BossTheme.ogg"))
+  
+  ProcedureReturn LoadedAll
+  
+EndProcedure
+
 Procedure.a LoadResources()
   If LoadSprites() = #False
     MessageRequester("ERROR", "Error loading sprites! Couldn't find data.")
     ProcedureReturn #False
   EndIf
+  
+  Protected ErrorLoadingSounds.a = #False
+  If LoadSounds() = #False
+    ErrorLoadingSounds = #True
+  EndIf
+  
+  If ErrorLoadingSounds
+    TurnOffSound()
+  EndIf
+  
+  
   
   ProcedureReturn #True
   
@@ -57,8 +74,17 @@ Procedure StartGame()
   
 EndProcedure
 
+InitSprite()
+InitKeyboard()
+InitMouse()
+InitializeSound()
+
+OpenWindow(1, 0,0,640,480,"Foo Game", #PB_Window_ScreenCentered | #PB_Window_SystemMenu)
+OpenWindowedScreen(WindowID(1),0,0,640,480,0,0,0)
+
 
 UsePNGImageDecoder()
+UseOGGSoundDecoder()
 
 If (LoadResources() = #False)
   ;error loading resources, can't ryb the game this way
