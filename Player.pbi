@@ -248,6 +248,8 @@ Procedure.a HurtPlayer(*Player.TPlayer, Power.f)
   *Player\Health - Power
   *Player\HurtTimer = 2.5
   
+  PlaySoundEffect(#PlayerHitSound, #True)
+  
   If *Player\Health <= 0
     *Player\Active = #False
     ProcedureReturn #True

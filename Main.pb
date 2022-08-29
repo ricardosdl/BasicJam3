@@ -34,6 +34,10 @@ Procedure.a LoadSounds()
   
   Protected LoadedAll.a = #True
   LoadedAll = LoadedAll & Bool(LoadSound(#MainMusicSound, "data\sounds\BossTheme.ogg"))
+  LoadedAll = LoadedAll & Bool(LoadSound(#ExplosionSound, "data\sounds\explosion.wav"))
+  LoadedAll = LoadedAll & Bool(LoadSound(#ItemRevealedSound, "data\sounds\itemrevealed.wav"))
+  LoadedAll = LoadedAll & Bool(LoadSound(#PowerUpSound, "data\sounds\powerup.wav"))
+  LoadedAll = LoadedAll & Bool(LoadSound(#PlayerHitSound, "data\sounds\playerhit.wav"))
   
   ProcedureReturn LoadedAll
   

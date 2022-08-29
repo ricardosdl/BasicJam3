@@ -20,6 +20,10 @@ Enumeration ESprites
   #EnemyMagnetoBombSprite
   #EnemySummonerSprite
   #MainMusicSound
+  #ExplosionSound
+  #ItemRevealedSound
+  #PowerUpSound
+  #PlayerHitSound
 EndEnumeration
 
 DisableExplicit

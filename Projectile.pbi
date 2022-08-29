@@ -5,6 +5,7 @@ XIncludeFile "DrawOrders.pbi"
 XIncludeFile "DrawList.pbi"
 XIncludeFile "Map.pbi"
 XIncludeFile "SpriteAnimation.pbi"
+XIncludeFile "Sound.pbi"
 
 EnableExplicit
 
@@ -321,6 +322,10 @@ Procedure AddExplosionAnimation(*Explosion.TProjectile, *PositionCoords.TVector2
   ProcedureReturn *ExplosionAnimation
 EndProcedure
 
+Procedure PlayExplosionSound()
+  PlaySoundEffect(#ExplosionSound, #True)
+EndProcedure
+
 Procedure UpdateExplosionExpansion(*Explosion.TProjectile, TimeSlice.f)
   If *Explosion\ExplosionExpansion\ExplosionExpansionTimer <= 0
     If *Explosion\ExplosionExpansion\CurrentExpansion > *Explosion\Power
@@ -332,6 +337,7 @@ Procedure UpdateExplosionExpansion(*Explosion.TProjectile, TimeSlice.f)
     
     ;time to expand the explosion in the cardinal directions
     Protected DirectionIdx.a
+    Protected AddedExplosion.a = #False
     For DirectionIdx = #MAP_DIRECTION_UP To #MAP_DIRECTION_LEFT
       If Not *Explosion\ExplosionExpansion\OpenDirections(DirectionIdx)
         ;the explosion expansion ended in this direction, go to the next
@@ -347,6 +353,7 @@ Procedure UpdateExplosionExpansion(*Explosion.TProjectile, TimeSlice.f)
       If IsTileWalkable(*Explosion\GameMap, PositionCoord\x, PositionCoord\y)
         ;this tile is walkable just add an explosion animation on it
         AddExplosionAnimation(*Explosion, @PositionCoord)
+        AddedExplosion = #True
         Continue
       EndIf
       
@@ -357,6 +364,7 @@ Procedure UpdateExplosionExpansion(*Explosion.TProjectile, TimeSlice.f)
         *Explosion\ExplosionExpansion\OpenDirections(DirectionIdx) = #False
         MakeTileWalkableWithTimer(*Explosion\GameMap, PositionCoord\x, PositionCoord\y, 1.0 / #EXPLOSION_ANIMATION_FPS * (#EXPLOSION_NON_COLLSION_FRAMES + 3))
         AddExplodedTileMap(*Explosion\GameMap, @PositionCoord)
+        AddedExplosion = #True
         Continue
       Else
         ;the tile is unbreakable, don't add explosion animation, but end the expansion on this direction
@@ -368,6 +376,11 @@ Procedure UpdateExplosionExpansion(*Explosion.TProjectile, TimeSlice.f)
     Next
     *Explosion\ExplosionExpansion\CurrentExpansion + 1
     
+    If AddedExplosion
+      PlayExplosionSound()
+    EndIf
+    
+    
   EndIf
   
   *Explosion\ExplosionExpansion\ExplosionExpansionTimer - TimeSlice
@@ -378,8 +391,10 @@ Procedure UpdateExplosion(*Explosion.TProjectile, TimeSlice.f)
   Protected *ExplosionAnimation.TExplosionAnimation
   
   If Not *Explosion\ExplosionStarted
+    ;first explosion on the tile where the bomb is
     *Explosion\ExplosionStarted = #True
     *ExplosionAnimation = AddExplosionAnimation(*Explosion, @*Explosion\PositionMapCoords)
+    PlayExplosionSound()
     ProcedureReturn
   EndIf
   

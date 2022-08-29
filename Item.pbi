@@ -135,6 +135,7 @@ EndProcedure
 
 Procedure EnableItem(*Item.TItem)
   *item\Enabled = #True
+  PlaySoundEffect(#ItemRevealedSound, #True)
 EndProcedure
 
 
@@ -149,6 +150,8 @@ Procedure ApplyItemOnPlayer(*Player.TPlayer, *Item.TItem)
       *Player\CurrentBombsLimit + 1
       KillItem(*Item)
   EndSelect
+  
+  PlaySoundEffect(#PowerUpSound, #True)
   
   
 EndProcedure

@@ -301,6 +301,7 @@ EndProcedure
 Procedure StartSoundsPlayState(*PlayState.TPlayState)
   StopSoundEffect(#MainMusicSound)
   PlaySoundEffect(#MainMusicSound, #False, #True)
+  StopMultiChannelSounds()
 EndProcedure
 
 Procedure StartPlayState(*PlayState.TPlayState)
@@ -626,6 +627,8 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   EndIf
   
   *PlayState\PlayerHUD\Level = *PlayState\Level
+  
+  UpdateSound()
   
   
   Protected MousePosition.TVector2D

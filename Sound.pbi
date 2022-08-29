@@ -89,6 +89,13 @@ Procedure UpdateMultiChannelSounds()
   Next
 EndProcedure
 
+Procedure StopMultiChannelSounds()
+  ForEach MultiChannelSounds()
+    StopSound(MultiChannelSounds()\Sound, MultiChannelSounds()\Channel)
+    DeleteElement(MultiChannelSounds())
+  Next
+EndProcedure
+
 Procedure UpdateSound()
   UpdateMultiChannelSounds()
 EndProcedure
