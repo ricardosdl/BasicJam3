@@ -39,6 +39,8 @@ Procedure.a LoadSounds()
   LoadedAll = LoadedAll & Bool(LoadSound(#ItemRevealedSound, "data\sounds\itemrevealed.wav"))
   LoadedAll = LoadedAll & Bool(LoadSound(#PowerUpSound, "data\sounds\powerup.wav"))
   LoadedAll = LoadedAll & Bool(LoadSound(#PlayerHitSound, "data\sounds\playerhit.wav"))
+  LoadedAll = LoadedAll & Bool(LoadSound(#DropBombSound, "data\sounds\dropbomb.wav"))
+  LoadedAll = LoadedAll & Bool(LoadSound(#SummonEnemySound, "data\sounds\summonenemy.wav"))
   
   ProcedureReturn LoadedAll
   

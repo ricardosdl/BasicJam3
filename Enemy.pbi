@@ -1133,6 +1133,7 @@ Procedure UpdateEnemySummoner(*Summoner.TEnemy, TimeSlice.f)
       MakeTileWalkable(*Summoner\GameMap, *Summoner\SummonTile\x, *Summoner\SummonTile\y)
       *Summoner\SpawnEnemy(@*Summoner\SummonTile)
       SwitchStateEnemy(*Summoner, #EnemyStateNoState)
+      PlaySoundEffect(#SummonEnemySound, #True)
       ProcedureReturn
     EndIf
     

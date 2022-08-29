@@ -25,6 +25,8 @@ Enumeration ESprites
   #PowerUpSound
   #PlayerHitSound
   #ItemRevealItemsSprite
+  #DropBombSound
+  #SummonEnemySound
 EndEnumeration
 
 DisableExplicit

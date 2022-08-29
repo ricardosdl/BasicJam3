@@ -34,6 +34,8 @@ Procedure PutBombPlayer(*Player.TPlayer)
   
   AddDrawItemDrawList(*Player\DrawList, *Projectile)
   
+  PlaySoundEffect(#DropBombSound, #True)
+  
   ProcedureReturn #True
   
 EndProcedure
