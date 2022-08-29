@@ -86,7 +86,7 @@ InitKeyboard()
 InitMouse()
 InitializeSound()
 
-OpenWindow(1, 0,0,640,480,"Foo Game", #PB_Window_ScreenCentered | #PB_Window_SystemMenu)
+OpenWindow(1, 0,0,640,480,"Bomber Escape", #PB_Window_ScreenCentered | #PB_Window_SystemMenu)
 OpenWindowedScreen(WindowID(1),0,0,640,480,0,0,0)
 
 
