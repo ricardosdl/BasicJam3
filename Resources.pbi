@@ -19,6 +19,7 @@ Enumeration ESprites
   #GameOverOverlaySprite
   #EnemyMagnetoBombSprite
   #EnemySummonerSprite
+  #ItemRevealItemsSprite
 EndEnumeration
 
 DisableExplicit
