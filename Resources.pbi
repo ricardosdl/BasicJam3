@@ -28,6 +28,7 @@ Enumeration ESprites
   #DropBombSound
   #SummonEnemySound
   #PauseSound
+  #GameOverSound
 EndEnumeration
 
 DisableExplicit

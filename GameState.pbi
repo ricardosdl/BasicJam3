@@ -653,7 +653,8 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
     If *PlayState\Level > *PlayState\BestLevel
       *PlayState\BestLevel = *PlayState\Level
     EndIf
-    
+    PauseSoundEffect(#MainMusicSound)
+    PlaySoundEffect(#GameOverSound, #False)
   EndIf
   
   If *PlayState\IsGameOver And KeyboardReleased(#PB_Key_Return)
