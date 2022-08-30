@@ -1023,6 +1023,7 @@ Procedure UpdateMainMenuState(*MainMenuState.TMainMenuState, TimeSlice.f)
 EndProcedure
 
 Procedure DrawMainMenuState(*MainMenuState.TMainMenuState, TimeSlice.f)
+  DisplayTransparentSprite(#MainMenuSplashSprite, 0, 0)
   DrawTextWithStandardFont(*MainMenuState\GameTitleX, *MainMenuState\GameTitleY,
                            *MainMenuState\GameTitle, *MainMenuState\GameTitleFontWidth,
                            *MainMenuState\GameTitleFontHeight)

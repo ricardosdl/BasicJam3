@@ -29,6 +29,7 @@ Enumeration ESprites
   #SummonEnemySound
   #PauseSound
   #GameOverSound
+  #MainMenuSplashSprite
 EndEnumeration
 
 DisableExplicit
