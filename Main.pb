@@ -4,7 +4,7 @@ XIncludeFile "Sound.pbi"
 EnableExplicit
 
 Global SimulationTime.q = 0, RealTime.q, GameTick = 5
-Global LastTimeInMs.q
+Global LastTimeInMs.q, Is_Full_Screen.a = #False
 
 Procedure.a LoadSprites()
   Protected LoadedAll = #True
@@ -80,7 +80,41 @@ Procedure DrawWorld()
   ;Banana\DrawGameObject(@Banana)
 EndProcedure
 
-Procedure StartGame()
+Procedure IsFullScreen()
+  Protected FullScreenParameter.s = ProgramParameter(0)
+  
+  If Len(FullScreenParameter) = 0
+    ProcedureReturn #False
+  EndIf
+  
+  If FullScreenParameter = "-f" Or FullScreenParameter = "-F"
+    ProcedureReturn #True
+  EndIf
+  
+  ProcedureReturn #False
+  
+EndProcedure
+
+Procedure InitScreen(IsFullScreen.a = #False)
+  If Not IsFullScreen
+    OpenWindow(1, 0 , 0, 640, 480, "Bomber Escape", #PB_Window_ScreenCentered | #PB_Window_SystemMenu)
+    OpenWindowedScreen(WindowID(1),0,0,640,480,0,0,0)
+    Is_Full_Screen = #False
+    ProcedureReturn
+  EndIf
+  
+  Protected OpenScreenResult = OpenScreen(640, 480, 32, "Bomber Escape")
+  
+  If OpenScreenResult = 0
+    ;couldn't open full screen
+    OpenWindow(1, 0 , 0, 640, 480, "Bomber Escape", #PB_Window_ScreenCentered | #PB_Window_SystemMenu)
+    OpenWindowedScreen(WindowID(1),0,0,640,480,0,0,0)
+    Is_Full_Screen = #False
+    ProcedureReturn
+  EndIf
+  
+  Is_Full_Screen = #True
+  
   
 EndProcedure
 
@@ -89,8 +123,12 @@ InitKeyboard()
 InitMouse()
 InitializeSound()
 
-OpenWindow(1, 0,0,640,480,"Bomber Escape", #PB_Window_ScreenCentered | #PB_Window_SystemMenu)
-OpenWindowedScreen(WindowID(1),0,0,640,480,0,0,0)
+Define IsFullScreen.a = IsFullScreen()
+InitScreen(IsFullScreen)
+
+
+
+
 
 
 UsePNGImageDecoder()
@@ -111,7 +149,11 @@ Repeat
   LastTimeInMs = ElapsedMilliseconds()
   
   ;RealTime = ElapsedMilliseconds()
-  Define Event = WindowEvent()
+  Define Event
+  If Not Is_Full_Screen
+    Event = WindowEvent()
+  EndIf
+  
   
   ExamineKeyboard()
   ;ExamineMouse()

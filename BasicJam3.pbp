@@ -7,7 +7,7 @@
   <section name="data">
     <explorer view="" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2022-08-29 16:43" user="ricardo.lima" host="686-D-02700820"/>
+    <lastopen date="2022-08-30 14:45" user="ricardo.lima" host="686-D-02700820"/>
   </section>
   <section name="files">
     <file name="BananaEnemy.pbi">
@@ -72,7 +72,9 @@
     <target name="Default Target" enabled="1" default="1">
       <inputfile value="Main.pb"/>
       <outputfile value="BomberScape.exe"/>
+      <executable value="BomberScape.exe"/>
       <options xpskin="1" debug="1"/>
+      <format exe="console" cpu="0"/>
     </target>
   </section>
 </project>
