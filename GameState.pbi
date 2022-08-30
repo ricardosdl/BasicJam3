@@ -75,6 +75,8 @@ Structure TPlayState Extends TGameState
   
   IsPaused.a
   
+  EscapedLevel.a
+  
 EndStructure
 
 Structure TMainMenuState Extends TGameState
@@ -337,6 +339,8 @@ Procedure StartPlayState(*PlayState.TPlayState)
   
   *PlayState\IsPaused = #False
   
+  *PlayState\EscapedLevel = #False
+  
   *PlayState\SelectedStartTile\x = -1
   *PlayState\SelectedStartTile\y = -1
   
@@ -404,6 +408,8 @@ EndProcedure
 
 Procedure GoToNextLevelPlayState(*PlayState.TPlayState)
   *PlayState\Level + 1
+  
+  *PlayState\EscapedLevel = #False
   
   RestartMapGrid(@*PlayState\GameMap)
   
@@ -648,8 +654,9 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   
   CheckItemsAgainstPlayer(*PlayState)
   
-  If BeatLevelPlayState(*PlayState)
-    GoToNextLevelPlayState(*PlayState)
+  If BeatLevelPlayState(*PlayState) And (Not *PlayState\EscapedLevel)
+    ;GoToNextLevelPlayState(*PlayState)
+    *PlayState\EscapedLevel = #True
     ProcedureReturn
   EndIf
   
@@ -666,6 +673,12 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
     SwitchGameState(@GameStateManager, #PlayState)
     ProcedureReturn
   EndIf
+  
+  If *PlayState\EscapedLevel And KeyboardReleased(#PB_Key_Return)
+    GoToNextLevelPlayState(*PlayState)
+    ProcedureReturn
+  EndIf
+  
   
   ;update the playerhud so it can show the current level
   *PlayState\PlayerHUD\Level = *PlayState\Level
@@ -862,6 +875,40 @@ Procedure DrawPauseTextPlayState(*PlayState.TPlayState)
   
 EndProcedure
 
+Procedure DrawEscapedLevelTextPlayState(*PlayState.TPlayState)
+  Protected EscapedLevel.s = "ESCAPED LEVEL:" + *PlayState\Level
+  Protected EscapedLevelLen = Len(EscapedLevel)
+  Protected.f EscapedLevelX, EscapedLevelY
+  Protected.f EscapedLevelFontW, EscapedLevelFontH
+  
+  EscapedLevelFontW = #STANDARD_FONT_WIDTH * 4 * #SPRITES_ZOOM
+  EscapedLevelFontH = #STANDARD_FONT_HEIGHT * 4 * #SPRITES_ZOOM
+  
+  EscapedLevelX = (ScreenWidth() - (EscapedLevelLen * EscapedLevelFontW)) / 2
+  EscapedLevelY = ScreenHeight() / 3.5
+  
+  DrawTextWithStandardFont(EscapedLevelX, EscapedLevelY, EscapedLevel, EscapedLevelFontW, EscapedLevelFontH)
+  
+  Protected EnterNextLevel.s = "Press Enter to go to next level"
+  Protected EnterNextLevelLen = Len(EnterNextLevel)
+  Protected.f EnterNextLevelX, EnterNextLevelY
+  Protected.f EnterNextLevelFontW, EnterNextLevelFontH
+  
+  EnterNextLevelFontW = #STANDARD_FONT_WIDTH * 2 * #SPRITES_ZOOM
+  EnterNextLevelFontH = #STANDARD_FONT_HEIGHT * 2 * #SPRITES_ZOOM
+  
+  EnterNextLevelX = (ScreenWidth() - (EnterNextLevelLen * EnterNextLevelFontW)) / 2
+  EnterNextLevelY = EscapedLevelY + EscapedLevelFontW + 10 * #SPRITES_ZOOM
+  
+  DrawTextWithStandardFont(EnterNextLevelX, EnterNextLevelY, EnterNextLevel, EnterNextLevelFontW, EnterNextLevelFontH)
+  
+EndProcedure
+
+Procedure DrawEscapedLevelScreenPlayState(*PlayState.TPlayState)
+  DisplayTransparentSprite(#GameOverOverlaySprite, 0, 0)
+  DrawEscapedLevelTextPlayState(*PlayState)
+EndProcedure
+
 Procedure DrawPauseScreenPlayState(*PlayState.TPlayState)
   DisplayTransparentSprite(#GameOverOverlaySprite, 0, 0)
   DrawPauseTextPlayState(*PlayState)
@@ -870,28 +917,6 @@ EndProcedure
 Procedure DrawPlayState(*PlayState.TPlayState)
   DrawDrawList(*PlayState\DrawList)
   
-  ;draw cursor
-  Protected DrawCursor.a = #True
-  If DrawCursor
-    Protected MouseX.l = MouseX()
-    Protected MouseY.l = MouseY()
-    
-    DisplayTransparentSprite(#CursorSprite, MouseX, MouseY)
-  EndIf
-  
-  If *PlayState\ShowAStar
-    StartDrawing(ScreenOutput())
-    DrawingMode(#PB_2DDrawing_Outlined)
-    
-    ForEach *PlayState\AStarPath()
-      Protected XPath.u = *PlayState\GameMap\Position\x + *PlayState\AStarPath()\x * #MAP_GRID_TILE_WIDTH
-      Protected YPath.u = *PlayState\GameMap\Position\y + *PlayState\AStarPath()\y * #MAP_GRID_TILE_HEIGHT
-      Box(XPath, YPath, #MAP_GRID_TILE_WIDTH, #MAP_GRID_TILE_HEIGHT, RGB(0, 214, 0))
-    Next
-    
-    StopDrawing()
-  EndIf
-  
   If *PlayState\IsGameOver
     DrawGameOverScreenPlayState(*PlayState)
   EndIf
@@ -899,6 +924,11 @@ Procedure DrawPlayState(*PlayState.TPlayState)
   If *PlayState\IsPaused
     DrawPauseScreenPlayState(*PlayState)
   EndIf
+  
+  If *PlayState\EscapedLevel
+    DrawEscapedLevelScreenPlayState(*PlayState)
+  EndIf
+  
   
   
   
@@ -910,7 +940,7 @@ Procedure StartMainMenuState(*MainMenuState.TMainMenuState)
   Protected MainMenuHeightOffset.f = ScreenHeight() / 5
   
   ;game title text
-  *MainMenuState\GameTitle = "BOMBER SCAPE v0.9999..."
+  *MainMenuState\GameTitle = "BOMBER ESCAPE v0.9999..."
   *MainMenuState\GameTitleFontWidth = #STANDARD_FONT_WIDTH * (#SPRITES_ZOOM + 2.5)
   *MainMenuState\GameTitleFontHeight = #STANDARD_FONT_HEIGHT * (#SPRITES_ZOOM + 2.5)
   Protected GameTitleWidth.f = Len(*MainMenuState\GameTitle) * *MainMenuState\GameTitleFontWidth
@@ -992,6 +1022,7 @@ Procedure InitPlayState(*PlayState.TPlayState)
   
   *PlayState\IsPaused = #False
   *PlayState\IsGameOver = #False
+  *PlayState\EscapedLevel = #False
   *PlayState\BestLevel = 0
 EndProcedure
 
