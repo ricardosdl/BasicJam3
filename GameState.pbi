@@ -103,6 +103,12 @@ Structure TMainMenuState Extends TGameState
   QuitGameY.f
   QuitGameFontWidth.f
   QuitGameFontHeight.f
+  
+  Credits.s
+  CreditsX.f
+  CreditsY.f
+  CreditsFontWidth.f
+  CreditsFontHeight.f
 EndStructure
 
 Global GameStateManager.TGameStateManager, PlayState.TPlayState, MainMenuState.TMainMenuState, QuitGame.a = #False
@@ -947,7 +953,7 @@ Procedure DrawPlayState(*PlayState.TPlayState)
 EndProcedure
 
 Procedure StartMainMenuState(*MainMenuState.TMainMenuState)
-  Protected MainMenuHeightOffset.f = ScreenHeight() / 5
+  Protected MainMenuHeightOffset.f = ScreenHeight() / 8
   
   ;game title text
   *MainMenuState\GameTitle = "BOMBER ESCAPE v0.9999..."
@@ -985,6 +991,15 @@ Procedure StartMainMenuState(*MainMenuState.TMainMenuState)
   *MainMenuState\QuitGameX = (ScreenWidth() - QuitGameWidth) / 2
   *MainMenuState\QuitGameY = MainMenuHeightOffset + *MainMenuState\GameControlsY
   
+  ;credits game text
+  *MainMenuState\Credits = "game by: @ricardo_sdl"
+  *MainMenuState\CreditsFontWidth = (#STANDARD_FONT_WIDTH) * 2 * #SPRITES_ZOOM
+  *MainMenuState\CreditsFontHeight = #STANDARD_FONT_HEIGHT * 2 * #SPRITES_ZOOM
+  Protected CreditsWidth.f = Len(*MainMenuState\Credits) * *MainMenuState\CreditsFontWidth
+  
+  *MainMenuState\CreditsX = (ScreenWidth() - CreditsWidth) / 2
+  *MainMenuState\CreditsY = MainMenuHeightOffset + *MainMenuState\QuitGameY
+  
   
 EndProcedure
 
@@ -1020,6 +1035,9 @@ Procedure DrawMainMenuState(*MainMenuState.TMainMenuState, TimeSlice.f)
   
   DrawTextWithStandardFont(*MainMenuState\QuitGameX, *MainMenuState\QuitGameY, *MainMenuState\QuitGame,
                            *MainMenuState\QuitGameFontWidth, *MainMenuState\QuitGameFontHeight)
+  
+  DrawTextWithStandardFont(*MainMenuState\CreditsX, *MainMenuState\CreditsY, *MainMenuState\Credits,
+                           *MainMenuState\CreditsFontWidth, *MainMenuState\CreditsFontHeight)
 EndProcedure
 
 Procedure InitPlayState(*PlayState.TPlayState)
