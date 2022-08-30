@@ -388,6 +388,11 @@ Procedure.a BeatLevelPlayState(*PlayState.TPlayState)
     ProcedureReturn #False
   EndIf
   
+  If IsThereActiveProjectileByType(@*PlayState\ProjectileList, #ProjectileBomb1)
+    ProcedureReturn #False
+  EndIf
+  
+  
   ProcedureReturn #True
   
   
