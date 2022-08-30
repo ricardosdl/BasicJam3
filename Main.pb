@@ -124,5 +124,5 @@ Repeat
   ClearScreen(#Black)  
   DrawWorld()
   FlipBuffers()
-Until event = #PB_Event_CloseWindow
+Until Event = #PB_Event_CloseWindow Or QuitGame
 End

@@ -95,9 +95,15 @@ Structure TMainMenuState Extends TGameState
   GameControlsY.f
   GameControlsFontWidth.f
   GameControlsFontHeight.f
+  
+  QuitGame.s
+  QuitGameX.f
+  QuitGameY.f
+  QuitGameFontWidth.f
+  QuitGameFontHeight.f
 EndStructure
 
-Global GameStateManager.TGameStateManager, PlayState.TPlayState, MainMenuState.TMainMenuState
+Global GameStateManager.TGameStateManager, PlayState.TPlayState, MainMenuState.TMainMenuState, QuitGame.a = #False
 
 Procedure DrawCurrentStateGameSateManager(*GameStateManager.TGameStateManager)
   Protected *GameState.TGameState = *GameStateManager\GameStates(*GameStateManager\CurrentGameState)
@@ -328,6 +334,8 @@ Procedure StartPlayState(*PlayState.TPlayState)
   StartSoundsPlayState(*PlayState)
   
   *PlayState\IsGameOver = #False
+  
+  *PlayState\IsPaused = #False
   
   *PlayState\SelectedStartTile\x = -1
   *PlayState\SelectedStartTile\y = -1
@@ -653,12 +661,28 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
     ProcedureReturn
   EndIf
   
+  ;update the playerhud so it can show the current level
   *PlayState\PlayerHUD\Level = *PlayState\Level
   
   If KeyboardReleased(#PB_Key_Escape)
     ;pause/unpause game
     PauseUnpauseGamePlayState(*PlayState)
   EndIf
+  
+  If *PlayState\IsPaused
+    If KeyboardReleased(#PB_Key_M)
+      SwitchGameState(@GameStateManager, #MainMenuState)
+      ProcedureReturn
+    EndIf
+    
+    If KeyboardReleased(#PB_Key_Q)
+      QuitGame = #True
+      ProcedureReturn
+    EndIf
+    
+    
+  EndIf
+  
   
   
   UpdateSound()
@@ -890,8 +914,8 @@ Procedure StartMainMenuState(*MainMenuState.TMainMenuState)
   
   ;start game text
   *MainMenuState\GameStart = "PRESS ENTER TO START"
-  *MainMenuState\GameStartFontWidth = #STANDARD_FONT_WIDTH * (#SPRITES_ZOOM)
-  *MainMenuState\GameStartFontHeight = #STANDARD_FONT_HEIGHT * (#SPRITES_ZOOM)
+  *MainMenuState\GameStartFontWidth = #STANDARD_FONT_WIDTH * 2 * (#SPRITES_ZOOM)
+  *MainMenuState\GameStartFontHeight = #STANDARD_FONT_HEIGHT * 2 * (#SPRITES_ZOOM)
   Protected GameStartWidth.f = Len(*MainMenuState\GameStart) * *MainMenuState\GameStartFontWidth
   
   *MainMenuState\GameStartX = (ScreenWidth() / 2) - GameStartWidth / 2
@@ -906,6 +930,16 @@ Procedure StartMainMenuState(*MainMenuState.TMainMenuState)
   *MainMenuState\GameControlsX = (ScreenWidth() - GameControlsWidth) / 2
   *MainMenuState\GameControlsY = MainMenuHeightOffset + *MainMenuState\GameStartY
   
+  ;quit game text
+  *MainMenuState\QuitGame = "Press Q to quit game"
+  *MainMenuState\QuitGameFontWidth = (#STANDARD_FONT_WIDTH) * 2 * #SPRITES_ZOOM
+  *MainMenuState\QuitGameFontHeight = #STANDARD_FONT_HEIGHT * 2 * #SPRITES_ZOOM
+  Protected QuitGameWidth.f = Len(*MainMenuState\QuitGame) * *MainMenuState\QuitGameFontWidth
+  
+  *MainMenuState\QuitGameX = (ScreenWidth() - QuitGameWidth) / 2
+  *MainMenuState\QuitGameY = MainMenuHeightOffset + *MainMenuState\GameControlsY
+  
+  
 EndProcedure
 
 Procedure EndMainMenuState(*MainMenuState.TMainMenuState)
@@ -917,6 +951,12 @@ Procedure UpdateMainMenuState(*MainMenuState.TMainMenuState, TimeSlice.f)
     SwitchGameState(@GameStateManager, #PlayState)
     ProcedureReturn
   EndIf
+  
+  If KeyboardReleased(#PB_Key_Q)
+    QuitGame = #True
+    ProcedureReturn
+  EndIf
+  
   
   
 EndProcedure
@@ -931,6 +971,9 @@ Procedure DrawMainMenuState(*MainMenuState.TMainMenuState, TimeSlice.f)
   
   DrawTextWithStandardFont(*MainMenuState\GameControlsX, *MainMenuState\GameControlsY, *MainMenuState\GameControls,
                            *MainMenuState\GameControlsFontWidth, *MainMenuState\GameControlsFontHeight)
+  
+  DrawTextWithStandardFont(*MainMenuState\QuitGameX, *MainMenuState\QuitGameY, *MainMenuState\QuitGame,
+                           *MainMenuState\QuitGameFontWidth, *MainMenuState\QuitGameFontHeight)
 EndProcedure
 
 Procedure InitPlayState(*PlayState.TPlayState)
@@ -942,6 +985,8 @@ Procedure InitPlayState(*PlayState.TPlayState)
   *PlayState\DrawGameState = @DrawPlayState()
   
   *PlayState\IsPaused = #False
+  *PlayState\IsGameOver = #False
+  *PlayState\BestLevel = 0
 EndProcedure
 
 Procedure InitGameSates()
