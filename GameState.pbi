@@ -620,7 +620,7 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
     TimeSlice = 0
   EndIf
   
-  If *PlayState\Player\Active
+  If *PlayState\Player\Active And (Not *PlayState\EscapedLevel)
     *PlayState\Player\Update(@*PlayState\Player, TimeSlice)
   EndIf
   
