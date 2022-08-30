@@ -789,6 +789,16 @@ Procedure DrawGameOverTextPlayState(*PlayState.TPlayState)
   GameOverTextPosY = (ScreenHeight() / 3) - GameOverFontHeight / 2
   DrawTextWithStandardFont(GameOverTextPosX, GameOverTextPosY, GameOverText, GameOverFontWidth, GameOverFontHeight)
   
+  Protected NoEscapeText.s = "there's no escape"
+  Protected NoEscapeTextLen = Len(NoEscapeText)
+  Protected.f NoEscapeTextPosX, NoEscapeTextPosY
+  Protected NoEscapeFontWidth.f, NoEscapeFontHeight.f
+  NoEscapeFontWidth = #STANDARD_FONT_WIDTH * 2 * #SPRITES_ZOOM
+  NoEscapeFontHeight = #STANDARD_FONT_HEIGHT * 2 * #SPRITES_ZOOM
+  NoEscapeTextPosX = (ScreenWidth() / 3) - ((NoEscapeTextLen * NoEscapeFontWidth) / 2)
+  NoEscapeTextPosY = GameOverTextPosY + GameOverFontHeight + 20
+  DrawTextWithStandardFont(NoEscapeTextPosX, NoEscapeTextPosY, NoEscapeText, NoEscapeFontWidth, NoEscapeFontHeight)
+  
   Protected LevelReachedText.s = "Level Reached:" + Str(*PlayState\Level)
   Protected LevelReachedTextLen = Len(LevelReachedText)
   Protected.f LevelReachedTextPosX, LevelReachedTextPosY
@@ -797,7 +807,7 @@ Procedure DrawGameOverTextPlayState(*PlayState.TPlayState)
   LevelReachedFontWidth = #STANDARD_FONT_WIDTH * 2.5 * #SPRITES_ZOOM
   LevelReachedFontHeight = #STANDARD_FONT_HEIGHT * 2.5 * #SPRITES_ZOOM
   LevelReachedTextPosX = (ScreenWidth() / 3) - ((LevelReachedTextLen * LevelReachedFontWidth) / 2)
-  LevelReachedTextPosY = GameOverTextPosY + LevelReachedFontHeight + 20
+  LevelReachedTextPosY = NoEscapeTextPosY + NoEscapeFontHeight + 20
   DrawTextWithStandardFont(LevelReachedTextPosX, LevelReachedTextPosY, LevelReachedText, LevelReachedFontWidth, LevelReachedFontHeight)
   
   Protected BestLevelText.s = "Best:" + Str(*PlayState\BestLevel)
@@ -808,7 +818,7 @@ Procedure DrawGameOverTextPlayState(*PlayState.TPlayState)
   BestLevelFontWidth = #STANDARD_FONT_WIDTH * 2.5 * #SPRITES_ZOOM
   BestLevelFontHeight = #STANDARD_FONT_HEIGHT * 2.5 * #SPRITES_ZOOM
   BestLevelTextPosX = (ScreenWidth() / 3) - ((BestLevelTextLen * BestLevelFontWidth) / 2)
-  BestLevelTextPosY = LevelReachedTextPosY + 20
+  BestLevelTextPosY = LevelReachedTextPosY + LevelReachedFontHeight + 20
   DrawTextWithStandardFont(BestLevelTextPosX, BestLevelTextPosY, BestLevelText, BestLevelFontWidth, BestLevelFontHeight)
   
   Protected RestartText.s = "Press enter to restart"
@@ -819,7 +829,7 @@ Procedure DrawGameOverTextPlayState(*PlayState.TPlayState)
   RestartFontWidth = #STANDARD_FONT_WIDTH * 1.875 * #SPRITES_ZOOM
   RestartFontHeight = #STANDARD_FONT_HEIGHT * 1.875 * #SPRITES_ZOOM
   RestartTextPosX = (ScreenWidth() / 3) - ((RestartTextLen * RestartFontWidth) / 2)
-  RestartTextPosY = BestLevelTextPosY + 20
+  RestartTextPosY = BestLevelTextPosY + BestLevelFontHeight + 20
   DrawTextWithStandardFont(RestartTextPosX, RestartTextPosY, RestartText, RestartFontWidth, RestartFontHeight)
   
   
