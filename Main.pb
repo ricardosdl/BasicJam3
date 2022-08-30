@@ -41,6 +41,7 @@ Procedure.a LoadSounds()
   LoadedAll = LoadedAll & Bool(LoadSound(#PlayerHitSound, "data\sounds\playerhit.wav"))
   LoadedAll = LoadedAll & Bool(LoadSound(#DropBombSound, "data\sounds\dropbomb.wav"))
   LoadedAll = LoadedAll & Bool(LoadSound(#SummonEnemySound, "data\sounds\summonenemy.wav"))
+  LoadedAll = LoadedAll & Bool(LoadSound(#PauseSound, "data\sounds\pausesound.wav"))
   
   ProcedureReturn LoadedAll
   
@@ -123,5 +124,5 @@ Repeat
   ClearScreen(#Black)  
   DrawWorld()
   FlipBuffers()
-Until event = #PB_Event_CloseWindow Or KeyboardPushed(#PB_Key_Escape)
+Until event = #PB_Event_CloseWindow
 End

@@ -73,6 +73,8 @@ Structure TPlayState Extends TGameState
   
   BestLevel.a
   
+  IsPaused.a
+  
 EndStructure
 
 Structure TMainMenuState Extends TGameState
@@ -576,7 +578,29 @@ Procedure CheckItemsAgainstPlayer(*PlayState.TPlayState)
   
 EndProcedure
 
+Procedure PauseUnpauseGamePlayState(*PlayState.TPlayState)
+  If *PlayState\IsGameOver
+    ;don't pause or unpause in gameover
+    ProcedureReturn
+  EndIf
+  
+  *PlayState\IsPaused = ~*PlayState\IsPaused
+  If *PlayState\IsPaused
+    ;play pause sound
+    PauseSoundEffect(#MainMusicSound)
+  Else
+    ResumeSoundEffect(#MainMusicSound)
+  EndIf
+  
+  PlaySoundEffect(#PauseSound, #False)
+  
+EndProcedure
+
 Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
+  If *PlayState\IsPaused
+    TimeSlice = 0
+  EndIf
+  
   If *PlayState\Player\Active
     *PlayState\Player\Update(@*PlayState\Player, TimeSlice)
   EndIf
@@ -630,6 +654,12 @@ Procedure UpdatePlayState(*PlayState.TPlayState, TimeSlice.f)
   EndIf
   
   *PlayState\PlayerHUD\Level = *PlayState\Level
+  
+  If KeyboardReleased(#PB_Key_Escape)
+    ;pause/unpause game
+    PauseUnpauseGamePlayState(*PlayState)
+  EndIf
+  
   
   UpdateSound()
   
@@ -757,6 +787,56 @@ Procedure DrawGameOverScreenPlayState(*PlayState.TPlayState)
   DrawGameOverTextPlayState(*PlayState)
 EndProcedure
 
+Procedure DrawPauseTextPlayState(*PlayState.TPlayState)
+  Protected PausedText.s = "PAUSED"
+  Protected PausedTextLen = Len(PausedText)
+  Protected.f PausedTextX, PausedTextY
+  Protected.f PausedFontWidth, PausedFontHeight
+  
+  PausedFontWidth = #STANDARD_FONT_WIDTH * 4 * #SPRITES_ZOOM
+  PausedFontHeight = #STANDARD_FONT_HEIGHT * 4 * #SPRITES_ZOOM
+  
+  PausedTextX = (ScreenWidth() - (PausedTextLen * PausedFontWidth)) / 2
+  PausedTextY = ScreenHeight() / 3.5
+  
+  DrawTextWithStandardFont(PausedTextX, PausedTextY, PausedText, PausedFontWidth, PausedFontHeight)
+  
+  Protected QuitGameText.s = "[Q]uit game"
+  Protected QuitGameTextLen = Len(QuitGameText)
+  Protected.f QuitGameTextX, QuitGameTextY
+  Protected.f QuitGameFontWidth, QuitGameFontHeight
+  
+  QuitGameFontWidth = #STANDARD_FONT_WIDTH * 2 * #SPRITES_ZOOM
+  QuitGameFontHeight = #STANDARD_FONT_HEIGHT * 2 * #SPRITES_ZOOM
+  
+  QuitGameTextX = (ScreenWidth() - (QuitGameTextLen * QuitGameFontWidth)) / 2
+  QuitGameTextY = (PausedTextY + PausedFontHeight) + 10 * #SPRITES_ZOOM
+  
+  DrawTextWithStandardFont(QuitGameTextX, QuitGameTextY, QuitGameText, QuitGameFontWidth, QuitGameFontHeight)
+  
+  Protected MainMenu.s = "[M]ain menu"
+  Protected MainMenuLen = Len(MainMenu)
+  Protected.f MainMenuX, MainMenuY
+  Protected.f MainMenuFontWidth, MainMenuFontHeight
+  
+  MainMenuFontWidth = #STANDARD_FONT_WIDTH * 2 * #SPRITES_ZOOM
+  MainMenuFontHeight = #STANDARD_FONT_HEIGHT * 2 * #SPRITES_ZOOM
+  
+  MainMenuX = (ScreenWidth() - (MainMenuLen * MainMenuFontWidth)) / 2
+  MainMenuY = (QuitGameTextY + QuitGameFontHeight) + 10 * #SPRITES_ZOOM
+  
+  DrawTextWithStandardFont(MainMenuX, MainMenuY, MainMenu, MainMenuFontWidth, MainMenuFontHeight)
+  
+  
+  
+  
+EndProcedure
+
+Procedure DrawPauseScreenPlayState(*PlayState.TPlayState)
+  DisplayTransparentSprite(#GameOverOverlaySprite, 0, 0)
+  DrawPauseTextPlayState(*PlayState)
+EndProcedure
+
 Procedure DrawPlayState(*PlayState.TPlayState)
   DrawDrawList(*PlayState\DrawList)
   
@@ -785,6 +865,11 @@ Procedure DrawPlayState(*PlayState.TPlayState)
   If *PlayState\IsGameOver
     DrawGameOverScreenPlayState(*PlayState)
   EndIf
+  
+  If *PlayState\IsPaused
+    DrawPauseScreenPlayState(*PlayState)
+  EndIf
+  
   
   
   
@@ -848,14 +933,21 @@ Procedure DrawMainMenuState(*MainMenuState.TMainMenuState, TimeSlice.f)
                            *MainMenuState\GameControlsFontWidth, *MainMenuState\GameControlsFontHeight)
 EndProcedure
 
+Procedure InitPlayState(*PlayState.TPlayState)
+  *PlayState\GameState = #PlayState
+  
+  *PlayState\StartGameState = @StartPlayState()
+  *PlayState\EndGameState = @EndPlayState()
+  *PlayState\UpdateGameState = @UpdatePlayState()
+  *PlayState\DrawGameState = @DrawPlayState()
+  
+  *PlayState\IsPaused = #False
+EndProcedure
+
 Procedure InitGameSates()
   ;@GameStateManager\GameStates(#PlayState)
-  PlayState\GameState = #PlayState
   
-  PlayState\StartGameState = @StartPlayState()
-  PlayState\EndGameState = @EndPlayState()
-  PlayState\UpdateGameState = @UpdatePlayState()
-  PlayState\DrawGameState = @DrawPlayState()
+  InitPlayState(@PlayState)
   
   MainMenuState\GameState = #MainMenuState
   MainMenuState\StartGameState = @StartMainMenuState()

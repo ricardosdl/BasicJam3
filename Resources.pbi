@@ -27,6 +27,7 @@ Enumeration ESprites
   #ItemRevealItemsSprite
   #DropBombSound
   #SummonEnemySound
+  #PauseSound
 EndEnumeration
 
 DisableExplicit
