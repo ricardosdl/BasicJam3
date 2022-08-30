@@ -13,7 +13,6 @@ Global NewList MultiChannelSounds.TMultiChannelSound()
 
 Procedure.a InitializeSound()
   SoundStarted = InitSound()
-  Debug SoundStarted
   ProcedureReturn Bool(SoundStarted <> 0)
 EndProcedure
 
