@@ -397,8 +397,32 @@ Procedure IsTileBreakable(*GameMap.TMap, TileX.w, TileY.w)
   ProcedureReturn *GameMap\MapGrid\TilesGrid(TileX, TileY)\Breakable
 EndProcedure
 
+CompilerIf #PB_Compiler_OS = #PB_OS_Web
+  
+Procedure CallBackReadMapGridFile(Status, FileName.s, File, SizeRead)
+  Select Status
+    Case #PB_Status_Loaded
+      ; File correctly loaded
+      
+    Case #PB_Status_Progress
+      ; File loading in progress, use FileProgress() get the current progress
+      
+    Case #PB_Status_Error
+      ; File loading has failed
+  EndSelect
+  
+EndProcedure
+
+CompilerEndIf
+
 Procedure.i InitMapGrid(*MapGrid.TMapGrid, MapGridFile.s)
-  Protected FileNum = ReadFile(#PB_Any, MapGridFile)
+  CompilerIf #PB_Compiler_OS = #PB_OS_Web
+    Protected FileNum = ReadFile(#PB_Any, MapGridFile, @CallBackReadMapGridFile())
+  CompilerElse
+    Protected FileNum = ReadFile(#PB_Any, MapGridFile)
+  CompilerEndIf
+  
+  
   If FileNum = 0
     ;error reading the mapgridfile
     ProcedureReturn #False

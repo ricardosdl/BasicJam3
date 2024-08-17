@@ -52,7 +52,13 @@ EndProcedure
 
 Procedure.a LoadResources()
   If LoadSprites() = #False
-    MessageRequester("ERROR", "Error loading sprites! Couldn't find data.")
+    CompilerIf #PB_Compiler_OS = #PB_OS_Web
+      MessageRequester("Error loading sprites! Couldn't find data.")
+    CompilerElse
+      MessageRequester("ERROR", "Error loading sprites! Couldn't find data.")
+    CompilerEndIf
+    
+    
     ProcedureReturn #False
   EndIf
   
@@ -119,6 +125,17 @@ Procedure InitScreen(IsFullScreen.a = #False)
   
 EndProcedure
 
+Procedure Loading()
+  
+EndProcedure
+
+Procedure LoadingError()
+EndProcedure
+
+Procedure RenderFrame()
+  
+EndProcedure
+
 InitSprite()
 InitKeyboard()
 InitMouse()
@@ -131,9 +148,16 @@ InitScreen(IsFullScreen)
 
 
 
+CompilerIf #PB_Compiler_OS <> #PB_OS_Web
+  UsePNGImageDecoder()
+  UseOGGSoundDecoder()
+CompilerEndIf
 
-UsePNGImageDecoder()
-UseOGGSoundDecoder()
+CompilerIf #PB_Compiler_OS = #PB_OS_Web
+  BindEvent(#PB_Event_Loading, @Loading())
+  BindEvent(#PB_Event_LoadingError, @LoadingError())
+  BindEvent(#PB_Event_RenderFrame, @RenderFrame())
+CompilerEndIf
 
 If (LoadResources() = #False)
   ;error loading resources, can't ryb the game this way
@@ -143,8 +167,13 @@ EndIf
 
 InitGameSates()
 SwitchGameState(@GameStateManager, #MainMenuState)
-
 SimulationTime = ElapsedMilliseconds()
+
+CompilerIf #PB_Compiler_Processor <> #PB_Processor_JavaScript
+  Repeat
+    RenderFrame()
+  Until ExitGame
+CompilerEndIf
 
 Repeat
   LastTimeInMs = ElapsedMilliseconds()

@@ -25,8 +25,16 @@ EndProcedure
 
 Procedure DrawDrawList(*DrawList.TDrawList, ReorderIfChanged.a = #True)
   If ReorderIfChanged And *DrawList\Changed
-    SortStructuredList(*DrawList\DrawList(), #PB_Sort_Ascending,
-                       OffsetOf(TDrawItem\DrawOrder), TypeOf(TDrawItem\DrawOrder))
+    ;TODO: implement SortStructuredList
+    CompilerIf #PB_Compiler_OS = #PB_OS_Web
+      ;     SortStructuredList(*DrawList\DrawList(), #PB_Sort_Ascending,
+      ;                        OffsetOf(TDrawItem\DrawOrder), TypeOf(TDrawItem\DrawOrder))
+      CompilerElse
+      SortStructuredList(*DrawList\DrawList(), #PB_Sort_Ascending,
+                         OffsetOf(TDrawItem\DrawOrder), TypeOf(TDrawItem\DrawOrder))
+      
+    CompilerEndIf
+    
     *DrawList\Changed = #False
   EndIf
   
