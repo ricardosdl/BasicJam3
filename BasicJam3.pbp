@@ -1,71 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 5.73 LTS (Windows - x64)">
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 6.02 LTS (Windows - x64)">
   <section name="config">
     <options closefiles="1" openmode="0" name="Basic Jam 3"/>
   </section>
   <section name="data">
     <explorer view="" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2022-08-30 14:45" user="ricardo.lima" host="686-D-02700820"/>
+    <lastopen date="2023-12-29 03:30" user="ricardo" host="DESKTOP-IU53FK0"/>
   </section>
   <section name="files">
-    <file name="BananaEnemy.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
-    </file>
     <file name="DrawList.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="4" panelstate="+"/>
     </file>
     <file name="DrawOrders.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="5" panelstate="+"/>
     </file>
     <file name="DrawText.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="6" panelstate="+"/>
     </file>
     <file name="Enemy.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="7" panelstate="+"/>
     </file>
     <file name="GameObject.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="8" panelstate="+"/>
     </file>
     <file name="GameState.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
-    </file>
-    <file name="Ground.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="9" panelstate="+"/>
     </file>
     <file name="Item.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="10" panelstate="+"/>
     </file>
     <file name="Main.pb">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="11" panelstate="+"/>
     </file>
     <file name="Map.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="12" panelstate="+"/>
     </file>
     <file name="Math.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="13" panelstate="+"/>
     </file>
     <file name="Player.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="14" panelstate="+"/>
     </file>
     <file name="PlayerHUD.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="15" panelstate="+"/>
     </file>
     <file name="Projectile.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="16" panelstate="+"/>
     </file>
     <file name="Resources.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
-    </file>
-    <file name="Sound.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="0" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="17" panelstate="+"/>
     </file>
     <file name="SpriteAnimation.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="18" panelstate="+"/>
     </file>
     <file name="Util.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="1" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="19" panelstate="+"/>
+    </file>
+    <file name="BananaEnemy.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" sortindex="999" panelstate="+"/>
+    </file>
+    <file name="Ground.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" sortindex="999" panelstate="+"/>
+    </file>
+    <file name="Sound.pbi">
+      <config load="0" scan="1" panel="1" warn="0" lastopen="0" sortindex="999" panelstate="+"/>
     </file>
   </section>
   <section name="targets">
@@ -73,7 +73,7 @@
       <inputfile value="Main.pb"/>
       <outputfile value="BomberScape.exe"/>
       <executable value="BomberScape.exe"/>
-      <options xpskin="1" debug="1"/>
+      <options xpskin="1" debug="1" optimizer="0"/>
       <format exe="console" cpu="0"/>
     </target>
   </section>
