@@ -4,7 +4,7 @@ XIncludeFile "Sound.pbi"
 EnableExplicit
 
 Global SimulationTime.q = 0, RealTime.q, GameTick = 5
-Global LastTimeInMs.q, Is_Full_Screen.a = #False
+Global LastTimeInMs.q, Is_Full_Screen.a = #False, Event, ExitGame.a = #False
 
 Procedure.a LoadSprites()
   Protected LoadedAll = #True
@@ -134,6 +134,35 @@ EndProcedure
 
 Procedure RenderFrame()
   
+  
+    LastTimeInMs = ElapsedMilliseconds()
+    CompilerIf #PB_Compiler_OS <> #PB_OS_Web
+      Repeat; Always process all the events to flush the queue at every frame
+        Event = WindowEvent()
+        Select Event
+          Case #PB_Event_CloseWindow
+            ExitGame = #True
+        EndSelect
+      Until Event = 0 ; Quit the event loop only when no more events are available
+    CompilerEndIf
+    
+    
+    ExamineKeyboard()
+    ;ExamineMouse()
+    
+    ;Update
+    While SimulationTime < LastTimeInMs
+      SimulationTime + GameTick
+      UpdateWorld(GameTick / 1000.0)
+    Wend
+    
+    ExitGame = QuitGame
+    
+    ;Draw
+    ClearScreen(#Black)  
+    DrawWorld()
+    FlipBuffers()
+  
 EndProcedure
 
 InitSprite()
@@ -175,28 +204,5 @@ CompilerIf #PB_Compiler_Processor <> #PB_Processor_JavaScript
   Until ExitGame
 CompilerEndIf
 
-Repeat
-  LastTimeInMs = ElapsedMilliseconds()
-  
-  ;RealTime = ElapsedMilliseconds()
-  Define Event
-  If Not Is_Full_Screen
-    Event = WindowEvent()
-  EndIf
-  
-  
-  ExamineKeyboard()
-  ;ExamineMouse()
-  
-  ;Update
-  While SimulationTime < LastTimeInMs
-    SimulationTime + GameTick
-    UpdateWorld(GameTick / 1000.0)
-  Wend
-  
-  ;Draw
-  ClearScreen(#Black)  
-  DrawWorld()
-  FlipBuffers()
-Until Event = #PB_Event_CloseWindow Or QuitGame
+
 End
