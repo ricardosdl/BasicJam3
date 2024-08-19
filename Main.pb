@@ -3,6 +3,9 @@ XIncludeFile "Sound.pbi"
 
 EnableExplicit
 
+#TOTAL_SPRITES = 18
+#TOTAL_SOUNDS = 9
+
 Global SimulationTime.q = 0, RealTime.q, GameTick = 5
 Global LastTimeInMs.q, Is_Full_Screen.a = #False, Event, ExitGame.a = #False
 
@@ -83,8 +86,6 @@ EndProcedure
 
 Procedure DrawWorld()
   DrawCurrentStateGameSateManager(@GameStateManager)
-  ;Player\DrawGameObject(@Player)
-  ;Banana\DrawGameObject(@Banana)
 EndProcedure
 
 Procedure IsFullScreen()
@@ -125,7 +126,31 @@ Procedure InitScreen(IsFullScreen.a = #False)
   
 EndProcedure
 
-Procedure Loading()
+Procedure LoadingHandler(Type, FileName.s, ObjectId)
+  Static LoadedSprites.a = 0
+  Static LoadedSounds.a = 0
+  
+  If Type = #PB_Loading_Sprite
+    LoadedSprites + 1
+  EndIf
+  
+  If LoadedSprites >= #TOTAL_SPRITES
+    InitGameSates()
+    SwitchGameState(@GameStateManager, #MainMenuState)
+    ;loaded all sprites can start rendering
+    SimulationTime = ElapsedMilliseconds()
+    FlipBuffers()
+  EndIf
+  
+  If Type = #PB_Loading_Sound
+    LoadedSounds + 1
+  EndIf
+  
+  If LoadedSounds >= #TOTAL_SOUNDS
+    SoundStarted = 1
+    
+  EndIf
+  
   
 EndProcedure
 
@@ -133,35 +158,48 @@ Procedure LoadingError()
 EndProcedure
 
 Procedure RenderFrame()
+  LastTimeInMs = ElapsedMilliseconds()
+  CompilerIf #PB_Compiler_OS <> #PB_OS_Web
+    Repeat; Always process all the events to flush the queue at every frame
+      Event = WindowEvent()
+      Select Event
+        Case #PB_Event_CloseWindow
+          ExitGame = #True
+      EndSelect
+    Until Event = 0 ; Quit the event loop only when no more events are available
+  CompilerEndIf
   
   
-    LastTimeInMs = ElapsedMilliseconds()
-    CompilerIf #PB_Compiler_OS <> #PB_OS_Web
-      Repeat; Always process all the events to flush the queue at every frame
-        Event = WindowEvent()
-        Select Event
-          Case #PB_Event_CloseWindow
-            ExitGame = #True
-        EndSelect
-      Until Event = 0 ; Quit the event loop only when no more events are available
-    CompilerEndIf
+  ExamineKeyboard()
+  ;ExamineMouse()
+  
+  ;Update
+  Debug "simulationtime:" + SimulationTime
+  Debug "LastTimeInMs:" + LastTimeInMs
+  While SimulationTime < LastTimeInMs
+    SimulationTime + GameTick
+    Debug "SimulationTime updated:" + SimulationTime
+    ;UpdateWorld(GameTick / 1000.0)
+  Wend
+  Debug "============="
+  
+  If KeyboardPushed(#PB_Key_Return)
+    Debug "return pushed here:" + ElapsedMilliseconds()
     
     
-    ExamineKeyboard()
-    ;ExamineMouse()
+  ;Else
+  ;  Debug "nothing inputed"
     
-    ;Update
-    While SimulationTime < LastTimeInMs
-      SimulationTime + GameTick
-      UpdateWorld(GameTick / 1000.0)
-    Wend
     
-    ExitGame = QuitGame
-    
-    ;Draw
-    ClearScreen(#Black)  
-    DrawWorld()
-    FlipBuffers()
+  EndIf
+  
+  
+  ExitGame = QuitGame
+  
+  ;Draw
+  ClearScreen(#Black)  
+  DrawWorld()
+  FlipBuffers()
   
 EndProcedure
 
@@ -183,9 +221,10 @@ CompilerIf #PB_Compiler_OS <> #PB_OS_Web
 CompilerEndIf
 
 CompilerIf #PB_Compiler_OS = #PB_OS_Web
-  BindEvent(#PB_Event_Loading, @Loading())
+  BindEvent(#PB_Event_Loading, @LoadingHandler())
   BindEvent(#PB_Event_LoadingError, @LoadingError())
   BindEvent(#PB_Event_RenderFrame, @RenderFrame())
+  SoundStarted = 0
 CompilerEndIf
 
 If (LoadResources() = #False)
@@ -193,10 +232,10 @@ If (LoadResources() = #False)
   End 1
 EndIf
 
-
-InitGameSates()
-SwitchGameState(@GameStateManager, #MainMenuState)
-SimulationTime = ElapsedMilliseconds()
+CompilerIf #PB_Compiler_OS <> #PB_OS_Web
+  InitGameSates()
+  SwitchGameState(@GameStateManager, #MainMenuState)
+CompilerEndIf
 
 CompilerIf #PB_Compiler_Processor <> #PB_Processor_JavaScript
   Repeat
