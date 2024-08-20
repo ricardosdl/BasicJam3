@@ -7,7 +7,7 @@
   <section name="data">
     <explorer view="" pattern="8"/>
     <log show="1"/>
-    <lastopen date="2024-08-20 09:40" user="ricardo.lima" host="686-D-03217801"/>
+    <lastopen date="2024-08-20 17:31" user="ricardo.lima" host="686-D-03217801"/>
   </section>
   <section name="files">
     <file name="Main.pb">
@@ -47,7 +47,7 @@
       <config load="0" scan="1" panel="1" warn="0" lastopen="0" sortindex="999" panelstate="+"/>
     </file>
     <file name="Map.pbi">
-      <config load="0" scan="1" panel="1" warn="0" lastopen="0" sortindex="999" panelstate="+"/>
+      <config load="0" scan="1" panel="1" warn="0" lastopen="1" sortindex="7" panelstate="+"/>
     </file>
     <file name="MapCollision.pbi">
       <config load="0" scan="1" panel="1" warn="0" lastopen="0" sortindex="999" panelstate="+"/>
