@@ -94,6 +94,8 @@ EndStructure
 
 Global.TMapDirection Map_Direction_Up, Map_Direction_Right, Map_Direction_Down, Map_Direction_Left, Map_Direction_None
 Global Dim Map_All_Directions.TMapDirection(#MAP_NUM_DIRECTIONS - 1)
+;stores the file object id for the InitMapGrid procedure
+Global FileNum_MapGridFile = -1
 
 Map_All_Directions(#MAP_DIRECTION_UP)\x = 0 : Map_All_Directions(#MAP_DIRECTION_UP)\y = -1
 
@@ -397,31 +399,7 @@ Procedure IsTileBreakable(*GameMap.TMap, TileX.w, TileY.w)
   ProcedureReturn *GameMap\MapGrid\TilesGrid(TileX, TileY)\Breakable
 EndProcedure
 
-CompilerIf #PB_Compiler_OS = #PB_OS_Web
-  
-Procedure CallBackReadMapGridFile(Status, FileName.s, File, SizeRead)
-  Select Status
-    Case #PB_Status_Loaded
-      ; File correctly loaded
-      
-    Case #PB_Status_Progress
-      ; File loading in progress, use FileProgress() get the current progress
-      
-    Case #PB_Status_Error
-      ; File loading has failed
-  EndSelect
-  
-EndProcedure
-
-CompilerEndIf
-
-Procedure.i InitMapGrid(*MapGrid.TMapGrid, MapGridFile.s)
-  CompilerIf #PB_Compiler_OS = #PB_OS_Web
-    Protected FileNum = ReadFile(#PB_Any, MapGridFile, @CallBackReadMapGridFile())
-  CompilerElse
-    Protected FileNum = ReadFile(#PB_Any, MapGridFile)
-  CompilerEndIf
-  
+Procedure.i InitMapGrid(*MapGrid.TMapGrid, FileNum)  
   
   If FileNum = 0
     ;error reading the mapgridfile
@@ -807,7 +785,7 @@ EndProcedure
 
 Procedure InitMap(*GameMap.TMap, *Position.TVector2D)
   InitGameObject(*GameMap, *Position, -1, @UpdateMap(), @DrawMap(), #True, 1.0, #MapDrawOrder)
-  InitMapGrid(@*GameMap\MapGrid, ".\data\maps\main-map-grid.csv")
+  InitMapGrid(@*GameMap\MapGrid, FileNum_MapGridFile)
   SetRandomBreakableWallsMap(*GameMap)
   SetTopLeftCornerPlayableByPlayer(*GameMap)
   ClearExplodedTilesMap(*GameMap)
@@ -829,7 +807,7 @@ EndProcedure
 
 Procedure RestartMapGrid(*GameMap.TMap)
   ClearMapGrid(*GameMap)
-  InitMapGrid(@*GameMap\MapGrid, ".\data\maps\main-map-grid.csv")
+  InitMapGrid(@*GameMap\MapGrid, FileNum_MapGridFile)
   SetRandomBreakableWallsMap(*GameMap)
   SetTopLeftCornerPlayableByPlayer(*GameMap)
   ClearExplodedTilesMap(*GameMap)

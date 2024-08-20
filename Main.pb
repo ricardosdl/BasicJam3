@@ -1,5 +1,6 @@
 ﻿XIncludeFile "GameState.pbi"
 XIncludeFile "Sound.pbi"
+XIncludeFile "Map.pbi"
 
 EnableExplicit
 
@@ -74,6 +75,12 @@ Procedure.a LoadResources()
     TurnOffSound()
   EndIf
   
+  CompilerIf #PB_Compiler_OS <> #PB_OS_Web
+    ;on desktop we can load the file synchroniously
+    FileNum_MapGridFile = ReadFile(#PB_Any, "./data/maps/main-map-grid.csv")
+  CompilerEndIf
+  
+  
   
   
   ProcedureReturn #True
@@ -126,6 +133,37 @@ Procedure InitScreen(IsFullScreen.a = #False)
   
 EndProcedure
 
+CompilerIf #PB_Compiler_OS = #PB_OS_Web
+  Procedure StartWebGameRendering()
+    SimulationTime = ElapsedMilliseconds()
+    FlipBuffers()
+  EndProcedure
+  
+  
+  Procedure CallBackReadMapGridFile(Status, FileName.s, File, SizeRead)
+    Select Status
+      Case #PB_Status_Loaded
+        ; File correctly loaded
+        FileNum_MapGridFile = File
+        ;now we can start the game
+        StartWebGameRendering()
+        
+      Case #PB_Status_Progress
+        ; File loading in progress, use FileProgress() get the current progress
+        
+      Case #PB_Status_Error
+        ; File loading has failed
+    EndSelect
+    
+  EndProcedure
+  
+  Procedure LoadMapGridFile()
+    FileNum_MapGridFile = ReadFile(#PB_Any, "./data/maps/main-Map-grid.csv", @CallBackReadMapGridFile())
+  EndProcedure
+  
+CompilerEndIf
+
+
 Procedure LoadingHandler(Type, FileName.s, ObjectId)
   Static LoadedSprites.a = 0
   Static LoadedSounds.a = 0
@@ -137,9 +175,8 @@ Procedure LoadingHandler(Type, FileName.s, ObjectId)
   If LoadedSprites >= #TOTAL_SPRITES
     InitGameSates()
     SwitchGameState(@GameStateManager, #MainMenuState)
-    ;loaded all sprites can start rendering
-    SimulationTime = ElapsedMilliseconds()
-    FlipBuffers()
+    ;loaded all sprites can load the map grid file now
+    LoadMapGridFile()
   EndIf
   
   If Type = #PB_Loading_Sound
@@ -179,7 +216,7 @@ Procedure RenderFrame()
   While SimulationTime < LastTimeInMs
     SimulationTime + GameTick
     Debug "SimulationTime updated:" + SimulationTime
-    ;UpdateWorld(GameTick / 1000.0)
+    UpdateWorld(GameTick / 1000.0)
   Wend
   Debug "============="
   
@@ -187,8 +224,8 @@ Procedure RenderFrame()
     Debug "return pushed here:" + ElapsedMilliseconds()
     
     
-  ;Else
-  ;  Debug "nothing inputed"
+    ;Else
+    ;  Debug "nothing inputed"
     
     
   EndIf
