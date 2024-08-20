@@ -163,33 +163,35 @@ CompilerIf #PB_Compiler_OS = #PB_OS_Web
   
 CompilerEndIf
 
-
-Procedure LoadingHandler(Type, FileName.s, ObjectId)
-  Static LoadedSprites.a = 0
-  Static LoadedSounds.a = 0
-  
-  If Type = #PB_Loading_Sprite
-    LoadedSprites + 1
-  EndIf
-  
-  If LoadedSprites >= #TOTAL_SPRITES
-    InitGameSates()
-    SwitchGameState(@GameStateManager, #MainMenuState)
-    ;loaded all sprites can load the map grid file now
-    LoadMapGridFile()
-  EndIf
-  
-  If Type = #PB_Loading_Sound
-    LoadedSounds + 1
-  EndIf
-  
-  If LoadedSounds >= #TOTAL_SOUNDS
-    SoundStarted = 1
+CompilerIf #PB_Compiler_OS = #PB_OS_Web
+  Procedure LoadingHandler(Type, FileName.s, ObjectId)
+    Static LoadedSprites.a = 0
+    Static LoadedSounds.a = 0
     
-  EndIf
-  
-  
-EndProcedure
+    If Type = #PB_Loading_Sprite
+      LoadedSprites + 1
+    EndIf
+    
+    If LoadedSprites >= #TOTAL_SPRITES
+      InitGameSates()
+      SwitchGameState(@GameStateManager, #MainMenuState)
+      ;loaded all sprites can load the map grid file now
+      LoadMapGridFile()
+    EndIf
+    
+    If Type = #PB_Loading_Sound
+      LoadedSounds + 1
+    EndIf
+    
+    If LoadedSounds >= #TOTAL_SOUNDS
+      SoundStarted = 1
+      
+    EndIf
+    
+    
+  EndProcedure
+CompilerEndIf
+
 
 Procedure LoadingError()
 EndProcedure
@@ -208,28 +210,12 @@ Procedure RenderFrame()
   
   
   ExamineKeyboard()
-  ;ExamineMouse()
   
   ;Update
-  Debug "simulationtime:" + SimulationTime
-  Debug "LastTimeInMs:" + LastTimeInMs
   While SimulationTime < LastTimeInMs
     SimulationTime + GameTick
-    Debug "SimulationTime updated:" + SimulationTime
     UpdateWorld(GameTick / 1000.0)
   Wend
-  Debug "============="
-  
-  If KeyboardPushed(#PB_Key_Return)
-    Debug "return pushed here:" + ElapsedMilliseconds()
-    
-    
-    ;Else
-    ;  Debug "nothing inputed"
-    
-    
-  EndIf
-  
   
   ExitGame = QuitGame
   
