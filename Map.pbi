@@ -449,7 +449,7 @@ Procedure.i InitMapGrid(*MapGrid.TMapGrid, FileNum)
     
   Wend
   
-  CloseFile(FileNum)
+  ;CloseFile(FileNum)
   
   ProcedureReturn #True
   
