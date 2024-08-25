@@ -449,7 +449,8 @@ Procedure.i InitMapGrid(*MapGrid.TMapGrid, FileNum)
     
   Wend
   
-  ;CloseFile(FileNum)
+  ;return the file pointer to the beginning
+  FileSeek(FileNum, 0)
   
   ProcedureReturn #True
   
